@@ -1,0 +1,331 @@
+2025-01-06 14:04:52,070 - INFO - Starting assessment processing for: Carlyle - Ian Fujiyama - US Buyout Q360 2024
+2025-01-06 14:04:52,070 - ERROR - Error reading PDF assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf: [Errno 2] No such file or directory: 'assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf'
+2025-01-06 14:04:52,070 - ERROR - Error processing assessment assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf: [Errno 2] No such file or directory: 'assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf'
+2025-01-06 14:05:07,379 - INFO - Starting assessment processing for: Carlyle - Ian Fujiyama - US Buyout Q360 2024
+2025-01-06 14:05:07,382 - INFO - Processing PDF with 16 pages
+2025-01-06 14:05:07,433 - INFO - Processed 10 of 16 pages
+2025-01-06 14:05:07,460 - INFO - Total chunks to process: 2
+2025-01-06 14:05:07,460 - INFO - Processing chunk 1/2
+2025-01-06 14:05:07,490 - ERROR - Error processing chunk with Claude: "Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2025-01-06 14:05:07,490 - ERROR - Error processing assessment ../../assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf: "Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2025-01-06 14:07:02,786 - INFO - Starting assessment processing for: Carlyle - Ian Fujiyama - US Buyout Q360 2024
+2025-01-06 14:07:02,790 - INFO - Processing PDF with 16 pages
+2025-01-06 14:07:02,845 - INFO - Processed 10 of 16 pages
+2025-01-06 14:07:02,871 - INFO - Total chunks to process: 2
+2025-01-06 14:07:02,871 - INFO - Processing chunk 1/2
+2025-01-06 14:07:03,328 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 400 Bad Request"
+2025-01-06 14:07:03,329 - ERROR - Error processing chunk with Claude: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'messages: Unexpected role "system". The Messages API accepts a top-level `system` parameter, not "system" as an input message role.'}}
+2025-01-06 14:07:03,329 - ERROR - Error processing assessment ../../assessments/Carlyle - Ian Fujiyama - US Buyout Q360 2024.pdf: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'messages: Unexpected role "system". The Messages API accepts a top-level `system` parameter, not "system" as an input message role.'}}
+2025-01-06 14:09:17,755 - INFO - Starting assessment processing for: Carlyle - Ian Fujiyama - US Buyout Q360 2024
+2025-01-06 14:09:17,757 - INFO - Processing PDF with 16 pages
+2025-01-06 14:09:17,809 - INFO - Processed 10 of 16 pages
+2025-01-06 14:09:17,835 - INFO - Total chunks to process: 2
+2025-01-06 14:09:17,835 - INFO - Processing chunk 1/2
+2025-01-06 14:14:28,555 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:14:41,045 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:14:41,064 - INFO - Processing chunk 2/2
+2025-01-06 14:15:04,586 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:15:17,870 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:15:17,874 - INFO - Executive interview saved to: data/processed_assessments/executive_Carlyle - Ian Fujiyama - US Buyout Q360 2024.txt
+2025-01-06 14:15:17,874 - INFO - Stakeholder feedback saved to: data/processed_assessments/filtered_Carlyle - Ian Fujiyama - US Buyout Q360 2024.txt
+2025-01-06 14:24:47,357 - INFO - Starting assessment processing for: ef4738b6-81b0-4a82-b7c0-fab183ff8eff
+2025-01-06 14:24:47,364 - INFO - Processing PDF with 33 pages
+2025-01-06 14:24:47,419 - INFO - Processed 10 of 33 pages
+2025-01-06 14:24:47,467 - INFO - Processed 20 of 33 pages
+2025-01-06 14:24:47,515 - INFO - Processed 30 of 33 pages
+2025-01-06 14:24:47,521 - INFO - Total chunks to process: 4
+2025-01-06 14:24:47,521 - INFO - Processing chunk 1/4
+2025-01-06 14:24:47,549 - ERROR - Error processing chunk with Claude: "Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2025-01-06 14:24:47,549 - ERROR - Error processing assessment data/uploads/ef4738b6-81b0-4a82-b7c0-fab183ff8eff.pdf: "Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2025-01-06 14:25:48,398 - INFO - Starting assessment processing for: 2f2a9188-d365-4f4e-9570-2153368fe5ca
+2025-01-06 14:25:48,406 - INFO - Processing PDF with 33 pages
+2025-01-06 14:25:48,473 - INFO - Processed 10 of 33 pages
+2025-01-06 14:25:48,523 - INFO - Processed 20 of 33 pages
+2025-01-06 14:25:48,572 - INFO - Processed 30 of 33 pages
+2025-01-06 14:25:48,578 - INFO - Total chunks to process: 4
+2025-01-06 14:25:48,578 - INFO - Processing chunk 1/4
+2025-01-06 14:27:16,573 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:27:23,824 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:27:23,830 - INFO - Processing chunk 2/4
+2025-01-06 14:28:43,953 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:29:06,020 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:29:06,026 - INFO - Processing chunk 3/4
+2025-01-06 14:29:56,215 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:30:25,752 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:30:25,758 - INFO - Processing chunk 4/4
+2025-01-06 14:30:31,535 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:30:33,469 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:30:33,480 - INFO - Executive interview saved to: data/processed_assessments/executive_2f2a9188-d365-4f4e-9570-2153368fe5ca.txt
+2025-01-06 14:30:33,480 - INFO - Stakeholder feedback saved to: data/processed_assessments/filtered_2f2a9188-d365-4f4e-9570-2153368fe5ca.txt
+2025-01-06 14:49:38,397 - INFO - Starting assessment processing for: 2268c658-9f55-4529-8c7c-11e5343d97d2
+2025-01-06 14:49:38,402 - INFO - Processing PDF with 33 pages
+2025-01-06 14:49:38,469 - INFO - Processed 10 of 33 pages
+2025-01-06 14:49:38,517 - INFO - Processed 20 of 33 pages
+2025-01-06 14:49:38,565 - INFO - Processed 30 of 33 pages
+2025-01-06 14:49:38,571 - INFO - Total chunks to process: 4
+2025-01-06 14:49:38,571 - INFO - Processing chunk 1/4
+2025-01-06 14:50:03,933 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:50:07,606 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:50:07,607 - INFO - Processing chunk 2/4
+2025-01-06 14:50:44,374 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:51:31,074 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:51:31,095 - INFO - Processing chunk 3/4
+2025-01-06 14:52:36,099 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:52:51,196 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:52:51,201 - INFO - Processing chunk 4/4
+2025-01-06 14:52:56,934 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:52:58,571 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:52:58,581 - INFO - Executive interview saved to: data/processed_assessments/executive_2268c658-9f55-4529-8c7c-11e5343d97d2.txt
+2025-01-06 14:52:58,582 - INFO - Stakeholder feedback saved to: data/processed_assessments/filtered_2268c658-9f55-4529-8c7c-11e5343d97d2.txt
+2025-01-06 14:54:31,517 - INFO - Starting assessment processing for: eb1821dc-3039-4359-a9a0-63c22bff5584
+2025-01-06 14:54:31,523 - INFO - Processing PDF with 33 pages
+2025-01-06 14:54:31,589 - INFO - Processed 10 of 33 pages
+2025-01-06 14:54:31,637 - INFO - Processed 20 of 33 pages
+2025-01-06 14:54:31,685 - INFO - Processed 30 of 33 pages
+2025-01-06 14:54:31,691 - INFO - Total chunks to process: 4
+2025-01-06 14:54:31,691 - INFO - Processing chunk 1/4
+2025-01-06 14:55:58,465 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:56:47,167 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:56:47,186 - INFO - Processing chunk 2/4
+2025-01-06 14:58:10,750 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:58:25,581 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:58:25,593 - INFO - Processing chunk 3/4
+2025-01-06 14:59:29,213 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:59:41,070 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:59:41,078 - INFO - Processing chunk 4/4
+2025-01-06 14:59:46,642 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:59:48,362 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:59:48,372 - INFO - Executive interview saved to: ../data/processed_assessments/executive_eb1821dc-3039-4359-a9a0-63c22bff5584.txt
+2025-01-06 14:59:48,372 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_eb1821dc-3039-4359-a9a0-63c22bff5584.txt
+2025-01-06 14:59:54,216 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 14:59:59,918 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:00:19,575 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:00:34,041 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:01:02,419 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:01:10,614 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:01:16,412 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:01:34,173 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:01:50,143 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:02,302 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:15,898 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:28,084 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:35,773 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:43,344 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:52,757 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:02:59,476 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:33:12,698 - INFO - Starting assessment processing for: 4fd3ba97-77db-420d-82c8-b9695edcf495
+2025-01-06 15:33:12,704 - INFO - Processing PDF with 16 pages
+2025-01-06 15:33:12,756 - INFO - Processed 10 of 16 pages
+2025-01-06 15:33:12,785 - INFO - Total chunks to process: 2
+2025-01-06 15:33:12,785 - INFO - Processing chunk 1/2
+2025-01-06 15:34:07,027 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:34:28,320 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:34:28,326 - INFO - Processing chunk 2/2
+2025-01-06 15:35:05,256 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:10,171 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:10,193 - INFO - Executive interview saved to: ../data/processed_assessments/executive_4fd3ba97-77db-420d-82c8-b9695edcf495.txt
+2025-01-06 15:35:10,194 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_4fd3ba97-77db-420d-82c8-b9695edcf495.txt
+2025-01-06 15:35:13,680 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:20,029 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:34,475 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:46,140 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:35:53,390 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:36:04,676 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:36:10,104 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:36:23,754 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:36:36,951 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:36:49,832 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:01,358 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:09,865 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:16,047 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:22,153 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:31,624 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:37:47,396 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:41:25,591 - INFO - Starting assessment processing for: 5dc4ba1b-967c-4ad0-a3ec-9c1192f3575b
+2025-01-06 15:41:25,597 - INFO - Processing PDF with 33 pages
+2025-01-06 15:41:25,665 - INFO - Processed 10 of 33 pages
+2025-01-06 15:41:25,713 - INFO - Processed 20 of 33 pages
+2025-01-06 15:41:25,762 - INFO - Processed 30 of 33 pages
+2025-01-06 15:41:25,768 - INFO - Total chunks to process: 4
+2025-01-06 15:41:25,768 - INFO - Processing chunk 1/4
+2025-01-06 15:42:55,946 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:42:59,651 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:42:59,655 - INFO - Processing chunk 2/4
+2025-01-06 15:44:21,638 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:44:41,200 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:44:41,215 - INFO - Processing chunk 3/4
+2025-01-06 15:45:47,297 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:45:58,434 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:45:58,438 - INFO - Processing chunk 4/4
+2025-01-06 15:46:04,637 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:06,184 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:06,191 - INFO - Executive interview saved to: ../data/processed_assessments/executive_5dc4ba1b-967c-4ad0-a3ec-9c1192f3575b.txt
+2025-01-06 15:46:06,192 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_5dc4ba1b-967c-4ad0-a3ec-9c1192f3575b.txt
+2025-01-06 15:46:13,810 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:21,954 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:34,250 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:46,488 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:46:54,573 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:47:02,916 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:47:09,768 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:47:23,806 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:47:38,140 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:47:51,152 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:04,639 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:14,535 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:21,889 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:30,011 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:37,422 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 15:48:50,731 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 529 "
+2025-01-06 15:48:50,735 - INFO - Retrying request to /v1/messages in 0.460170 seconds
+2025-01-06 15:48:58,049 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:27:37,662 - INFO - Starting assessment processing for: 4ee6b28d-09e1-4554-94ba-f4f01b4fa1e4
+2025-01-06 16:27:37,669 - INFO - Processing PDF with 16 pages
+2025-01-06 16:27:37,729 - INFO - Processed 10 of 16 pages
+2025-01-06 16:27:37,757 - INFO - Total chunks to process: 2
+2025-01-06 16:27:37,758 - INFO - Processing chunk 1/2
+2025-01-06 16:28:29,824 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:28:37,843 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:28:37,867 - INFO - Processing chunk 2/2
+2025-01-06 16:29:20,280 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:29:35,711 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:29:35,730 - INFO - Executive interview saved to: ../data/processed_assessments/executive_4ee6b28d-09e1-4554-94ba-f4f01b4fa1e4.txt
+2025-01-06 16:29:35,730 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_4ee6b28d-09e1-4554-94ba-f4f01b4fa1e4.txt
+2025-01-06 16:29:41,693 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:29:47,989 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:02,723 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:23,162 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:31,661 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:38,726 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:43,882 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:30:56,608 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:11,292 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:22,964 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:35,520 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:44,062 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:49,890 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:31:55,733 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:32:05,664 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:32:12,220 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:32:15,085 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 16:42:25,238 - INFO - Starting assessment processing for: d13dc9c2-4c26-48d8-9c13-677356709fc0
+2025-01-06 16:42:25,245 - INFO - Processing PDF with 16 pages
+2025-01-06 16:42:25,297 - INFO - Processed 10 of 16 pages
+2025-01-06 16:42:25,327 - INFO - Total chunks to process: 2
+2025-01-06 16:42:25,327 - INFO - Processing chunk 1/2
+2025-01-06 16:42:55,369 - INFO - Retrying request to /v1/messages in 0.393357 seconds
+2025-01-06 16:43:25,772 - INFO - Retrying request to /v1/messages in 0.871418 seconds
+2025-01-06 16:43:56,710 - ERROR - Error processing chunk with Claude: Connection error.
+2025-01-06 16:43:56,715 - ERROR - Error processing assessment ../data/uploads/d13dc9c2-4c26-48d8-9c13-677356709fc0.pdf: Connection error.
+2025-01-06 18:03:04,017 - INFO - Starting assessment processing for: db47ac22-ea8e-42b7-897e-19136d76ee3d
+2025-01-06 18:03:04,028 - INFO - Processing PDF with 33 pages
+2025-01-06 18:03:04,089 - INFO - Processed 10 of 33 pages
+2025-01-06 18:03:04,193 - INFO - Processed 20 of 33 pages
+2025-01-06 18:03:04,255 - INFO - Processed 30 of 33 pages
+2025-01-06 18:03:04,263 - INFO - Total chunks to process: 4
+2025-01-06 18:03:04,263 - INFO - Processing chunk 1/4
+2025-01-06 18:04:33,563 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:04:40,293 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:04:40,300 - INFO - Processing chunk 2/4
+2025-01-06 18:05:02,369 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:05:25,440 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:05:25,448 - INFO - Processing chunk 3/4
+2025-01-06 18:06:28,554 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:01,745 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:01,756 - INFO - Processing chunk 4/4
+2025-01-06 18:07:10,488 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:13,136 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:13,147 - INFO - Executive interview saved to: ../data/processed_assessments/executive_db47ac22-ea8e-42b7-897e-19136d76ee3d.txt
+2025-01-06 18:07:13,147 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_db47ac22-ea8e-42b7-897e-19136d76ee3d.txt
+2025-01-06 18:07:21,163 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:27,478 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:42,772 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:07:54,895 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:02,973 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:10,958 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:16,475 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:30,110 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:43,305 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:08:56,441 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:08,245 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:17,682 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:24,286 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:31,162 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:39,731 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:47,979 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 18:09:57,322 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:16:30,458 - INFO - Starting assessment processing for: 622b7bf0-7ae7-4296-a3f4-7a430761b0bc
+2025-01-06 19:16:30,463 - INFO - Processing PDF with 33 pages
+2025-01-06 19:16:30,538 - INFO - Processed 10 of 33 pages
+2025-01-06 19:16:30,587 - INFO - Processed 20 of 33 pages
+2025-01-06 19:16:30,636 - INFO - Processed 30 of 33 pages
+2025-01-06 19:16:30,642 - INFO - Total chunks to process: 4
+2025-01-06 19:16:30,642 - INFO - Processing chunk 1/4
+2025-01-06 19:18:03,566 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:18:11,501 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:18:11,505 - INFO - Processing chunk 2/4
+2025-01-06 19:19:06,081 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:19:25,946 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:19:25,954 - INFO - Processing chunk 3/4
+2025-01-06 19:21:08,968 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:21:21,838 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:21:21,842 - INFO - Processing chunk 4/4
+2025-01-06 19:21:28,028 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:21:30,763 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:21:30,772 - INFO - Executive interview saved to: ../data/processed_assessments/executive_622b7bf0-7ae7-4296-a3f4-7a430761b0bc.txt
+2025-01-06 19:21:30,772 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_622b7bf0-7ae7-4296-a3f4-7a430761b0bc.txt
+2025-01-06 19:23:38,226 - INFO - Retrying request to /v1/messages in 0.453630 seconds
+2025-01-06 19:23:46,394 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:23:56,578 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:24:12,591 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:24:40,540 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:24:48,541 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:24:57,643 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:25:06,458 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:25:20,317 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:25:38,073 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:25:53,629 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:08,853 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:20,931 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:29,479 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:39,395 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:49,159 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:56,990 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 19:26:59,992 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:02:35,764 - INFO - Starting assessment processing for: 3ce5432c-f47b-4387-83bc-92bf6028e507
+2025-01-06 20:02:35,770 - INFO - Processing PDF with 33 pages
+2025-01-06 20:02:35,840 - INFO - Processed 10 of 33 pages
+2025-01-06 20:02:35,890 - INFO - Processed 20 of 33 pages
+2025-01-06 20:02:35,939 - INFO - Processed 30 of 33 pages
+2025-01-06 20:02:35,945 - INFO - Total chunks to process: 4
+2025-01-06 20:02:35,945 - INFO - Processing chunk 1/4
+2025-01-06 20:04:08,718 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:04:15,140 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:04:15,145 - INFO - Processing chunk 2/4
+2025-01-06 20:05:18,660 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:05:30,539 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:05:30,552 - INFO - Processing chunk 3/4
+2025-01-06 20:06:26,819 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:06:46,307 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:06:46,311 - INFO - Processing chunk 4/4
+2025-01-06 20:06:51,836 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:06:53,989 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:06:53,999 - INFO - Executive interview saved to: ../data/processed_assessments/executive_3ce5432c-f47b-4387-83bc-92bf6028e507.txt
+2025-01-06 20:06:53,999 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_3ce5432c-f47b-4387-83bc-92bf6028e507.txt
+2025-01-06 20:07:01,668 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:07:09,965 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:07:24,803 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:07:36,621 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:07:44,984 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:07:55,122 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:08:05,085 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:08:18,778 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:08:36,991 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:08:49,344 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:01,480 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:17,456 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:28,513 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:35,173 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:44,460 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:51,565 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-06 20:09:56,074 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
