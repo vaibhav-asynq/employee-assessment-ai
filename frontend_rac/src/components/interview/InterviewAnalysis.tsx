@@ -1,4 +1,3 @@
-// src/components/interview/InterviewAnalysis.tsx
 'use client'
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,12 +9,21 @@ import { uploadFile, generateReport, generateWordDocument } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
 
+const emptyAnalysis: InterviewAnalysisType = {
+  name: '',
+  date: new Date().toISOString().split('T')[0],
+  strengths: {},
+  areas_to_target: {},
+  next_steps: []
+};
+
 export function InterviewAnalysis() {
   const [activeStep, setActiveStep] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [analysisData, setAnalysisData] = useState<InterviewAnalysisType | null>(null);
+  const [aiAnalysisData, setAIAnalysisData] = useState<InterviewAnalysisType | null>(null);
+  const [humanAnalysisData, setHumanAnalysisData] = useState<InterviewAnalysisType>(emptyAnalysis);
   const [uploadProgress, setUploadProgress] = useState<'uploading' | 'processing' | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +50,24 @@ export function InterviewAnalysis() {
       // Then, generate the report using the file ID
       const data = await generateReport(fileId);
       
-      setAnalysisData(data);
+      // Set the AI-generated data
+      setAIAnalysisData(data);
+      
+      // Create empty human sections matching AI sections
+      const humanData = {
+        ...emptyAnalysis,
+        strengths: Object.fromEntries(
+          Object.keys(data.strengths).map(key => [key, ''])
+        ),
+        areas_to_target: Object.fromEntries(
+          Object.keys(data.areas_to_target).map(key => [key, ''])
+        ),
+        next_steps: data.next_steps.map(step => 
+          typeof step === 'string' ? '' : { main: '', sub_points: new Array(step.sub_points.length).fill('') }
+        )
+      };
+      setHumanAnalysisData(humanData);
+      
       setActiveStep(2);
       setUploadProgress(null);
     } catch (err) {
@@ -53,10 +78,10 @@ export function InterviewAnalysis() {
   };
 
   const handleDownloadWord = async () => {
-    if (!analysisData) return;
+    if (!humanAnalysisData) return;
 
     try {
-      const blob = await generateWordDocument(analysisData);
+      const blob = await generateWordDocument(humanAnalysisData);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -85,7 +110,7 @@ export function InterviewAnalysis() {
           </Button>
           <Button 
             onClick={() => setActiveStep(Math.min(3, activeStep + 1))}
-            disabled={activeStep === 3 || !analysisData}
+            disabled={activeStep === 3 || !aiAnalysisData}
           >
             Next
           </Button>
@@ -114,10 +139,12 @@ export function InterviewAnalysis() {
             />
           )}
 
-          {activeStep === 2 && analysisData && (
+          {activeStep === 2 && aiAnalysisData && (
             <EditSection 
-              data={analysisData}
-              onUpdate={setAnalysisData}
+              data={humanAnalysisData}
+              aiData={aiAnalysisData}
+              onUpdate={setHumanAnalysisData}
+              onAIUpdate={setAIAnalysisData}
             />
           )}
 
