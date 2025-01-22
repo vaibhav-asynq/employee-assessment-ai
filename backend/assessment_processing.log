@@ -521,3 +521,47 @@
 2025-01-16 09:46:30,156 - INFO - Processed 30 of 33 pages
 2025-01-16 09:46:30,162 - INFO - Total chunks to process: 4
 2025-01-16 09:46:30,162 - INFO - Processing chunk 1/4
+2025-01-22 20:55:26,221 - INFO - Starting assessment processing for: a3f6d50c-2650-474d-ad0c-b77bb5c910f3
+2025-01-22 20:55:26,227 - INFO - Processing PDF with 33 pages
+2025-01-22 20:55:26,291 - INFO - Processed 10 of 33 pages
+2025-01-22 20:55:26,340 - INFO - Processed 20 of 33 pages
+2025-01-22 20:55:26,388 - INFO - Processed 30 of 33 pages
+2025-01-22 20:55:26,394 - INFO - Total chunks to process: 4
+2025-01-22 20:55:26,394 - INFO - Processing chunk 1/4
+2025-01-22 20:57:01,545 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 20:57:04,859 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 20:57:04,862 - INFO - Processing chunk 2/4
+2025-01-22 20:58:31,601 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 20:58:34,178 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 20:58:34,180 - INFO - Processing chunk 3/4
+2025-01-22 20:59:39,292 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:00:15,698 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:00:15,704 - INFO - Processing chunk 4/4
+2025-01-22 21:00:22,552 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:00:24,519 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:00:24,528 - INFO - Executive interview saved to: ../data/processed_assessments/executive_a3f6d50c-2650-474d-ad0c-b77bb5c910f3.txt
+2025-01-22 21:00:24,528 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_a3f6d50c-2650-474d-ad0c-b77bb5c910f3.txt
+2025-01-22 21:00:34,462 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:00:45,404 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:00,030 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:13,169 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:24,637 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:35,049 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:42,730 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:01:57,092 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:02:17,405 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:02:34,513 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:02:50,658 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:03,423 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:13,970 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:24,825 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:35,027 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:44,074 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:03:47,145 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-01-22 21:17:20,527 - INFO - Starting assessment processing for: 7c16a1d1-2eb9-485f-be6e-d64a97638ccf
+2025-01-22 21:17:20,532 - INFO - Processing PDF with 33 pages
+2025-01-22 21:17:20,592 - INFO - Processed 10 of 33 pages
+2025-01-22 21:17:20,640 - INFO - Processed 20 of 33 pages
+2025-01-22 21:17:20,688 - INFO - Processed 30 of 33 pages
+2025-01-22 21:17:20,694 - INFO - Total chunks to process: 4
+2025-01-22 21:17:20,694 - INFO - Processing chunk 1/4

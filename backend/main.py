@@ -21,7 +21,7 @@ app = FastAPI()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,7 +62,7 @@ async def upload_file(file: UploadFile):
             content = await file.read()
             f.write(content)
         
-        # stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+        stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
         # Store file info
         files_store[file_id] = {
             "file_path": file_path,
@@ -82,20 +82,20 @@ async def generate_report(file_id: str):
         self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
         others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
 
-        # feedback_content = read_file_content(others_transcript)
-        # executive_interview = read_file_content(self_transcript)
+        feedback_content = read_file_content(others_transcript)
+        executive_interview = read_file_content(self_transcript)
 
-        # system_prompt = ""
+        system_prompt = ""
 
-        # results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
-        # name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
+        results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
+        name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
 
-        # employee_name = name_data.get('employee_name',"")
-        # report_date = name_data.get('report_date',"")
+        employee_name = name_data.get('employee_name',"")
+        report_date = name_data.get('report_date',"")
         
-        # formatted_data = transform_content_to_report_format(results, employee_name, report_date)
+        formatted_data = transform_content_to_report_format(results, employee_name, report_date)
 
-        # return formatted_data
+        return formatted_data
         # create_360_feedback_report(header_txt+".pdf", formatted_data, header_txt)
         # Here you would typically process the PDF and extract information
         # This is a mock response for demonstration

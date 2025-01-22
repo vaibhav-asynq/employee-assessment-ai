@@ -284,17 +284,18 @@ Do not include anything else in the answer other than these areas to target poin
     
     str_3_4 = """
     Review the four development area write-ups and refine them to ensure these points for each of the write ups:
-1. Keep the first part of the opening sentence exactly as written, only modifying text after any transition word (yet, but, although, while, etc.)
-2. Insert appropriate softeners ('sometimes,' 'tends to,' 'occasionally,' 'at times') ONLY where negative traits or actions are described
-3. Preserve all positive statements and achievements exactly as written
-4. Maintain the exact sentence structure and grammar of the original
-5. Only modify descriptions that:
+1. Keep the first part of the opening sentence exactly as written, only modifying text after any transition word (yet, but, although etc.)
+2. make sure you're using words like "though", "however", "but", or "yet" to signal the shift to a more negative statement in the middle of the sentence. Avoid using "while" in the middle.
+3. Insert appropriate softeners ('sometimes,' 'tends to,' 'occasionally,' 'at times') ONLY where negative traits or actions are described
+4. Preserve all positive statements and achievements exactly as written
+5. Maintain the exact sentence structure and grammar of the original
+6. Only modify descriptions that:
 - Present absolute/categorical behaviors
 - Imply persistent patterns
 - Could be perceived as direct criticism
-6. Make sure the impact is described in the last line and is only present in one line.
-7. Do not add any new words or phrases unless absolutely necessary for the above requirements
-8. Consistent length across each write up (125-150 words)
+7. Make sure the impact is described in the last line and is only present in one line.
+8. Do not add any new words or phrases unless absolutely necessary for the above requirements
+9. Consistent length across each write up (125-150 words)
 
 The goal is to maintain the original message while making only essential modifications to achieve a balanced, professional tone.
     
@@ -416,7 +417,7 @@ The goal is to maintain the original message while making only essential modific
    - Make accountability clear but non-confrontational
    - Suggest concrete actions
    - Maintain senior executive perspective
-   - Include 3-4 bullet points per paragraph
+   - Include 4 bullet points per paragraph
    - Each bullet pointshould be between 20-25 words
 
 4. Language Guidelines:
