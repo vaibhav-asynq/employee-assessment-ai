@@ -1,40 +1,86 @@
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { SectionHeading } from './shared/SectionHeading';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
-import { DraggableSection } from './shared/DraggableSection';
-import { InterviewAnalysis } from '@/lib/types';
+import { InterviewAnalysis, SubheadingSection, NextStep } from '@/lib/types';
 
-interface EditSectionProps {
+interface SplitScreenSectionProps {
   data: InterviewAnalysis;
-  aiData?: InterviewAnalysis;
   onUpdate: (newData: InterviewAnalysis) => void;
-  onAIUpdate: (newData: InterviewAnalysis) => void;
+  isAISuggestion?: boolean;
 }
 
-interface DragData {
-  type: string;
-  section: string;
-  index: number;
-  content: {
-    subheading?: string;
-    text: string;
-    subPoints?: string[];
+function AnalysisSection({ data, onUpdate, isAISuggestion = false }: SplitScreenSectionProps) {
+  // Basic info update
+  const updateBasicInfo = (field: 'name' | 'date', value: string) => {
+    const newData = { ...data };
+    newData[field] = value;
+    onUpdate(newData);
   };
-}
 
-export function EditSection({ data, aiData, onUpdate, onAIUpdate }: EditSectionProps) {
-  const CommonHeader = () => (
-    <div className="mb-8">
+  // Convert strengths object to array structure
+  const strengthsArray = Object.entries(data.strengths).map(([heading, content]) => ({
+    main: heading,
+    content: content
+  }));
+
+  // Convert areas to target object to array structure
+  const areasArray = Object.entries(data.areas_to_target).map(([heading, content]) => ({
+    main: heading,
+    content: content
+  }));
+
+  const updateStrengthSection = (index: number, field: 'main' | 'content', value: string) => {
+    const newStrengths = [...strengthsArray];
+    newStrengths[index][field] = value;
+    const newData = { ...data };
+    newData.strengths = Object.fromEntries(
+      newStrengths.map(item => [item.main, item.content])
+    );
+    onUpdate(newData);
+  };
+
+  const updateAreaSection = (index: number, field: 'main' | 'content', value: string) => {
+    const newAreas = [...areasArray];
+    newAreas[index][field] = value;
+    const newData = { ...data };
+    newData.areas_to_target = Object.fromEntries(
+      newAreas.map(item => [item.main, item.content])
+    );
+    onUpdate(newData);
+  };
+
+  const addSubPoint = (stepIndex: number) => {
+    const newData = { ...data };
+    const step = newData.next_steps[stepIndex] as { main: string; sub_points: string[] };
+    step.sub_points.push('');
+    onUpdate(newData);
+  };
+
+  const removeSubPoint = (stepIndex: number, subIndex: number) => {
+    const newData = { ...data };
+    const step = newData.next_steps[stepIndex] as { main: string; sub_points: string[] };
+    step.sub_points = step.sub_points.filter((_, i) => i !== subIndex);
+    onUpdate(newData);
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold tracking-tight">
+        {isAISuggestion ? 'AI Suggestions' : 'Final Report'}
+      </h2>
+      
+      {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Name</label>
           <Input
             value={data.name}
-            onChange={(e) => onUpdate({ ...data, name: e.target.value })}
+            onChange={(e) => updateBasicInfo('name', e.target.value)}
           />
         </div>
         <div>
@@ -42,393 +88,292 @@ export function EditSection({ data, aiData, onUpdate, onAIUpdate }: EditSectionP
           <Input
             type="date"
             value={data.date}
-            onChange={(e) => onUpdate({ ...data, date: e.target.value })}
+            onChange={(e) => updateBasicInfo('date', e.target.value)}
           />
         </div>
       </div>
-    </div>
-  );
 
-  const handleDragStart = (section: string, index: number, subheading?: string, text?: string, subPoints?: string[]) => (e: React.DragEvent) => {
-    const dragData: DragData = {
-      type: 'section-content',
-      section,
-      index,
-      content: {
-        subheading,
-        text: text || '',
-        subPoints
-      }
-    };
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-  };
-
-  const handleDrop = (targetSection: string, targetIndex: number, existingSubheading?: string) => (e: React.DragEvent) => {
-    e.preventDefault();
-    try {
-      const dragData: DragData = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (dragData.type !== 'section-content') return;
-
-      const newData = { ...data };
-
-      if (targetSection === 'strengths' || targetSection === 'areas_to_target') {
-        const orderedEntries = Object.entries(newData[targetSection]);
+      {/* Strengths Section */}
+      <div>
+        <SectionHeading title="Strengths" className="text-xl font-bold text-gray-900">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              const newStrengths = [...strengthsArray, { main: 'New Strength', content: '' }];
+              const newData = { ...data };
+              newData.strengths = Object.fromEntries(
+                newStrengths.map(item => [item.main, item.content])
+              );
+              onUpdate(newData);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Subheading
+          </Button>
+        </SectionHeading>
         
-        if (existingSubheading) {
-          // Replace content in existing box while maintaining position
-          const index = orderedEntries.findIndex(([key]) => key === existingSubheading);
-          if (index !== -1) {
-            orderedEntries[index] = [dragData.content.subheading || existingSubheading, dragData.content.text];
-          }
-        } else {
-          // Insert at specific index
-          orderedEntries.splice(targetIndex, 0, [
-            dragData.content.subheading || `Item ${orderedEntries.length + 1}`,
-            dragData.content.text
-          ]);
-        }
+        {strengthsArray.map((strength, index) => (
+          <div key={index} className="mb-4">
+            <EditableSubheading
+              value={strength.main}
+              onChange={(newValue) => updateStrengthSection(index, 'main', newValue)}
+              onDelete={() => {
+                const newStrengths = strengthsArray.filter((_, i) => i !== index);
+                const newData = { ...data };
+                newData.strengths = Object.fromEntries(
+                  newStrengths.map(item => [item.main, item.content])
+                );
+                onUpdate(newData);
+              }}
+            />
+            <EditableText
+              value={strength.content}
+              onChange={(newValue) => updateStrengthSection(index, 'content', newValue)}
+              minHeight="150px"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Areas to Target Section */}
+      <div>
+        <SectionHeading title="Areas to Target" className="text-xl font-bold text-gray-900">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              const newAreas = [...areasArray, { main: 'New Area', content: '' }];
+              const newData = { ...data };
+              newData.areas_to_target = Object.fromEntries(
+                newAreas.map(item => [item.main, item.content])
+              );
+              onUpdate(newData);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Subheading
+          </Button>
+        </SectionHeading>
         
-        newData[targetSection] = Object.fromEntries(orderedEntries);
-      } else if (targetSection === 'next_steps') {
-        const newSteps = [...newData.next_steps];
-        const newContent = dragData.content.subPoints 
-          ? {
-              main: dragData.content.text,
-              sub_points: [...dragData.content.subPoints]
-            }
-          : dragData.content.text;
-        
-        if (targetIndex < newSteps.length) {
-          newSteps[targetIndex] = newContent;
-        } else {
-          newSteps.splice(targetIndex, 0, newContent);
-        }
-        newData.next_steps = newSteps;
-      }
+        {areasArray.map((area, index) => (
+          <div key={index} className="mb-4">
+            <EditableSubheading
+              value={area.main}
+              onChange={(newValue) => updateAreaSection(index, 'main', newValue)}
+              onDelete={() => {
+                const newAreas = areasArray.filter((_, i) => i !== index);
+                const newData = { ...data };
+                newData.areas_to_target = Object.fromEntries(
+                  newAreas.map(item => [item.main, item.content])
+                );
+                onUpdate(newData);
+              }}
+            />
+            <EditableText
+              value={area.content}
+              onChange={(newValue) => updateAreaSection(index, 'content', newValue)}
+              minHeight="200px"
+            />
+          </div>
+        ))}
+      </div>
 
-      onUpdate(newData);
-    } catch (error) {
-      console.error('Error handling drop:', error);
-    }
-  };
+      {/* Next Steps Section */}
+      <div>
+        <SectionHeading title="Next Steps" className="text-xl font-bold text-gray-900">
+          <div className="space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                const newData = { ...data };
+                newData.next_steps = [...newData.next_steps, { main: 'New Step', sub_points: [''] }];
+                onUpdate(newData);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Step
+            </Button>
+          </div>
+        </SectionHeading>
 
-  // Calculate maximum entries for each section
-  const maxEntries = useMemo(() => {
-    const humanData = data;
-    const aiDataEntries = aiData || { strengths: {}, areas_to_target: {}, next_steps: [] };
-    
-    return {
-      strengths: Math.max(
-        Object.keys(humanData.strengths).length,
-        Object.keys(aiDataEntries.strengths).length
-      ),
-      areas_to_target: Math.max(
-        Object.keys(humanData.areas_to_target).length,
-        Object.keys(aiDataEntries.areas_to_target).length
-      ),
-      next_steps: Math.max(
-        humanData.next_steps.length,
-        aiDataEntries.next_steps.length
-      )
-    };
-  }, [data, aiData]);
-
-  const updateSectionHeading = (
-    section: 'strengths' | 'areas_to_target',
-    oldHeading: string,
-    newHeading: string,
-    currentData: InterviewAnalysis,
-    updateFn: (newData: InterviewAnalysis) => void
-  ) => {
-    const orderedEntries = Object.entries(currentData[section]);
-    const index = orderedEntries.findIndex(([key]) => key === oldHeading);
-    
-    if (index !== -1) {
-      // Replace the heading while maintaining position
-      orderedEntries[index] = [newHeading, orderedEntries[index][1]];
-      const newSection = Object.fromEntries(orderedEntries);
-      
-      updateFn({
-        ...currentData,
-        [section]: newSection
-      });
-    }
-  };
-
-  const renderSection = (side: 'human' | 'ai') => {
-    const currentData = side === 'human' ? data : (aiData || data);
-    const currentUpdate = side === 'human' ? onUpdate : onAIUpdate;
-    const isAISide = side === 'ai';
-
-    const createDropZone = (section: string, index: number) => {
-      if (isAISide) return null;
-      
-      return (
-        <div 
-          className="h-16 border-2 border-dashed border-gray-300 rounded-lg my-4 flex items-center justify-center text-gray-400 hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop(section, index)}
-        >
-          Drop here to add new item
-        </div>
-      );
-    };
-
-    const renderEmptyBoxes = (section: string, count: number) => {
-      if (isAISide) return null;
-      
-      return Array.from({ length: count }).map((_, index) => (
-        <div key={`empty-${section}-${index}`} className="h-16 my-4" />
-      ));
-    };
-
-    return (
-      <div id={`${side}-side`} className="w-full p-6 border rounded-lg space-y-8">
-        <h2 className="text-2xl font-bold mb-6">
-          {side === 'human' ? 'Final Report' : 'AI Suggestions'}
-        </h2>
-
-        <div id={`${side}-strengths-wrapper`} className="mb-8">
-          <SectionHeading title="Strengths" className="text-xl font-bold text-gray-900">
-            {!isAISide && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const newKey = `Subheading${Object.keys(data.strengths).length + 1}`;
-                  onUpdate({
-                    ...data,
-                    strengths: { ...data.strengths, [newKey]: '' }
-                  });
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Subheading
-              </Button>
-            )}
-          </SectionHeading>
-          
-          {Object.entries(currentData.strengths).map(([subheading, text], index) => (
-            <React.Fragment key={subheading}>
-              <DraggableSection
-                onDragStart={handleDragStart('strengths', index, subheading, text)}
-                onDrop={!isAISide ? handleDrop('strengths', index, subheading) : undefined}
-                className="mb-2"
-              >
-                <EditableSubheading
-                  value={subheading}
-                  onChange={(newValue) => {
-                    updateSectionHeading('strengths', subheading, newValue, currentData, currentUpdate);
-                  }}
-                  onDelete={!isAISide ? () => {
-                    const orderedEntries = Object.entries(currentData.strengths);
-                    const filteredEntries = orderedEntries.filter(([key]) => key !== subheading);
-                    currentUpdate({
-                      ...currentData,
-                      strengths: Object.fromEntries(filteredEntries)
-                    });
-                  } : undefined}
-                />
+        {data.next_steps.map((step, index) => (
+          <div key={index} className="mb-4 relative group">
+            {index === 1 ? (
+              // The reflection content box
+              <div className="flex gap-2">
                 <EditableText
-                  value={text}
+                  value={step as string}
                   onChange={(newValue) => {
-                    const orderedEntries = Object.entries(currentData.strengths);
-                    const index = orderedEntries.findIndex(([key]) => key === subheading);
-                    if (index !== -1) {
-                      orderedEntries[index] = [subheading, newValue];
-                      currentUpdate({
-                        ...currentData,
-                        strengths: Object.fromEntries(orderedEntries)
-                      });
-                    }
+                    const newSteps = [...data.next_steps];
+                    newSteps[index] = newValue;
+                    onUpdate({ ...data, next_steps: newSteps });
                   }}
-                  minHeight="200px"
+                  minHeight="120px"
                 />
-              </DraggableSection>
-              {!isAISide && createDropZone('strengths', index + 1)}
-            </React.Fragment>
-          ))}
-          {renderEmptyBoxes('strengths', maxEntries.strengths - Object.keys(currentData.strengths).length)}
-        </div>
-
-        <div id={`${side}-areas-wrapper`} className="mb-8">
-          <SectionHeading title="Areas to Target" className="text-xl font-bold text-gray-900">
-            {!isAISide && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const newKey = `Area${Object.keys(data.areas_to_target).length + 1}`;
-                  onUpdate({
-                    ...data,
-                    areas_to_target: { ...data.areas_to_target, [newKey]: '' }
-                  });
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Area
-              </Button>
-            )}
-          </SectionHeading>
-
-          {Object.entries(currentData.areas_to_target).map(([subheading, text], index) => (
-            <React.Fragment key={subheading}>
-              <DraggableSection
-                onDragStart={handleDragStart('areas_to_target', index, subheading, text)}
-                onDrop={!isAISide ? handleDrop('areas_to_target', index, subheading) : undefined}
-                className="mb-2"
-              >
-                <EditableSubheading
-                  value={subheading}
-                  onChange={(newValue) => {
-                    updateSectionHeading('areas_to_target', subheading, newValue, currentData, currentUpdate);
-                  }}
-                  onDelete={!isAISide ? () => {
-                    const orderedEntries = Object.entries(currentData.areas_to_target);
-                    const filteredEntries = orderedEntries.filter(([key]) => key !== subheading);
-                    currentUpdate({
-                      ...currentData,
-                      areas_to_target: Object.fromEntries(filteredEntries)
-                    });
-                  } : undefined}
-                />
-                <EditableText
-                  value={text}
-                  onChange={(newValue) => {
-                    const orderedEntries = Object.entries(currentData.areas_to_target);
-                    const index = orderedEntries.findIndex(([key]) => key === subheading);
-                    if (index !== -1) {
-                      orderedEntries[index] = [subheading, newValue];
-                      currentUpdate({
-                        ...currentData,
-                        areas_to_target: Object.fromEntries(orderedEntries)
-                      });
-                    }
-                  }}
-                  minHeight="220px"
-                />
-              </DraggableSection>
-              {!isAISide && createDropZone('areas_to_target', index + 1)}
-            </React.Fragment>
-          ))}
-          {renderEmptyBoxes('areas_to_target', maxEntries.areas_to_target - Object.keys(currentData.areas_to_target).length)}
-        </div>
-
-        <div id={`${side}-nextsteps-wrapper`}>
-          <SectionHeading title="Next Steps" className="text-xl font-bold text-gray-900">
-            {!isAISide && (
-              <div className="space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
-                    currentUpdate({
-                      ...currentData,
-                      next_steps: [...currentData.next_steps, '']
-                    });
+                    const newSteps = data.next_steps.filter((_, i) => i !== index);
+                    onUpdate({ ...data, next_steps: newSteps });
                   }}
                 >
-                  <Plus className="h-4 w-4 mr-1" /> Add Text
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    currentUpdate({
-                      ...currentData,
-                      next_steps: [...currentData.next_steps, { main: '', sub_points: [''] }]
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Points
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            )}
-          </SectionHeading>
-
-          {currentData.next_steps.map((step, index) => (
-            <React.Fragment key={index}>
-              <DraggableSection
-                onDragStart={handleDragStart(
-                  'next_steps',
-                  index,
-                  undefined,
-                  typeof step === 'string' ? step : step.main,
-                  typeof step === 'string' ? undefined : step.sub_points
-                )}
-                onDrop={!isAISide ? handleDrop('next_steps', index) : undefined}
-                className="mb-2"
-              >
-                {typeof step === 'string' ? (
-                  <EditableText
-                    value={step}
-                    onChange={(newValue) => {
-                      const newSteps = [...currentData.next_steps];
-                      newSteps[index] = newValue;
-                      currentUpdate({ ...currentData, next_steps: newSteps });
-                    }}
-                    minHeight="100px"
-                  />
-                ) : (
-                  <div className="grid grid-cols-1">
+            ) : typeof step === 'string' ? (
+              // Other text-only steps
+              <div className="flex gap-2">
+                <EditableText
+                  value={step}
+                  onChange={(newValue) => {
+                    const newSteps = [...data.next_steps];
+                    newSteps[index] = newValue;
+                    onUpdate({ ...data, next_steps: newSteps });
+                  }}
+                  minHeight="120px"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const newSteps = data.next_steps.filter((_, i) => i !== index);
+                    onUpdate({ ...data, next_steps: newSteps });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              // Step with main point and sub-points
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  {index === 0 ? (
                     <EditableText
                       value={step.main}
                       onChange={(newValue) => {
-                        const newSteps = [...currentData.next_steps];
+                        const newSteps = [...data.next_steps];
                         newSteps[index] = { ...step, main: newValue };
-                        currentUpdate({ ...currentData, next_steps: newSteps });
+                        onUpdate({ ...data, next_steps: newSteps });
                       }}
-                      minHeight="100px"
+                      minHeight="60px"
                     />
-                    <div className="ml-6 grid grid-cols-1 gap-4 pt-4">
-                      {step.sub_points.map((subPoint, subIndex) => (
-                        <EditableText
-                          key={subIndex}
-                          value={subPoint}
-                          onChange={(newValue) => {
-                            const newSteps = [...currentData.next_steps];
-                            const newStep = { ...step };
-                            newStep.sub_points[subIndex] = newValue;
-                            newSteps[index] = newStep;
-                            currentUpdate({ ...currentData, next_steps: newSteps });
-                          }}
-                          minHeight="120px"
-                        />
-                      ))}
-                      {!isAISide && (
-                        <div className="h-14">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newSteps = [...currentData.next_steps];
-                              const newStep = { ...step };
-                              newStep.sub_points.push('');
-                              newSteps[index] = newStep;
-                              currentUpdate({ ...currentData, next_steps: newSteps });
-                            }}
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Add Sub-point
-                          </Button>
-                        </div>
-                      )}
+                  ) : (
+                    <EditableSubheading
+                      value={step.main}
+                      onChange={(newValue) => {
+                        const newSteps = [...data.next_steps];
+                        newSteps[index] = { ...step, main: newValue };
+                        onUpdate({ ...data, next_steps: newSteps });
+                      }}
+                      onDelete={() => {
+                        const newSteps = data.next_steps.filter((_, i) => i !== index);
+                        onUpdate({ ...data, next_steps: newSteps });
+                      }}
+                    />
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newSteps = data.next_steps.filter((_, i) => i !== index);
+                      onUpdate({ ...data, next_steps: newSteps });
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="ml-6 space-y-2">
+                  {step.sub_points.map((subPoint, subIndex) => (
+                    <div key={subIndex} className="flex gap-2">
+                      <EditableText
+                        value={subPoint}
+                        onChange={(newValue) => {
+                          const newData = { ...data };
+                          const currentStep = newData.next_steps[index] as { main: string; sub_points: string[] };
+                          currentStep.sub_points[subIndex] = newValue;
+                          onUpdate(newData);
+                        }}
+                        minHeight="80px"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeSubPoint(index, subIndex)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
-                )}
-              </DraggableSection>
-              {!isAISide && createDropZone('next_steps', index + 1)}
-            </React.Fragment>
-          ))}
-          {renderEmptyBoxes('next_steps', maxEntries.next_steps - currentData.next_steps.length)}
-        </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addSubPoint(index)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add Sub-point
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-    );
+    </div>
+  );
+}
+
+export function SplitScreenAnalysis({ data, onUpdate }) {
+  // Initialize empty final report with same structure
+  const createEmptyReport = () => {
+    return {
+      name: '',
+      date: '',
+      strengths: Object.fromEntries(
+        Object.keys(data.strengths).map((_, i) => [`New Strength ${i + 1}`, ''])
+      ),
+      areas_to_target: Object.fromEntries(
+        Object.keys(data.areas_to_target).map((_, i) => [`New Area ${i + 1}`, ''])
+      ),
+      next_steps: [
+        { 
+          main: 'Prepare to have a discussion with Brian, Steve and Sandra after you have had time for reflection and they receive this report. Make sure you think through:', 
+          sub_points: [
+            'What did I hear from the feedback that was new or different than I expected?',
+            'What resonated most for me? How does it connect to what I heard from other historical feedback I\'ve received?',
+            'What am I focused on in the immediate short term and for the rest of 2024?',
+            'What kind of support do I need from Brian, Steve and Sandra, or others?'
+          ]
+        },
+        'Ian, after 3 years leading Carlyle\'s Aerospace, Defense & Government Services sector, you find yourself managing an 11-person team through significant transitions including RIFs, splitting time between DC/NYC offices, and no team offsite for the first time. While delivering strong performance (17% portfolio growth), you\'re focused on empowering your team and building the sector\'s external brand. This appeals to your need for developing others while maintaining work-life balance as a new empty nester. Keep those needs in mind as you think through these suggestions for development.',
+        { 
+          main: 'To Enhance Strategic Vision', 
+          sub_points: [
+            'Consider identifying 2-3 key industry forums annually where sector expertise would add meaningful value to broader industry discussions',
+            'Explore opportunities to showcase team achievements through structured internal presentations, focusing on strategic decision-making processes',
+            'Look into creating informal mentoring moments by sharing investment thesis development with junior team members during deal analysis'
+          ]
+        }
+      ]
+    };
   };
 
+  const [finalReport, setFinalReport] = useState(createEmptyReport());
+  const [aiSuggestions, setAiSuggestions] = useState(data);
+
   return (
-    <div className="space-y-6 w-full">
-      <CommonHeader />
-      <div className="grid grid-cols-2 gap-6">
-        {renderSection('human')}
-        {aiData && renderSection('ai')}
+    <div className="grid grid-cols-2 gap-6">
+      <div className="border-r pr-4">
+        <AnalysisSection 
+          data={finalReport}
+          onUpdate={setFinalReport}
+          isAISuggestion={false}
+        />
+      </div>
+      <div className="pl-4">
+        <AnalysisSection 
+          data={aiSuggestions}
+          onUpdate={setAiSuggestions}
+          isAISuggestion={true}
+        />
       </div>
     </div>
   );

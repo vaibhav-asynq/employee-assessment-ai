@@ -1,29 +1,20 @@
-'use client'
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UploadSection } from './UploadSection';
-import { EditSection } from './EditSection';
+import { RawInterviewData } from './RawInterviewData';
+import { SplitScreenAnalysis } from './SplitScreenAnalysis';
 import { uploadFile, generateReport, generateWordDocument } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
-
-const emptyAnalysis: InterviewAnalysisType = {
-  name: '',
-  date: new Date().toISOString().split('T')[0],
-  strengths: {},
-  areas_to_target: {},
-  next_steps: []
-};
 
 export function InterviewAnalysis() {
   const [activeStep, setActiveStep] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiAnalysisData, setAIAnalysisData] = useState<InterviewAnalysisType | null>(null);
-  const [humanAnalysisData, setHumanAnalysisData] = useState<InterviewAnalysisType>(emptyAnalysis);
+  const [analysisData, setAnalysisData] = useState<InterviewAnalysisType | null>(null);
   const [uploadProgress, setUploadProgress] = useState<'uploading' | 'processing' | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,40 +25,16 @@ export function InterviewAnalysis() {
       setError('Please upload a PDF file');
       return;
     }
-
     setFile(uploadedFile);
     setError('');
     setUploadProgress('uploading');
     
     try {
       setLoading(true);
-      
-      // First, upload the file
       const fileId = await uploadFile(uploadedFile);
-      
       setUploadProgress('processing');
-      
-      // Then, generate the report using the file ID
       const data = await generateReport(fileId);
-      
-      // Set the AI-generated data
-      setAIAnalysisData(data);
-      
-      // Create empty human sections matching AI sections
-      const humanData = {
-        ...emptyAnalysis,
-        strengths: Object.fromEntries(
-          Object.keys(data.strengths).map(key => [key, ''])
-        ),
-        areas_to_target: Object.fromEntries(
-          Object.keys(data.areas_to_target).map(key => [key, ''])
-        ),
-        next_steps: data.next_steps.map(step => 
-          typeof step === 'string' ? '' : { main: '', sub_points: new Array(step.sub_points.length).fill('') }
-        )
-      };
-      setHumanAnalysisData(humanData);
-      
+      setAnalysisData(data);
       setActiveStep(2);
       setUploadProgress(null);
     } catch (err) {
@@ -78,10 +45,9 @@ export function InterviewAnalysis() {
   };
 
   const handleDownloadWord = async () => {
-    if (!humanAnalysisData) return;
-
+    if (!analysisData) return;
     try {
-      const blob = await generateWordDocument(humanAnalysisData);
+      const blob = await generateWordDocument(analysisData);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -90,7 +56,6 @@ export function InterviewAnalysis() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      setActiveStep(3);
     } catch (err) {
       setError('Failed to generate document. Please try again.');
     }
@@ -109,16 +74,15 @@ export function InterviewAnalysis() {
             Previous
           </Button>
           <Button 
-            onClick={() => setActiveStep(Math.min(3, activeStep + 1))}
-            disabled={activeStep === 3 || !aiAnalysisData}
+            onClick={() => setActiveStep(Math.min(4, activeStep + 1))}
+            disabled={activeStep === 4 || !analysisData}
           >
             Next
           </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-8">
-        {[1, 2, 3].map((step) => (
+      <div className="grid grid-cols-4 gap-2 mb-8">
+        {[1, 2, 3, 4].map((step) => (
           <div
             key={step}
             className={`h-2 rounded ${
@@ -127,7 +91,6 @@ export function InterviewAnalysis() {
           />
         ))}
       </div>
-
       <Card>
         <CardContent className="p-6">
           {activeStep === 1 && (
@@ -138,17 +101,16 @@ export function InterviewAnalysis() {
               uploadProgress={uploadProgress}
             />
           )}
-
-          {activeStep === 2 && aiAnalysisData && (
-            <EditSection 
-              data={humanAnalysisData}
-              aiData={aiAnalysisData}
-              onUpdate={setHumanAnalysisData}
-              onAIUpdate={setAIAnalysisData}
+          {activeStep === 2 && analysisData && (
+            <RawInterviewData data={analysisData} />
+          )}
+          {activeStep === 3 && analysisData && (
+            <SplitScreenAnalysis 
+              data={analysisData}
+              onUpdate={setAnalysisData}
             />
           )}
-
-          {activeStep === 3 && (
+          {activeStep === 4 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Generate Report</h2>
               <Button
@@ -160,7 +122,6 @@ export function InterviewAnalysis() {
               </Button>
             </div>
           )}
-
           {error && (
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>{error}</AlertDescription>
