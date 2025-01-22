@@ -62,7 +62,8 @@ async def upload_file(file: UploadFile):
             content = await file.read()
             f.write(content)
         
-        stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+        # *****Uncomment below line******
+        # stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
         # Store file info
         files_store[file_id] = {
             "file_path": file_path,
@@ -82,54 +83,62 @@ async def generate_report(file_id: str):
         self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
         others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
 
-        feedback_content = read_file_content(others_transcript)
-        executive_interview = read_file_content(self_transcript)
 
-        system_prompt = ""
+        # *****Uncomment******
+        # feedback_content = read_file_content(others_transcript)
+        # executive_interview = read_file_content(self_transcript)
 
-        results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
-        name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
+        # system_prompt = ""
 
-        employee_name = name_data.get('employee_name',"")
-        report_date = name_data.get('report_date',"")
+        # results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
+        # name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
+
+        # employee_name = name_data.get('employee_name',"")
+        # report_date = name_data.get('report_date',"")
         
-        formatted_data = transform_content_to_report_format(results, employee_name, report_date)
+        # formatted_data = transform_content_to_report_format(results, employee_name, report_date)
 
-        return formatted_data
+        # return formatted_data
+        # *****Uncomment******
+
         # create_360_feedback_report(header_txt+".pdf", formatted_data, header_txt)
         # Here you would typically process the PDF and extract information
         # This is a mock response for demonstration
         return {'name': 'Ian Fujiyama',
  'date': 'June 2024',
- 'strengths': {'Strategic Leadership & Investment Excellence': "Ian is known as exceptionally astute, a brilliant strategic investor, and a decisive portfolio manager. He rapidly identifies critical investment factors, executes efficient decision-making on opportunities, and maintains disciplined portfolio oversight. He processes complex market dynamics swiftly, provides strategic guidance to portfolio companies, and drives value creation through targeted interventions. As a result, his portfolio consistently outperforms with 17% growth across companies while establishing his sector as Carlyle's premier vertical for investment excellence.",
-  'People Development & Emotional Intelligence': 'Ian is recognized as a masterful talent developer, emotionally intelligent leader, and strategic mentor. He creates deliberate growth opportunities, maintains composed oversight during complex situations, and builds trust through transparent communication. He empowers team autonomy while providing strategic guidance, develops next-generation leaders, and navigates challenging situations with diplomatic finesse. Consequently, he has built an exceptional team of highly capable leaders who demonstrate superior client focus, technical expertise, and independent decision-making capabilities.',
-  'Collaborative Leadership & Personal Growth': 'Ian is identified as a collaborative partner, continuous learner, and cross-functional leader. He actively engages in firm-wide initiatives, builds relationships across sectors, and consistently seeks opportunities for personal development. He implements feedback effectively, invests in skill enhancement, and promotes knowledge sharing across organizational boundaries. This creates a dual impact of strengthening both team performance and organizational effectiveness while establishing a culture of continuous improvement that extends beyond his immediate sphere of influence.'},
- 'areas_to_target': {'STRATEGIC INFLUENCE': 'Ian is highly regarded for his intellectual depth and investment judgment, yet sometimes minimizes his visible leadership presence in key forums. He tends to defer speaking opportunities, occasionally steps back from industry platforms, and often maintains a supporting role in situations where his expertise could drive significant value. He typically approaches leadership moments with careful restraint, generally enabling others to represent initiatives he has shaped. This pattern appears more pronounced in larger group settings and external venues. As a result, the organization sometimes misses opportunities to leverage his market credibility, sector expertise remains less visible than peers, and team members have fewer chances to observe his strategic approach in action.',
-  'DEVELOPMENTAL LEADERSHIP': 'Ian is skilled at identifying talent and creating empowering environments, though he tends to maintain a hands-off approach to development. He often structures autonomous learning experiences rather than engaging in direct coaching, particularly with developing talent. He typically maintains distance in day-to-day operations, allowing team members to navigate challenges independently without active guidance. The shift to hybrid work has reduced informal teaching moments. This leads to extended learning curves for junior staff, gaps in succession preparation, and increased pressure on team members to progress through self-directed experience.',
-  'DIRECTIVE COMMUNICATION': 'Ian is thoughtful and measured in his interactions, while he sometimes emphasizes subtlety over clarity. He tends to guide discussions through indirect steering rather than explicit direction, occasionally crafts brief messages that belie deep analysis, and often maintains diplomatic positioning when direct intervention could accelerate outcomes. He typically approaches challenging conversations with careful consideration rather than immediate directness. This results in extended decision timelines, unclear expectations among stakeholders, and missed opportunities for others to learn from his strategic reasoning process.',
-  'TEAM SUSTAINABILITY': "Ian is effective at driving high performance and results, although the current team structure shows signs of strain. He maintains exceptional output levels while managing through significant mid-level staffing gaps. He tends to continue previous workload expectations despite reduced team capacity and increased market pressures. The combination of high standards and resource constraints has sometimes created challenging patterns. This creates potential risks for retention, limits bandwidth for new opportunities, and may impact the team's ability to maintain their strong performance trajectory."},
- 'next_steps': [{'main': 'Prepare to have a discussion with Brian, Steve and Sandra after you have had time for reflection and they receive this report. Make sure you think through:',
+ 'strengths': {'Strategic Leadership & Investment Excellence': 'Ian is known as exceptionally astute, a brilliant strategic investor, and a decisive dealmaker. He processes complex investment opportunities with 90% decision accuracy, while efficiently directing resources toward high-potential ventures. He eliminates underperforming opportunities swiftly and maintains rigorous investment discipline across his portfolio. He anticipates market movements and positions investments for optimal returns, demonstrated through his consistent above-market performance. As a result, his portfolio achieved 17% growth last year while establishing new benchmarks for investment excellence across the firm.',
+  'People Development & Collaborative Leadership': 'Ian is recognized as an empowering mentor, cross-functional collaborator, and culture builder. He creates structured growth opportunities for team members while fostering autonomy and accountability. He builds bridges across sectors, promotes knowledge sharing, and develops next-generation leaders through hands-on guidance. He has successfully developed two vertical leaders who now independently drive significant business units. This leads to a high-performing, self-sufficient team culture that consistently delivers results while maintaining strong cross-organizational relationships.',
+  'Stakeholder Management & Industry Expertise': 'Ian is identified as a composed negotiator, industry authority, and relationship architect in the A&D sector. He navigates complex stakeholder dynamics with remarkable emotional intelligence and strategic insight. He leverages deep market knowledge to guide portfolio companies through critical decisions and maintains strong relationships across the industry ecosystem. He consistently demonstrates mastery in high-stakes negotiations while preserving long-term partnerships. Consequently, he has established himself and Carlyle as the premier advisors in aerospace, defense, and government services sectors.'},
+ 'areas_to_target': {'STRATEGIC INFLUENCE': "Ian is highly respected for his investment expertise and analytical depth, yet tends to minimize his leadership visibility in broader forums. He sometimes steps back from industry speaking engagements, occasionally declines participation in external panels, and often maintains a lower profile in public settings. He tends to opt for private, focused interactions over larger platform opportunities, particularly regarding industry conferences and public events. This results in missed opportunities to leverage his expertise for market positioning, reduced external awareness of Carlyle's capabilities, and fewer chances for team members to observe and learn from his strategic approach in public settings.",
+  'TALENT ACCELERATION': 'Ian is astute at identifying and evaluating talent, though his development approach sometimes remains selective rather than systematic. He tends to concentrate coaching efforts on senior direct reports while maintaining a more hands-off stance with junior team members during daily operations. He engages deeply in development conversations when specifically approached but occasionally hesitates to initiate teaching moments or provide unsolicited guidance. This leads to uneven skill development across the team, particularly at mid-levels, creating structural gaps in team capability and impacting succession readiness.',
+  'DIRECTIVE LEADERSHIP': 'Ian is thoughtful and measured in his decision-making approach, yet his subtle guidance style can sometimes create ambiguity. He tends to guide teams through indirect suggestions rather than explicit direction, often sending brief email responses that belie his deep consideration of issues. He generally maintains a pattern of empowering team members by avoiding direct intervention in their work processes. This results in team members occasionally experiencing uncertainty about expectations and timelines, leading to decreased efficiency when more explicit guidance would accelerate progress.',
+  'ORGANIZATIONAL PRESENCE': "Ian is skilled at building focused relationships and trust, yet his physical presence and informal engagement have sometimes become intermittent. He tends to divide his time between multiple office locations, which can limit spontaneous interactions and informal coaching opportunities. His split presence sometimes affects the frequency and consistency of team interactions across locations. This creates challenges for maintaining team cohesion, reduces opportunities for informal mentoring, and impacts the team's ability to maintain consistent communication patterns."},
+ 'next_steps': [{'main': 'Prepare to have a discussion with Brian, Steve, and Sandra after you have had time for reflection and they receive this report. Make sure you think through:',
    'sub_points': ['What did I hear from the feedback that was new or different than I expected?',
     "What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
     'What am I focused on in the immediate short term and for the rest of 2024?',
-    'What kind of support do I need from Brian, Steve and Sandra, or others?']},
-  "Ian, after 3 years leading Carlyle's Aerospace, Defense & Government Services sector, you find yourself managing an 11-person team through significant transitions including RIFs, splitting time between DC/NYC offices, and no team offsite for the first time. While delivering strong performance (17% portfolio growth), you're focused on empowering your team and building the sector's external brand. This appeals to your need for developing others while maintaining work-life balance as a new empty nester. Keep those needs in mind as you think through these suggestions for development.",
-  {'main': 'To Enhance Strategic Visibility',
-   'sub_points': ['Consider identifying 2-3 key industry forums annually where sector expertise would add meaningful value to broader industry discussions',
-    'Explore opportunities to showcase team achievements through structured internal presentations, focusing on strategic decision-making processes',
-    'Look into creating informal mentoring moments by sharing investment thesis development with junior team members during deal analysis']},
+    'What kind of support do I need from Brian, Steve, and Sandra, or others?']},
+  "Ian, after 3 years leading the Aerospace, Defense & Government Services sector at Carlyle, you find yourself managing a leaner 11-person team while splitting time between DC and NYC offices. Your sector delivered strong performance (17% growth) despite organizational changes and RIFs. You're focused on empowering your team, building the Carlyle brand in DC, and driving cross-sector collaboration, while wrestling with maintaining team cohesion and preventing burnout. This appeals to your need for building institutional credibility while developing others and making the organization better. Keep those needs in mind as you think through these suggestions for development.",
+  {'main': 'To Increase Strategic Visibility',
+   'sub_points': ["Consider accepting 2-3 targeted speaking engagements per quarter, focusing on areas where your investment expertise would most benefit Carlyle's market position.",
+    "Explore opportunities to showcase team members alongside you at industry events, creating developmental moments while expanding Carlyle's presence.",
+    "Look into establishing a regular cadence of thought leadership contributions through industry publications or Carlyle's platforms.",
+    'Try scheduling structured time for external relationship building, particularly in areas aligned with current investment priorities.']},
   {'main': 'To Strengthen Team Development',
-   'sub_points': ['Consider establishing regular strategy sessions where team members can directly observe and learn from your decision-making approach',
-    'Explore implementing structured check-ins with developing talent, focusing on specific growth areas and career progression',
-    'Look into creating more deliberate teaching moments during deal reviews, highlighting key considerations and strategic thinking']},
-  {'main': 'To Increase Communication Impact',
-   'sub_points': ['Consider adopting a more structured approach to feedback sessions, incorporating specific examples and clear direction',
-    'Explore opportunities to share strategic insights more explicitly during team meetings, particularly around complex decision points',
-    'Look into developing a more direct communication style for time-sensitive situations while maintaining diplomatic approach where appropriate']},
-  {'main': 'To Build Sustainable Team Structure',
-   'sub_points': ['Consider reviewing current workload distribution patterns to identify opportunities for more balanced resource allocation',
-    'Explore implementing regular pulse checks with team members to better understand capacity constraints and development needs',
-    'Look into creating structured development paths that allow for workload scaling while maintaining high performance standards']}]}
+   'sub_points': ['Consider implementing regular strategy sessions where junior team members can observe and learn from your decision-making process.',
+    'Explore creating informal mentoring moments during deal reviews by sharing specific insights about your analytical approach.',
+    'Look into establishing weekly office hours or drop-in times when team members can seek guidance more readily.',
+    'Try incorporating teaching moments into regular team meetings by sharing specific examples from past experiences.']},
+  {'main': 'To Enhance Direct Communication',
+   'sub_points': ['Consider prefacing indirect guidance with explicit statements of expectations or timelines to ensure clarity of direction.',
+    'Explore expanding brief email responses with additional context when addressing complex or strategic matters.',
+    'Look into establishing regular check-in points during projects where direct feedback and guidance can be provided.',
+    'Try incorporating more specific deadlines and success metrics when delegating responsibilities to team members.']},
+  {'main': 'To Increase Organizational Connection',
+   'sub_points': ["Consider scheduling regular in-person team days when you're in each office location, focusing on relationship-building activities.",
+    'Explore using video conferences for informal team connections beyond scheduled meetings when working remotely.',
+    'Look into creating structured touchpoints with different team levels during your office visits.',
+    'Try establishing consistent communication patterns that work across locations and time zones.']}]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
