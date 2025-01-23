@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UploadSection } from './UploadSection';
 import { RawInterviewData } from './RawInterviewData';
 import { SplitScreenAnalysis } from './SplitScreenAnalysis';
-import { uploadFile, generateReport, generateWordDocument } from '@/lib/api';
+import { uploadFile, generateReport, generateWordDocument, getRawData } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
 
@@ -15,7 +15,33 @@ export function InterviewAnalysis() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [analysisData, setAnalysisData] = useState<InterviewAnalysisType | null>(null);
+  const [rawData, setRawData] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState<'uploading' | 'processing' | null>(null);
+  const [fileId, setFileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    console.log('Active Step:', activeStep);
+    console.log('File ID:', fileId);
+    if (activeStep === 2 && fileId) {
+      fetchRawData();
+    }
+  }, [activeStep, fileId]);
+
+  const fetchRawData = async () => {
+    if (!fileId) return;
+    setLoading(true);
+    try {
+      console.log('Fetching raw data for fileId:', fileId);
+      const data = await getRawData(fileId);
+      console.log('Raw data received:', data);
+      setRawData(data);
+    } catch (err) {
+      console.error('Error fetching raw data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch raw interview data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
@@ -31,13 +57,17 @@ export function InterviewAnalysis() {
     
     try {
       setLoading(true);
-      const fileId = await uploadFile(uploadedFile);
+      const id = await uploadFile(uploadedFile);
+      console.log('File uploaded, ID:', id);
+      setFileId(id);
       setUploadProgress('processing');
-      const data = await generateReport(fileId);
+      const data = await generateReport(id);
+      console.log('Report generated:', data);
       setAnalysisData(data);
       setActiveStep(2);
       setUploadProgress(null);
     } catch (err) {
+      console.error('Error during file upload or report generation:', err);
       setError(err instanceof Error ? err.message : 'Failed to process the interview. Please try again.');
     } finally {
       setLoading(false);
@@ -101,8 +131,12 @@ export function InterviewAnalysis() {
               uploadProgress={uploadProgress}
             />
           )}
-          {activeStep === 2 && analysisData && (
-            <RawInterviewData data={analysisData} />
+          {activeStep === 2 && (
+            <RawInterviewData 
+              data={rawData} 
+              loading={loading} 
+              error={error}
+            />
           )}
           {activeStep === 3 && analysisData && (
             <SplitScreenAnalysis 

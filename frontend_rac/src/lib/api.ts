@@ -47,3 +47,17 @@ export async function generateWordDocument(data: InterviewAnalysis): Promise<Blo
 
   return response.blob();
 }
+
+// In your api.ts file
+
+export async function getRawData(fileId: string): Promise<any> {
+  console.log('Making API call to get raw data for fileId:', fileId);
+  const response = await fetch(`${API_BASE_URL}/api/get_raw_data/${fileId}`);
+  if (!response.ok) {
+    console.error('API call failed:', response.status, response.statusText);
+    throw new Error('Failed to fetch raw interview data');
+  }
+  const data = await response.json();
+  console.log('Raw data received:', data);
+  return data;
+}
