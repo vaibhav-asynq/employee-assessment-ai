@@ -1,6 +1,7 @@
 import anthropic
 import json
 import os
+from generate_report_llm import parse_gpt_response, process_json
 
 def get_raw_data(transcript, strengths, areas_to_target, api_key):
     client = anthropic.Anthropic(api_key=api_key)
@@ -62,20 +63,18 @@ Please analyze this transcript and provide the evidence in the specified JSON fo
         json_str = raw_data  # Fallback to using raw_data as is
 
     try:
-        # Find the start of the JSON object
-        json_start = json_str.find('{')
-        if json_start != -1:
-            json_str = json_str[json_start:]
-            parsed_data = json.loads(json_str)
+        parsed_data = parse_gpt_response(json_str)
+        if parsed_data:
             return parsed_data
         else:
             print("\nNo valid JSON structure found in the response.")
             return {"error": "No valid JSON structure found", "raw_response": json_str}
-    except json.JSONDecodeError as e:
-        print(f"\nError processing response: {e}")
+    except Exception as e:
+        print(f"\nError processing response: {str(e)}")
         print("Raw response content:")
         print(json_str)
         return {"error": str(e), "raw_response": json_str}
+
 
 # The rest of your code remains the same
 
