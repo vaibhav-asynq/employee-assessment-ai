@@ -20,12 +20,10 @@ export function InterviewAnalysis() {
   const [fileId, setFileId] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('Active Step:', activeStep);
-    console.log('File ID:', fileId);
-    if (activeStep === 2 && fileId) {
+    if (activeStep === 2 && fileId && !rawData) {
       fetchRawData();
     }
-  }, [activeStep, fileId]);
+  }, [activeStep, fileId, rawData]);
 
   const fetchRawData = async () => {
     if (!fileId) return;
@@ -66,6 +64,8 @@ export function InterviewAnalysis() {
       setAnalysisData(data);
       setActiveStep(2);
       setUploadProgress(null);
+      // Reset rawData when a new file is uploaded
+      setRawData(null);
     } catch (err) {
       console.error('Error during file upload or report generation:', err);
       setError(err instanceof Error ? err.message : 'Failed to process the interview. Please try again.');
