@@ -3,6 +3,145 @@ import json
 import os
 from generate_report_llm import parse_gpt_response, process_json
 
+
+
+def get_strengths_data(transcript, strengths, api_key):
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    json_format = """
+    {
+        "strengths": {
+            "[strength_category]": [
+                {
+                    "name": "",        // Full name of the person quoted
+                    "role": "",        // Role/position of the person
+                    "quotes": []       // Array of exact quotes from the transcript
+                }
+            ]
+        }
+    }
+    """
+    
+    prompt = f"""Analyze this interview transcript and extract all relevant quotes that provide evidence for the following strengths.
+Strengths to analyze:
+{strengths}
+
+Format the output as a JSON object following this structure:
+{json_format}
+
+Rules:
+- Only include direct quotes from stakeholders
+- Maintain exact wording from the transcript
+- Include full name and role when available
+- Group quotes by the same person under one entry
+- Ensure quotes clearly support the specific strength
+- Do not include interpretive comments or summaries
+
+Please analyze this transcript and provide the evidence in the specified JSON format:
+{transcript}
+"""
+
+    response = client.messages.create(
+        model="claude-3-sonnet-20240229",
+        max_tokens=4000,
+        temperature=0,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    
+    raw_data = response.content
+    if isinstance(raw_data, list) and len(raw_data) > 0 and hasattr(raw_data[0], 'text'):
+        json_str = raw_data[0].text
+    else:
+        json_str = raw_data
+        
+    try:
+        parsed_data = parse_gpt_response(json_str.replace("\n",""))
+        if parsed_data:
+            return parsed_data
+        else:
+            print("\nNo valid JSON structure found in the response.")
+            return {"error": "No valid JSON structure found", "raw_response": json_str}
+    except Exception as e:
+        print(f"\nError processing response: {str(e)}")
+        print("Raw response content:")
+        print(json_str)
+        return {"error": str(e), "raw_response": json_str}
+
+def get_areas_to_target_data(transcript, areas_to_target, api_key):
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    json_format = """
+    {
+        "areas_to_target": {
+            "[area_category]": [
+                {
+                    "name": "",        // Full name of the person quoted
+                    "role": "",        // Role/position of the person
+                    "quotes": []       // Array of exact quotes from the transcript
+                }
+            ]
+        }
+    }
+    """
+    
+    prompt = f"""Analyze this interview transcript and extract all relevant quotes that provide evidence for the following areas that need improvement.
+Areas to target to analyze:
+{areas_to_target}
+
+Format the output as a JSON object following this structure:
+{json_format}
+
+Rules:
+- Only include direct quotes from stakeholders
+- Maintain exact wording from the transcript
+- Include full name and role when available
+- Group quotes by the same person under one entry
+- Ensure quotes clearly support the specific area to target
+- Do not include interpretive comments or summaries
+
+Please analyze this transcript and provide the evidence in the specified JSON format:
+{transcript}
+"""
+
+    response = client.messages.create(
+        model="claude-3-sonnet-20240229",
+        max_tokens=4000,
+        temperature=0,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    
+    raw_data = response.content
+    if isinstance(raw_data, list) and len(raw_data) > 0 and hasattr(raw_data[0], 'text'):
+        json_str = raw_data[0].text
+    else:
+        json_str = raw_data
+        
+    try:
+        parsed_data = parse_gpt_response(json_str.replace("\n",""))
+        if parsed_data:
+            return parsed_data
+        else:
+            print("\nNo valid JSON structure found in the response.")
+            return {"error": "No valid JSON structure found", "raw_response": json_str}
+    except Exception as e:
+        print(f"\nError processing response: {str(e)}")
+        print("Raw response content:")
+        print(json_str)
+        return {"error": str(e), "raw_response": json_str}
+
+
+
+
+
+
+
+
 def get_raw_data(transcript, strengths, areas_to_target, api_key):
     client = anthropic.Anthropic(api_key=api_key)
     

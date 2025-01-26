@@ -13,7 +13,8 @@ import json
 from process_pdf import AssessmentProcessor
 from generate_report_llm import read_file_content, transform_content_to_report_format, process_prompts, extract_employee_info
 from report_generation import create_360_feedback_report
-from generate_raw_data import get_raw_data
+from generate_raw_data import get_raw_data,get_strengths_data,get_areas_to_target_data
+
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 assessment_processor = AssessmentProcessor(api_key)
@@ -177,8 +178,14 @@ async def get_raw_data_endpoint(file_id: str):
         areas_to_target = report_data.get('areas_to_target', {})
         
         # Get raw data
-        raw_data = get_raw_data(transcript, strengths, areas_to_target, api_key)
-        
+        # For strengths analysis
+        strengths_data = get_strengths_data(transcript, strengths, api_key)
+
+        # For areas to target analysis
+        areas_data = get_areas_to_target_data(transcript, areas_to_target, api_key)
+        raw_data = {}
+        raw_data.update(strengths_data)
+        raw_data.update(areas_data)
         return raw_data
         
     except Exception as e:
