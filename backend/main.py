@@ -183,9 +183,12 @@ async def get_raw_data_endpoint(file_id: str):
 
         # For areas to target analysis
         areas_data = get_areas_to_target_data(transcript, areas_to_target, api_key)
+        # strengths_data= ""
+        # areas_data = "" 
         raw_data = {}
         raw_data.update(strengths_data)
         raw_data.update(areas_data)
+        # print(raw_data)
         return raw_data
         
     except Exception as e:

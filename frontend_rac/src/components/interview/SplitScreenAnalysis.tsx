@@ -6,12 +6,12 @@ import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { SectionHeading } from './shared/SectionHeading';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
-import { InterviewAnalysis, SubheadingSection, NextStep } from '@/lib/types';
+import { InterviewAnalysis } from '@/lib/types';
 
-interface SplitScreenSectionProps {
+interface SplitScreenAnalysisProps {
   data: InterviewAnalysis;
-  onUpdate: (newData: InterviewAnalysis) => void;
-  isAISuggestion?: boolean;
+  aiSuggestions: InterviewAnalysis;
+  onUpdate: (data: InterviewAnalysis) => void;
 }
 
 interface DragItem {
@@ -48,19 +48,7 @@ const DraggableSection: React.FC<{
   );
 };
 
-const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, isAISuggestion = false }) => {
-  // Convert strengths object to array structure
-  const strengthsArray = Object.entries(data.strengths).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
-
-  // Convert areas to target object to array structure
-  const areasArray = Object.entries(data.areas_to_target).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
-
+export function SplitScreenAnalysis({ data, aiSuggestions, onUpdate }: SplitScreenAnalysisProps) {
   const handleDragStart = (
     section: 'strengths' | 'areas_to_target' | 'next_steps',
     index: number,
@@ -82,7 +70,6 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
     index: number
   ) => (e: React.DragEvent) => {
     e.preventDefault();
-    if (isAISuggestion) return;
 
     try {
       const dragData: DragItem = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -115,168 +102,235 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
     }
   };
 
-  const updateStrengthSection = (index: number, field: 'main' | 'content', value: string) => {
-    const newStrengths = [...strengthsArray];
-    newStrengths[index][field] = value;
-    const newData = { ...data };
-    newData.strengths = Object.fromEntries(
-      newStrengths.map(item => [item.main, item.content])
-    );
-    onUpdate(newData);
-  };
+  return (
+    <div className="grid grid-cols-2 gap-6">
+      {/* Left Panel - Human Report */}
+      <div className="left-panel border-r pr-4">
+        <AnalysisSection 
+          data={data}
+          onUpdate={onUpdate}
+          handleDragStart={handleDragStart}
+          handleDrop={handleDrop}
+          title="Human Report"
+        />
+      </div>
 
-  const updateAreaSection = (index: number, field: 'main' | 'content', value: string) => {
-    const newAreas = [...areasArray];
-    newAreas[index][field] = value;
-    const newData = { ...data };
-    newData.areas_to_target = Object.fromEntries(
-      newAreas.map(item => [item.main, item.content])
-    );
-    onUpdate(newData);
-  };
+      {/* Right Panel - AI Suggestions */}
+      <div className="right-panel pl-4">
+        <AnalysisSection 
+          data={aiSuggestions}
+          onUpdate={(updatedData) => {
+            onUpdate({
+              ...data,
+              ...updatedData
+            });
+          }}
+          handleDragStart={handleDragStart}
+          handleDrop={handleDrop}
+          title="AI Suggestions"
+        />
+      </div>
+    </div>
+  );
+}
 
-  const addNextStep = (type: 'text' | 'points') => {
-    const newData = { ...data };
-    if (type === 'text') {
-      newData.next_steps = [...newData.next_steps, ''];
-    } else {
-      newData.next_steps = [...newData.next_steps, { main: 'New Step', sub_points: [''] }];
-    }
-    onUpdate(newData);
-  };
+interface AnalysisSectionProps {
+  data: InterviewAnalysis;
+  onUpdate: (data: InterviewAnalysis) => void;
+  handleDragStart: (
+    section: 'strengths' | 'areas_to_target' | 'next_steps',
+    index: number,
+    data: any,
+    isSubPoint?: boolean
+  ) => (e: React.DragEvent) => void;
+  handleDrop: (
+    section: 'strengths' | 'areas_to_target' | 'next_steps',
+    index: number
+  ) => (e: React.DragEvent) => void;
+  title: string;
+}
+
+function AnalysisSection({ data, onUpdate, handleDragStart, handleDrop, title }: AnalysisSectionProps) {
+  // Convert strengths object to array structure
+  const strengthsArray = Object.entries(data.strengths).map(([heading, content]) => ({
+    main: heading,
+    content: content
+  }));
+
+  // Convert areas to target object to array structure
+  const areasArray = Object.entries(data.areas_to_target).map(([heading, content]) => ({
+    main: heading,
+    content: content
+  }));
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">
-        {isAISuggestion ? 'AI Suggestions' : 'Final Report'}
-      </h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold tracking-tight mb-8">{title}</h2>
 
       {/* Strengths Section */}
-      <section className="transition-all duration-200 ease-in-out">
-        <div>
-          <SectionHeading title="Strengths" className="text-xl font-bold text-gray-900">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                const newStrengths = [...strengthsArray, { main: 'New Strength', content: '' }];
-                const newData = { ...data };
-                newData.strengths = Object.fromEntries(
-                  newStrengths.map(item => [item.main, item.content])
-                );
-                onUpdate(newData);
+      <section className="mb-8">
+        <SectionHeading title="STRENGTHS" className="text-xl font-semibold text-gray-900">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              const newStrengths = { ...data.strengths };
+              const newKey = `New Strength ${Object.keys(newStrengths).length + 1}`;
+              newStrengths[newKey] = '';
+              onUpdate({
+                ...data,
+                strengths: newStrengths
+              });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Subheading
+          </Button>
+        </SectionHeading>
+        
+        {strengthsArray.map((strength, index) => (
+          <DraggableSection
+            key={index}
+            onDragStart={handleDragStart('strengths', index, strength)}
+            onDrop={handleDrop('strengths', index)}
+            className="mb-8"
+          >
+            <EditableSubheading
+              value={strength.main}
+              onChange={(newValue) => {
+                const newStrengths = { ...data.strengths };
+                delete newStrengths[strength.main];
+                newStrengths[newValue] = strength.content;
+                onUpdate({
+                  ...data,
+                  strengths: newStrengths
+                });
               }}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Subheading
-            </Button>
-          </SectionHeading>
-          
-          {strengthsArray.map((strength, index) => (
-            <DraggableSection
-              key={index}
-              onDragStart={handleDragStart('strengths', index, strength)}
-              onDrop={!isAISuggestion ? handleDrop('strengths', index) : undefined}
-              className="mb-4"
-            >
-              <EditableSubheading
-                value={strength.main}
-                onChange={(newValue) => updateStrengthSection(index, 'main', newValue)}
-                onDelete={() => {
-                  const newStrengths = strengthsArray.filter((_, i) => i !== index);
-                  const newData = { ...data };
-                  newData.strengths = Object.fromEntries(
-                    newStrengths.map(item => [item.main, item.content])
-                  );
-                  onUpdate(newData);
-                }}
-              />
-              <EditableText
-                value={strength.content}
-                onChange={(newValue) => updateStrengthSection(index, 'content', newValue)}
-                minHeight="180px"
-              />
-            </DraggableSection>
-          ))}
-        </div>
+              onDelete={() => {
+                const newStrengths = { ...data.strengths };
+                delete newStrengths[strength.main];
+                onUpdate({
+                  ...data,
+                  strengths: newStrengths
+                });
+              }}
+            />
+            <EditableText
+              value={strength.content}
+              onChange={(newValue) => {
+                const newStrengths = { ...data.strengths };
+                newStrengths[strength.main] = newValue;
+                onUpdate({
+                  ...data,
+                  strengths: newStrengths
+                });
+              }}
+              minHeight="180px"
+            />
+          </DraggableSection>
+        ))}
       </section>
 
       {/* Areas to Target Section */}
-      <section className="transition-all duration-200 ease-in-out">
-        <div>
-          <SectionHeading title="Areas to Target" className="text-xl font-bold text-gray-900">
+      <section className="mb-8">
+        <SectionHeading title="AREAS TO TARGET" className="text-xl font-semibold text-gray-900">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              const newAreas = { ...data.areas_to_target };
+              const newKey = `New Area ${Object.keys(newAreas).length + 1}`;
+              newAreas[newKey] = '';
+              onUpdate({
+                ...data,
+                areas_to_target: newAreas
+              });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Subheading
+          </Button>
+        </SectionHeading>
+        
+        {areasArray.map((area, index) => (
+          <DraggableSection
+            key={index}
+            onDragStart={handleDragStart('areas_to_target', index, area)}
+            onDrop={handleDrop('areas_to_target', index)}
+            className="mb-8"
+          >
+            <EditableSubheading
+              value={area.main}
+              onChange={(newValue) => {
+                const newAreas = { ...data.areas_to_target };
+                delete newAreas[area.main];
+                newAreas[newValue] = area.content;
+                onUpdate({
+                  ...data,
+                  areas_to_target: newAreas
+                });
+              }}
+              onDelete={() => {
+                const newAreas = { ...data.areas_to_target };
+                delete newAreas[area.main];
+                onUpdate({
+                  ...data,
+                  areas_to_target: newAreas
+                });
+              }}
+            />
+            <EditableText
+              value={area.content}
+              onChange={(newValue) => {
+                const newAreas = { ...data.areas_to_target };
+                newAreas[area.main] = newValue;
+                onUpdate({
+                  ...data,
+                  areas_to_target: newAreas
+                });
+              }}
+              minHeight="180px"
+            />
+          </DraggableSection>
+        ))}
+      </section>
+
+      {/* Next Steps Section */}
+      <section className="mb-8">
+        <SectionHeading title="NEXT STEPS" className="text-xl font-semibold text-gray-900">
+          <div className="flex gap-2">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => {
-                const newAreas = [...areasArray, { main: 'New Area', content: '' }];
-                const newData = { ...data };
-                newData.areas_to_target = Object.fromEntries(
-                  newAreas.map(item => [item.main, item.content])
-                );
-                onUpdate(newData);
+                onUpdate({
+                  ...data,
+                  next_steps: [...data.next_steps, '']
+                });
               }}
             >
-              <Plus className="h-4 w-4 mr-1" /> Add Subheading
+              <Plus className="h-4 w-4 mr-1" /> Add Text
             </Button>
-          </SectionHeading>
-          
-          {areasArray.map((area, index) => (
-            <DraggableSection
-              key={index}
-              onDragStart={handleDragStart('areas_to_target', index, area)}
-              onDrop={!isAISuggestion ? handleDrop('areas_to_target', index) : undefined}
-              className="mb-4"
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                onUpdate({
+                  ...data,
+                  next_steps: [...data.next_steps, { main: '', sub_points: [''] }]
+                });
+              }}
             >
-              <EditableSubheading
-                value={area.main}
-                onChange={(newValue) => updateAreaSection(index, 'main', newValue)}
-                onDelete={() => {
-                  const newAreas = areasArray.filter((_, i) => i !== index);
-                  const newData = { ...data };
-                  newData.areas_to_target = Object.fromEntries(
-                    newAreas.map(item => [item.main, item.content])
-                  );
-                  onUpdate(newData);
-                }}
-              />
-              <EditableText
-                value={area.content}
-                onChange={(newValue) => updateAreaSection(index, 'content', newValue)}
-                minHeight="220px"
-              />
-            </DraggableSection>
-          ))}
-        </div>
-      </section>
-
-      {/* Next Steps Section */}
-      <section className="transition-all duration-200 ease-in-out">
-        <div>
-          <SectionHeading title="Next Steps" className="text-xl font-bold text-gray-900">
-            <div className="space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => addNextStep('text')}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Text
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => addNextStep('points')}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Points
-              </Button>
-            </div>
-          </SectionHeading>
-
+              <Plus className="h-4 w-4 mr-1" /> Add Points
+            </Button>
+          </div>
+        </SectionHeading>
+        
+        <div className="space-y-4">
           {data.next_steps.map((step, index) => (
             <DraggableSection
               key={index}
               onDragStart={handleDragStart('next_steps', index, step)}
-              onDrop={!isAISuggestion ? handleDrop('next_steps', index) : undefined}
-              className="mb-4"
+              onDrop={handleDrop('next_steps', index)}
+              className="space-y-2"
             >
               {typeof step === 'string' ? (
                 <div className="flex gap-2">
@@ -285,17 +339,22 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
                     onChange={(newValue) => {
                       const newSteps = [...data.next_steps];
                       newSteps[index] = newValue;
-                      onUpdate({ ...data, next_steps: newSteps });
+                      onUpdate({
+                        ...data,
+                        next_steps: newSteps
+                      });
                     }}
-                    className="flex-1"
-                    minHeight="180px"
+                    minHeight="100px"
                   />
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => {
                       const newSteps = data.next_steps.filter((_, i) => i !== index);
-                      onUpdate({ ...data, next_steps: newSteps });
+                      onUpdate({
+                        ...data,
+                        next_steps: newSteps
+                      });
                     }}
                     className="text-gray-500 hover:text-red-600"
                   >
@@ -304,69 +363,78 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex flex-col w-full">
-                    {index === 0 ? (
-                      <div className="w-full">
-                        <EditableText
-                          value={step.main}
-                          onChange={(newValue) => {
-                            const newSteps = [...data.next_steps];
-                            newSteps[index] = { ...step, main: newValue };
-                            onUpdate({ ...data, next_steps: newSteps });
-                          }}
-                          className="w-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full">
-                        <EditableSubheading
-                          value={step.main}
-                          onChange={(newValue) => {
-                            const newSteps = [...data.next_steps];
-                            newSteps[index] = { ...step, main: newValue };
-                            onUpdate({ ...data, next_steps: newSteps });
-                          }}
-                          onDelete={() => {
-                            const newSteps = data.next_steps.filter((_, i) => i !== index);
-                            onUpdate({ ...data, next_steps: newSteps });
-                          }}
-                          style={{ width: '100%', minWidth: '500px' }}
-                        />
-                      </div>
-                    )}
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      className="flex-1 p-2 border rounded text-lg font-semibold min-w-[500px]"
+                      value={step.main}
+                      onChange={(e) => {
+                        const newSteps = [...data.next_steps];
+                        newSteps[index] = {
+                          ...step,
+                          main: e.target.value
+                        };
+                        onUpdate({
+                          ...data,
+                          next_steps: newSteps
+                        });
+                      }}
+                      placeholder="Enter heading..."
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newSteps = data.next_steps.filter((_, i) => i !== index);
+                        onUpdate({
+                          ...data,
+                          next_steps: newSteps
+                        });
+                      }}
+                      className="text-gray-500 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                   <div className="ml-6 space-y-2">
-                    {step.sub_points.map((subPoint, subIndex) => (
+                    {step.sub_points.map((point, pointIndex) => (
                       <DraggableSection
-                        key={subIndex}
-                        onDragStart={handleDragStart('next_steps', subIndex, subPoint, true)}
-                        onDrop={!isAISuggestion ? handleDrop('next_steps', subIndex) : undefined}
+                        key={pointIndex}
+                        onDragStart={handleDragStart('next_steps', pointIndex, point, true)}
+                        onDrop={handleDrop('next_steps', pointIndex)}
                         className="flex gap-2"
                       >
                         <EditableText
-                          value={subPoint}
+                          value={point}
                           onChange={(newValue) => {
                             const newSteps = [...data.next_steps];
                             const newStep = { ...step };
                             newStep.sub_points = [...step.sub_points];
-                            newStep.sub_points[subIndex] = newValue;
+                            newStep.sub_points[pointIndex] = newValue;
                             newSteps[index] = newStep;
-                            onUpdate({ ...data, next_steps: newSteps });
+                            onUpdate({
+                              ...data,
+                              next_steps: newSteps
+                            });
                           }}
-                          className="flex-1 min-h-[60px]"
+                          minHeight="60px"
                         />
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="icon"
                           onClick={() => {
                             const newSteps = [...data.next_steps];
                             const newStep = { ...step };
-                            newStep.sub_points = step.sub_points.filter((_, i) => i !== subIndex);
+                            newStep.sub_points = step.sub_points.filter((_, i) => i !== pointIndex);
                             newSteps[index] = newStep;
-                            onUpdate({ ...data, next_steps: newSteps });
+                            onUpdate({
+                              ...data,
+                              next_steps: newSteps
+                            });
                           }}
+                          className="text-gray-500 hover:text-red-600"
                         >
-                            <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </DraggableSection>
                     ))}
@@ -378,7 +446,10 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
                         const newStep = { ...step };
                         newStep.sub_points = [...step.sub_points, ''];
                         newSteps[index] = newStep;
-                        onUpdate({ ...data, next_steps: newSteps });
+                        onUpdate({
+                          ...data,
+                          next_steps: newSteps
+                        });
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" /> Add Sub-point
@@ -390,128 +461,6 @@ const AnalysisSection: React.FC<SplitScreenSectionProps> = ({ data, onUpdate, is
           ))}
         </div>
       </section>
-    </div>
-  );
-};
-
-export function SplitScreenAnalysis({ data, onUpdate }) {
-  const createEmptyReport = () => {
-    return {
-      name: data.name || '',
-      date: data.date || '',
-      strengths: Object.fromEntries(
-        Object.keys(data.strengths).map((_, i) => [`New Strength ${i + 1}`, ''])
-      ),
-      areas_to_target: Object.fromEntries(
-        Object.keys(data.areas_to_target).map((_, i) => [`New Area ${i + 1}`, ''])
-      ),
-      next_steps: data.next_steps.map(step => 
-        typeof step === 'string' ? '' : { main: 'New Step', sub_points: Array(step.sub_points.length).fill('') }
-      )
-    };
-  };
-
-  const [finalReport, setFinalReport] = useState(createEmptyReport());
-  const [aiSuggestions, setAiSuggestions] = useState(data);
-
-  const updateCommonFields = (field: 'name' | 'date', value: string) => {
-    const newFinalReport = { ...finalReport, [field]: value };
-    const newAiSuggestions = { ...aiSuggestions, [field]: value };
-    setFinalReport(newFinalReport);
-    setAiSuggestions(newAiSuggestions);
-    onUpdate(newAiSuggestions);
-  };
-
-  useEffect(() => {
-    const syncHeights = () => {
-      requestAnimationFrame(() => {
-        const sectionTypes = ['strengths', 'areas', 'next-steps'];
-        sectionTypes.forEach((type, index) => {
-          const leftSection = document.querySelector(`.left-panel section:nth-of-type(${index + 1})`);
-          const rightSection = document.querySelector(`.right-panel section:nth-of-type(${index + 1})`);
-          
-          if (leftSection && rightSection) {
-            // Reset heights first
-            leftSection.style.minHeight = 'auto';
-            rightSection.style.minHeight = 'auto';
-            
-            // Get the actual content height
-            const leftHeight = leftSection.getBoundingClientRect().height;
-            const rightHeight = rightSection.getBoundingClientRect().height;
-            
-            // Only set a minimum height if either side has content
-            if (leftHeight > 0 || rightHeight > 0) {
-              const maxHeight = Math.max(leftHeight, rightHeight);
-              leftSection.style.minHeight = `${maxHeight}px`;
-              rightSection.style.minHeight = `${maxHeight}px`;
-            }
-          }
-        });
-      });
-    };
-
-    // Set up resize observer with debounce
-    let resizeTimeout;
-    const debouncedSync = () => {
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-      resizeTimeout = setTimeout(syncHeights, 100);
-    };
-
-    const resizeObserver = new ResizeObserver(debouncedSync);
-    const sections = document.querySelectorAll('.left-panel section, .right-panel section');
-    sections.forEach(section => resizeObserver.observe(section));
-
-    // Initial sync
-    syncHeights();
-
-    return () => {
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-      resizeObserver.disconnect();
-    };
-  }, [finalReport, aiSuggestions]);
-
-  return (
-    <div className="space-y-6">
-      {/* Common Name and Date Fields */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <Input
-            value={aiSuggestions.name}
-            onChange={(e) => updateCommonFields('name', e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <Input
-            type="date"
-            value={aiSuggestions.date}
-            onChange={(e) => updateCommonFields('date', e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Split Screen Content */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="left-panel border-r pr-4">
-          <AnalysisSection 
-            data={finalReport}
-            onUpdate={setFinalReport}
-            isAISuggestion={false}
-          />
-        </div>
-        <div className="right-panel pl-4">
-          <AnalysisSection 
-            data={aiSuggestions}
-            onUpdate={setAiSuggestions}
-            isAISuggestion={true}
-          />
-        </div>
-      </div>
     </div>
   );
 }
