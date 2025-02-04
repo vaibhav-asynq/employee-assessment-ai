@@ -29,7 +29,26 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "Content-Type"],
 )
+
+# Add middleware to handle CORS preflight requests
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+# Add middleware to handle iframe requests
+@app.middleware("http")
+async def add_iframe_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path == "/api/excel":
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 # Create uploads directory if it doesn't exist
 UPLOAD_DIR = "../data/uploads"
@@ -57,24 +76,37 @@ class InterviewAnalysis(BaseModel):
 # Store uploaded files and their analysis
 files_store = {}
 
-@app.get("/api/csv/{file_type}")
-async def get_csv_data(file_type: str):
-    file_mapping = {
-        "suggestions": "Suggestions -Table 1.csv",
-        "derailers": "Derailers-Table 1.csv",
-        "key_themes": "KEY THEMES-Table 1.csv"
+from fastapi.responses import Response
+
+@app.options("/api/excel")
+async def excel_options():
+    headers = {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+    }
+    return Response(content="", headers=headers)
+
+@app.get("/api/excel")
+async def get_excel_file():
+    file_path = "../Developmental Suggestions & Resources.xlsx"
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Excel file not found")
+    
+    with open(file_path, "rb") as f:
+        content = f.read()
+    
+    headers = {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": "attachment; filename=Developmental Suggestions & Resources.xlsx",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
     }
     
-    if file_type not in file_mapping:
-        raise HTTPException(status_code=400, detail="Invalid file type")
-        
-    file_path = os.path.join(CSV_DIR, file_mapping[file_type])
-    
-    try:
-        data = parse_csv(file_path)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return Response(content=content, headers=headers)
 
 @app.post("/api/upload_file")
 async def upload_file(file: UploadFile):

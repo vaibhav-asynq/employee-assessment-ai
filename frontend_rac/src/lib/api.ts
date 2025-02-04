@@ -67,3 +67,17 @@ export async function getCSVData(fileType: 'suggestions' | 'derailers' | 'key_th
   }
   return response.json();
 }
+
+export async function getExcelFile(): Promise<ArrayBuffer> {
+  const response = await fetch(`${API_BASE_URL}/api/excel`, {
+    credentials: 'include',
+    mode: 'cors',
+    headers: {
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch Excel file');
+  }
+  return response.arrayBuffer();
+}
