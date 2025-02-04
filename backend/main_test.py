@@ -14,6 +14,7 @@ from process_pdf import AssessmentProcessor
 from generate_report_llm import read_file_content, transform_content_to_report_format, process_prompts, extract_employee_info
 from report_generation import create_360_feedback_report
 from generate_raw_data import get_raw_data,get_strengths_data,get_areas_to_target_data
+from csv_parser import parse_csv
 
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -35,6 +36,7 @@ UPLOAD_DIR = "../data/uploads"
 SAVE_DIR = "../data/processed_assessments"
 OUTPUT_DIR = "../data/output"
 REPORT_DIR = "../data/generated_reports"
+CSV_DIR = "../Data Inputs/Developmental Suggestions & Resources"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -54,6 +56,25 @@ class InterviewAnalysis(BaseModel):
 
 # Store uploaded files and their analysis
 files_store = {}
+
+@app.get("/api/csv/{file_type}")
+async def get_csv_data(file_type: str):
+    file_mapping = {
+        "suggestions": "Suggestions -Table 1.csv",
+        "derailers": "Derailers-Table 1.csv",
+        "key_themes": "KEY THEMES-Table 1.csv"
+    }
+    
+    if file_type not in file_mapping:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+        
+    file_path = os.path.join(CSV_DIR, file_mapping[file_type])
+    
+    try:
+        data = parse_csv(file_path)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload_file")
 async def upload_file(file: UploadFile):
@@ -157,37 +178,6 @@ async def generate_report(file_id: str):
 @app.get("/api/get_raw_data/{file_id}")
 async def get_raw_data_endpoint(file_id: str):
     try:
-        # Load the generated report
-        # report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
-        # if not os.path.exists(report_file_path):
-        #     raise HTTPException(status_code=404, detail="Report not found. Please generate the report first.")
-        
-        # with open(report_file_path, 'r') as f:
-        #     report_data = json.load(f)
-        
-        # # Get the transcript
-        # transcript_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-        # if not os.path.exists(transcript_path):
-        #     raise HTTPException(status_code=404, detail="Transcript not found.")
-        
-        # with open(transcript_path, 'r') as f:
-        #     transcript = f.read()
-        
-        # # Extract strengths and areas_to_target from the report data
-        # strengths = report_data.get('strengths', {})
-        # areas_to_target = report_data.get('areas_to_target', {})
-        
-        # # Get raw data
-        # # For strengths analysis
-        # strengths_data = get_strengths_data(transcript, strengths, api_key)
-
-        # # For areas to target analysis
-        # areas_data = get_areas_to_target_data(transcript, areas_to_target, api_key)
-        # # strengths_data= ""
-        # # areas_data = "" 
-        # # raw_data = {}
-        # raw_data.update(strengths_data)
-        # raw_data.update(areas_data)
         raw_data = {'strengths': {'Strategic Leadership & Investment Excellence': [{'name': 'Dayne Baird', 'role': 'Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report)', 'quotes': ['The smartest person I know, really quickly gets things and processes information', '90% accurate, makes the right call', 'Solid at exiting, no conflicts there']}, {'name': 'Joe Logue', 'role': 'CEO Two Six Technologies', 'quotes': ['Brilliant', 'Knows the market exceptionally well, impressive how he understands it']}, {'name': 'Will Langenstein', 'role': 'Principal focused on U.S. Buyout & Growth (direct report)', 'quotes': ["Investing acumen: an incredible investor and a brilliant mind, what's a good deal and we should be investing in", 'Strategy and tactics on a deal, sees forest in spite of trees', 'Excellent negotiator']}], 'People Development & Collaborative Leadership': [{'name': 'Doug Brandely', 'role': 'MD for ADG (direct report)', 'quotes': ['Gives them space to develop, lets us have the stage', 'Good at spotting and evaluating talent']}, {'name': 'Anna Mire', 'role': 'VP (direct report)', 'quotes': ['Developing people, really works though the programs I needed to improve something I wanted to work on', 'Tone setter, keeping the group cohesive and united']}, {'name': 'Will Langenstein', 'role': 'Principal focused on U.S. Buyout & Growth (direct report)', 'quotes': ['Super thoughtful and strong as a leader in giving room to run, concerted effort to let others elevate themselves', 'Empowers and elevates them', 'He has a ton of experience and is excellent at spotting and growing talent', 'Good at coaching others']}], 'Stakeholder Management & Industry Expertise': [{'name': 'Martin Sumner', 'role': 'Sector Head Industrials (peer)', 'quotes': ['Developing deep relationships with people and management', 'He focuses heavily on negotiations and the 10 ways he can get screwed, very much a chess player and thinks through the landscape; shrewd negotiator']}, {'name': 'Joe Logue', 'role': 'CEO Two Six Technologies', 'quotes': ['Spends a lot of time building relationships', 'Really understands the market']}, {'name': 'Will Langenstein', 'role': 'Principal focused on U.S. Buyout & Growth (direct report)', 'quotes': ['Incredible on deal negotiations, one of his specialties is reading the room and figuring out how to approach things, understanding and predict responses']}]}, 'areas_to_target': {'STRATEGIC INFLUENCE': [{'name': 'Mark Marengo', 'role': 'JP Morgan, MD co-head of North America Diversified Industries Securities', 'quotes': ['Take advantage of the capacity he has freed up by building a talented team', "He can take on even more, broader opportunities at Carlyle (which he's doing)"]}, {'name': 'Martin Sumner', 'role': 'Sector Head Industrials (peer)', 'quotes': ["More confidence in communication (he's clear but shies away a bit from the spotlight and that takes away from his content)", 'Not the rah rah public figure']}, {'name': 'Joe Logue', 'role': 'CEO Two Six Technologies', 'quotes': ['He can push his brand more on the inside, politics not the results win the day', 'He seems to want to be asked to do instead of positioning himself to do it']}, {'name': 'Dayne Baird', 'role': 'Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report)', 'quotes': ["Needs to get out there more and represent Carlyle, he just doesn't do it but need more external leadership", 'We need to do some brand building in aerospace, for example']}], 'TALENT ACCELERATION': [{'name': 'Doug Brandely', 'role': 'MD for ADG (direct report)', 'quotes': ['Less direct coaching and teaching, could be more involved and engaged in active coaching during the day to day work, teaching others how he thinks (especially more junior people)', 'Good at spotting and evaluating talent']}, {'name': 'Dayne Baird', 'role': 'Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report)', 'quotes': ['Not sure he is mentoring anymore but he has the skill', 'One of my peers needs mentorship, new in defense vertical lead role', "We have a glaring hole in our team at the mid-level, due to departures (voluntary and involuntary) and we're all feeling it"]}, {'name': 'Wil Langenstein', 'role': 'Principal focused on U.S. Buyout & Growth (direct report)', 'quotes': ["He could facilitate and be more involved with others' development because he has a lot of resources, like an incredible network that can help us in our own careers", 'He has a ton of experience and is excellent at spotting and growing talent']}], 'DIRECTIVE LEADERSHIP': [{'name': 'Matt Savino', 'role': 'MD Head of U.S. Capital Markets (upward peer/partner)', 'quotes': ['Being more direct more frequently, not so polished and savvy all the time']}, {'name': 'Joe Logue', 'role': 'CEO Two Six Technologies', 'quotes': ['More proactive, always see him thinking and analyzing, gently guides those around him to the right answer, could save time with a more direct style']}, {'name': 'Wil Langenstein', 'role': 'Principal focused on U.S. Buyout & Growth (direct report)', 'quotes': ['Email communication: can look apathetic because he will send a quick, brief response even though he has read through and looked at things deeply (can send that message)', 'Communication in general around direction, deadlines and expectations (because he tries not to be overly involved)']}], 'ORGANIZATIONAL PRESENCE': [{'name': 'Anna Mire', 'role': 'VP (direct report)', 'quotes': ['People are in the office less nowadays, so I bump into him less (but I appreciate the flexibility), make himself more available when he is in the office']}, {'name': 'Dayne Baird', 'role': 'Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report)', 'quotes': ["Recently an empty nester, but he needs to be deliberate about being present (more Zoom when he's in NY)"]}]}}
         
         return raw_data
@@ -198,66 +188,9 @@ async def get_raw_data_endpoint(file_id: str):
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# @app.post("/api/dump_word")
-# async def generate_word_document(analysis: InterviewAnalysis):
-#     try:
-#         # Create a new Word document
-#         doc = Document()
-        
-#         # Add title
-#         doc.add_heading('Interview Analysis Report', 0)
-        
-#         # Add basic info
-#         doc.add_heading('Basic Information', level=1)
-#         doc.add_paragraph(f'Name: {analysis.name}')
-#         doc.add_paragraph(f'Date: {analysis.date}')
-        
-#         # Add strengths
-#         doc.add_heading('Strengths', level=1)
-#         for title, content in analysis.strengths.items():
-#             doc.add_heading(title, level=2)
-#             doc.add_paragraph(content)
-        
-#         # Add areas to target
-#         doc.add_heading('Areas to Target', level=1)
-#         for title, content in analysis.areas_to_target.items():
-#             doc.add_heading(title, level=2)
-#             doc.add_paragraph(content)
-        
-#         # Add next steps
-#         doc.add_heading('Next Steps', level=1)
-#         for step in analysis.next_steps:
-#             if isinstance(step, str):
-#                 doc.add_paragraph(step, style='List Bullet')
-#             else:
-#                 doc.add_paragraph(step.main)
-#                 for sub_point in step.sub_points:
-#                     p = doc.add_paragraph(style='List Bullet 2')
-#                     p.add_run(sub_point)
-        
-#         # Save the document
-#         output_path = os.path.join(UPLOAD_DIR, "interview_analysis.docx")
-#         doc.save(output_path)
-        
-#         # Return the document as a response
-#         return FileResponse(
-#             output_path,
-#             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-#             filename="interview_analysis.docx"
-#         )
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/api/dump_word")
 async def generate_pdf_docuement(analysis: InterviewAnalysis):
     output_path = OUTPUT_DIR+"/temp.pdf" 
-    # header_txt = analysis + ' - Qualitative 360 Feedback June 2024'
-    # print(analysis)
-    # print(analysis.name)
-    # print(analysis.date)
-    \
     header_txt = analysis.name + ' - Qualitative 360 Feedback'
     create_360_feedback_report(output_path, analysis, header_txt)
     return FileResponse(
@@ -265,7 +198,6 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
             media_type="application/pdf",
             filename="interview_analysis.pdf"
         )
-    
 
 # Optional: Cleanup endpoint
 @app.delete("/api/cleanup/{file_id}")

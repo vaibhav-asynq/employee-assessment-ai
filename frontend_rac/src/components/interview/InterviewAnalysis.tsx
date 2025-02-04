@@ -8,6 +8,7 @@ import { SplitScreenAnalysis } from './SplitScreenAnalysis';
 import { uploadFile, generateReport, generateWordDocument, getRawData } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
+import { DevelopmentalResources } from './DevelopmentalResources';
 
 interface ExtendedInterviewAnalysis extends InterviewAnalysisType {
   humanReport?: InterviewAnalysisType;
@@ -245,13 +246,20 @@ export function InterviewAnalysis() {
             />
           )}
           {activeStep === 2 && (
-            <RawDataSplitScreen
-              rawData={rawData}
-              loading={loading}
-              error={error}
-              editableContent={editableContent}
-              setEditableContent={setEditableContent}
-            />
+            <div className="flex flex-col">
+              <div className="mb-8">
+                <RawDataSplitScreen
+                  rawData={rawData}
+                  loading={loading}
+                  error={error}
+                  editableContent={editableContent}
+                  setEditableContent={setEditableContent}
+                />
+              </div>
+              <div className="border-t pt-4">
+                <DevelopmentalResources />
+              </div>
+            </div>
           )}
           {activeStep === 3 && analysisData?.humanReport && analysisData?.aiSuggestions && (
             <SplitScreenAnalysis 

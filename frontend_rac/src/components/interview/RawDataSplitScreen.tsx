@@ -43,9 +43,9 @@ export function RawDataSplitScreen({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 min-h-0">
+    <div className="grid grid-cols-2 gap-6">
       {/* Left Panel - Raw Data */}
-      <div className="left-panel border-r pr-4 flex-1 overflow-auto">
+      <div className="left-panel border-r pr-4 flex-1">
         <RawInterviewData 
           data={rawData} 
           loading={loading} 
@@ -54,7 +54,7 @@ export function RawDataSplitScreen({
       </div>
       
       {/* Right Panel - Editable Text Boxes */}
-      <div className="right-panel pl-4 flex-1 overflow-auto">
+      <div className="right-panel pl-4 flex-1">
         <div className="p-6">
           <h2 className="text-2xl font-bold tracking-tight mb-8">Human Report</h2>
           
