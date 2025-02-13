@@ -288,9 +288,11 @@ export function InterviewAnalysis() {
         return 5;
       case 2:
       case 3:
-      case 4:
         // Other paths: Upload -> Feedback -> Path Selection -> Split Screen
         return 4;
+      case 4:
+        // Path 4: Upload -> Feedback -> Path Selection -> Split Screen -> Download
+        return 5;
       default:
         return 3;
     }
@@ -396,7 +398,7 @@ export function InterviewAnalysis() {
               </div>
             </div>
           )}
-          {activeStep === 5 && selectedPath === 1 && (
+          {activeStep === 5 && (selectedPath === 1 || selectedPath === 4) && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Generate Report</h2>
               <Button
