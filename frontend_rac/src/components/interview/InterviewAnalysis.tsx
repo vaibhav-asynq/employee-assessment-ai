@@ -3,12 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UploadSection } from './UploadSection';
-import { RawDataSplitScreen } from './RawDataSplitScreen';
-import { SplitScreenAnalysis } from './SplitScreenAnalysis';
-import { uploadFile, generateReport, generateWordDocument, getRawData } from '@/lib/api';
+import { EditableAnalysis } from './EditableAnalysis';
+import { uploadFile, generateReport, generateWordDocument, getRawData, getFeedbackData } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
+import { FeedbackScreen } from './FeedbackScreen';
+import { PathSelectionScreen } from './PathSelectionScreen';
 import { DevelopmentalResources } from './DevelopmentalResources';
+import { FeedbackDisplay } from './FeedbackDisplay';
 
 interface ExtendedInterviewAnalysis extends InterviewAnalysisType {
   humanReport?: InterviewAnalysisType;
@@ -17,6 +19,8 @@ interface ExtendedInterviewAnalysis extends InterviewAnalysisType {
 
 export function InterviewAnalysis() {
   const [activeStep, setActiveStep] = useState(1);
+  const [selectedPath, setSelectedPath] = useState<number | null>(null);
+  const [feedbackData, setFeedbackData] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +41,6 @@ export function InterviewAnalysis() {
   // Initialize editable content when raw data changes
   useEffect(() => {
     if (rawData && analysisData) {
-      // Only initialize if not already populated
       if (Object.keys(editableContent.strengths).length === 0) {
         setEditableContent(prev => ({
           strengths: Object.fromEntries(
@@ -52,7 +55,6 @@ export function InterviewAnalysis() {
     }
   }, [rawData, analysisData]);
 
-  // Initialize next steps when analysis data changes
   useEffect(() => {
     if (analysisData && editableContent.next_steps.length === 0) {
       setEditableContent(prev => ({
@@ -72,10 +74,31 @@ export function InterviewAnalysis() {
   }, [analysisData]);
 
   useEffect(() => {
-    if (activeStep === 2 && fileId && !rawData) {
+    if ((activeStep === 2 || activeStep === 4) && !feedbackData) {
+      fetchFeedbackData();
+    }
+    if (activeStep === 4 && fileId && !rawData) {
       fetchRawData();
     }
-  }, [activeStep, fileId, rawData]);
+  }, [activeStep, fileId, rawData, feedbackData]);
+
+  const fetchFeedbackData = async () => {
+    setLoading(true);
+    try {
+      console.log('Fetching feedback data...');
+      const data = await getFeedbackData();
+      console.log('Feedback data received:', data);
+      if (!data) {
+        throw new Error('No feedback data received');
+      }
+      setFeedbackData(data);
+    } catch (err) {
+      console.error('Error fetching feedback data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch feedback data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchRawData = async () => {
     if (!fileId) return;
@@ -116,7 +139,6 @@ export function InterviewAnalysis() {
       setAnalysisData(data);
       setActiveStep(2);
       setUploadProgress(null);
-      // Reset rawData when a new file is uploaded
       setRawData(null);
     } catch (err) {
       console.error('Error during file upload or report generation:', err);
@@ -129,14 +151,21 @@ export function InterviewAnalysis() {
   const handleDownloadWord = async () => {
     if (!analysisData) return;
     try {
-      // Extract the base InterviewAnalysis data
-      const reportData: InterviewAnalysisType = analysisData.humanReport || {
+      // Create a base report data object
+      const baseReport: InterviewAnalysisType = {
         name: analysisData.name,
         date: analysisData.date,
         strengths: analysisData.strengths,
         areas_to_target: analysisData.areas_to_target,
         next_steps: analysisData.next_steps
       };
+
+      // For Path 1, use the base report (AI suggestions)
+      // For other paths, use the human report if available
+      const reportData = selectedPath === 1 
+        ? baseReport 
+        : (analysisData.humanReport || baseReport);
+
       const blob = await generateWordDocument(reportData);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -152,40 +181,55 @@ export function InterviewAnalysis() {
   };
 
   const handleStepChange = (newStep: number) => {
-    if (newStep === 3 && activeStep === 2) {
-      // Moving from step 2 to 3
-      const humanReport: InterviewAnalysisType = {
-        ...analysisData!,
-        strengths: Object.fromEntries(
-          Object.entries(editableContent.strengths).map(([key, value]) => [value.title, value.content])
-        ),
-        areas_to_target: Object.fromEntries(
-          Object.entries(editableContent.areas_to_target).map(([key, value]) => [value.title, value.content])
-        ),
-        next_steps: editableContent.next_steps
-      };
-
-      // If we already have humanReport and aiSuggestions, preserve them
-      if (analysisData?.humanReport && analysisData?.aiSuggestions) {
-        setAnalysisData({
-          ...analysisData,
-          humanReport
-        });
-      } else {
+    if (newStep > getTotalSteps()) return;
+    
+    if (newStep === 5 && activeStep === 4) {
+      if (selectedPath === 1) {
+        // For Path 1, use the current AI suggestions as the report
+        const baseReport: InterviewAnalysisType = {
+          name: analysisData!.name,
+          date: analysisData!.date,
+          strengths: analysisData!.strengths,
+          areas_to_target: analysisData!.areas_to_target,
+          next_steps: analysisData!.next_steps
+        };
         setAnalysisData({
           ...analysisData!,
-          humanReport,
-          aiSuggestions: {
-            name: analysisData!.name,
-            date: analysisData!.date,
-            strengths: analysisData!.strengths,
-            areas_to_target: analysisData!.areas_to_target,
-            next_steps: analysisData!.next_steps
-          }
+          humanReport: baseReport
         });
+      } else {
+        // For other paths, use the editable content
+        const humanReport: InterviewAnalysisType = {
+          ...analysisData!,
+          strengths: Object.fromEntries(
+            Object.entries(editableContent.strengths).map(([key, value]) => [value.title, value.content])
+          ),
+          areas_to_target: Object.fromEntries(
+            Object.entries(editableContent.areas_to_target).map(([key, value]) => [value.title, value.content])
+          ),
+          next_steps: editableContent.next_steps
+        };
+
+        if (analysisData?.humanReport && analysisData?.aiSuggestions) {
+          setAnalysisData({
+            ...analysisData,
+            humanReport
+          });
+        } else {
+          setAnalysisData({
+            ...analysisData!,
+            humanReport,
+            aiSuggestions: {
+              name: analysisData!.name,
+              date: analysisData!.date,
+              strengths: analysisData!.strengths,
+              areas_to_target: analysisData!.areas_to_target,
+              next_steps: analysisData!.next_steps
+            }
+          });
+        }
       }
-    } else if (newStep === 2 && activeStep === 3 && analysisData?.humanReport) {
-      // Moving from step 3 to 2, update editableContent with current humanReport data
+    } else if (newStep === 4 && activeStep === 5 && analysisData?.humanReport) {
       setEditableContent({
         strengths: Object.fromEntries(
           Object.entries(analysisData.humanReport.strengths).map(([key, value]) => [
@@ -205,6 +249,24 @@ export function InterviewAnalysis() {
     setActiveStep(newStep);
   };
 
+  const getTotalSteps = () => {
+    // First 3 steps are common: Upload, Feedback, Path Selection
+    if (!selectedPath) return 3;
+
+    switch (selectedPath) {
+      case 1:
+        // Path 1: Upload -> Feedback -> Path Selection -> Split Screen -> Download
+        return 5;
+      case 2:
+      case 3:
+      case 4:
+        // Other paths: Upload -> Feedback -> Path Selection -> Split Screen
+        return 4;
+      default:
+        return 3;
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-8">
@@ -218,19 +280,19 @@ export function InterviewAnalysis() {
             Previous
           </Button>
           <Button 
-            onClick={() => handleStepChange(Math.min(4, activeStep + 1))}
-            disabled={activeStep === 4 || !analysisData}
+            onClick={() => handleStepChange(activeStep + 1)}
+            disabled={activeStep === getTotalSteps() || !analysisData}
           >
             Next
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-2 mb-8">
-        {[1, 2, 3, 4].map((step) => (
+      <div className="grid gap-2 mb-8" style={{ gridTemplateColumns: `repeat(${getTotalSteps()}, minmax(0, 1fr))` }}>
+        {Array.from({ length: getTotalSteps() }).map((_, index) => (
           <div
-            key={step}
+            key={index + 1}
             className={`h-2 rounded ${
-              step <= activeStep ? 'bg-blue-500' : 'bg-gray-200'
+              index + 1 <= activeStep ? 'bg-blue-500' : 'bg-gray-200'
             }`}
           />
         ))}
@@ -245,35 +307,51 @@ export function InterviewAnalysis() {
               uploadProgress={uploadProgress}
             />
           )}
-          {activeStep === 2 && (
-            <div className="flex flex-col">
-              <div className="mb-8">
-                <RawDataSplitScreen
-                  rawData={rawData}
-                  loading={loading}
-                  error={error}
-                  editableContent={editableContent}
-                  setEditableContent={setEditableContent}
-                />
-              </div>
-              <div className="border-t pt-4">
-                <DevelopmentalResources />
-              </div>
-            </div>
+          {activeStep === 2 && feedbackData && (
+            <FeedbackScreen data={feedbackData} />
           )}
-          {activeStep === 3 && analysisData?.humanReport && analysisData?.aiSuggestions && (
-            <SplitScreenAnalysis 
-              data={analysisData.humanReport}
-              aiSuggestions={analysisData.aiSuggestions}
-              onUpdate={(updatedData) => {
-                setAnalysisData(prev => ({
-                  ...prev!,
-                  humanReport: updatedData
-                }));
+          {activeStep === 3 && (
+            <PathSelectionScreen 
+              onSelectPath={(path) => {
+                setSelectedPath(path);
+                setActiveStep(4);
               }}
             />
           )}
           {activeStep === 4 && (
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold">Interview Feedback</h2>
+                </div>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Loading feedback data...</p>
+                  </div>
+                ) : feedbackData ? (
+                  <FeedbackDisplay data={feedbackData} />
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No feedback data available</p>
+                  </div>
+                )}
+              </div>
+              <div className="border-l pl-8">
+                {analysisData && (
+                  <EditableAnalysis 
+                    data={analysisData} 
+                    onUpdate={(updatedData) => {
+                      setAnalysisData({
+                        ...analysisData,
+                        ...updatedData
+                      });
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+          {activeStep === 5 && selectedPath === 1 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Generate Report</h2>
               <Button

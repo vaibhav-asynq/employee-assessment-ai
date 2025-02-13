@@ -1,4 +1,5 @@
-// src/components/interview/shared/SectionHeading.tsx
+import React from 'react';
+
 interface SectionHeadingProps {
   title: string;
   children?: React.ReactNode;
@@ -7,8 +8,8 @@ interface SectionHeadingProps {
 
 export function SectionHeading({ title, children, className = '' }: SectionHeadingProps) {
   return (
-    <div className="flex justify-between items-center mb-4">
-      <h3 className={className}>{title}</h3>
+    <div className={`flex items-center justify-between mb-4 ${className}`}>
+      <h3 className="text-xl font-semibold">{title}</h3>
       {children}
     </div>
   );

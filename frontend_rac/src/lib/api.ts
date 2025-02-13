@@ -68,6 +68,14 @@ export async function getCSVData(fileType: 'suggestions' | 'derailers' | 'key_th
   return response.json();
 }
 
+export async function getFeedbackData(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/get_feedback`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch feedback data');
+  }
+  return response.json();
+}
+
 export async function getExcelFile(): Promise<ArrayBuffer> {
   const response = await fetch(`${API_BASE_URL}/api/excel`, {
     credentials: 'include',

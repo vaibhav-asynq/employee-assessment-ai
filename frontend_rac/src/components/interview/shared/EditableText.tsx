@@ -1,25 +1,25 @@
-import { Textarea } from '@/components/ui/textarea';
+import React from 'react';
 
 interface EditableTextProps {
   value: string;
-  onChange: (newValue: string) => void;
-  className?: string;
+  onChange: (value: string) => void;
   minHeight?: string;
+  placeholder?: string;
 }
 
 export function EditableText({ 
   value, 
   onChange, 
-  className = '', 
-  minHeight = '100px' 
+  minHeight = "100px",
+  placeholder = "Enter text..."
 }: EditableTextProps) {
   return (
-    <Textarea
+    <textarea
+      className="w-full p-2 border rounded-md"
+      style={{ minHeight }}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`${className}`}
-      style={{ minHeight }}
-      placeholder="Enter text"
+      placeholder={placeholder}
     />
   );
 }

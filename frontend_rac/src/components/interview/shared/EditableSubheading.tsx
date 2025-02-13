@@ -1,28 +1,22 @@
-// src/components/interview/shared/EditableSubheading.tsx
-import { Input } from '@/components/ui/input';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
 interface EditableSubheadingProps {
   value: string;
-  onChange: (newValue: string) => void;
+  onChange: (value: string) => void;
   onDelete: () => void;
-  className?: string;
 }
 
-export function EditableSubheading({ 
-  value, 
-  onChange, 
-  onDelete,
-  className = '' 
-}: EditableSubheadingProps) {
+export function EditableSubheading({ value, onChange, onDelete }: EditableSubheadingProps) {
   return (
-    <div className="flex items-center gap-2">
-      <Input
+    <div className="flex items-center justify-between mb-2">
+      <input
+        type="text"
+        className="flex-1 text-lg font-semibold p-2 border rounded mr-2"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`text-sm font-bold text-gray-700 ${className}`}
-        placeholder="Enter subheading"
+        placeholder="Enter subheading..."
       />
       <Button
         variant="ghost"
