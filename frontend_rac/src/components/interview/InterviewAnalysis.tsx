@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UploadSection } from './UploadSection';
 import { EditableAnalysis } from './EditableAnalysis';
+import { Path4HumanReport } from './Path4HumanReport';
 import { uploadFile, generateReport, generateWordDocument, getRawData, getFeedbackData } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
@@ -161,10 +162,22 @@ export function InterviewAnalysis() {
       };
 
       // For Path 1, use the base report (AI suggestions)
+      // For Path 4, use the human report without next steps
       // For other paths, use the human report if available
-      const reportData = selectedPath === 1 
-        ? baseReport 
-        : (analysisData.humanReport || baseReport);
+      let reportData: InterviewAnalysisType;
+      if (selectedPath === 1) {
+        reportData = baseReport;
+      } else if (selectedPath === 4) {
+        reportData = {
+          name: analysisData.name,
+          date: analysisData.date,
+          strengths: analysisData.humanReport?.strengths || analysisData.strengths,
+          areas_to_target: analysisData.humanReport?.areas_to_target || analysisData.areas_to_target,
+          next_steps: [] // Empty array for Path 4
+        };
+      } else {
+        reportData = analysisData.humanReport || baseReport;
+      }
 
       const blob = await generateWordDocument(reportData);
       const url = window.URL.createObjectURL(blob);
@@ -196,6 +209,22 @@ export function InterviewAnalysis() {
         setAnalysisData({
           ...analysisData!,
           humanReport: baseReport
+        });
+      } else if (selectedPath === 4) {
+        // For Path 4, use only strengths and areas to target
+        const humanReport: InterviewAnalysisType = {
+          ...analysisData!,
+          strengths: Object.fromEntries(
+            Object.entries(editableContent.strengths).map(([key, value]) => [value.title, value.content])
+          ),
+          areas_to_target: Object.fromEntries(
+            Object.entries(editableContent.areas_to_target).map(([key, value]) => [value.title, value.content])
+          ),
+          next_steps: [] // Empty array for Path 4
+        };
+        setAnalysisData({
+          ...analysisData!,
+          humanReport
         });
       } else {
         // For other paths, use the editable content
@@ -338,15 +367,31 @@ export function InterviewAnalysis() {
               </div>
               <div className="border-l pl-8">
                 {analysisData && (
-                  <EditableAnalysis 
-                    data={analysisData} 
-                    onUpdate={(updatedData) => {
-                      setAnalysisData({
-                        ...analysisData,
-                        ...updatedData
-                      });
-                    }}
-                  />
+                  selectedPath === 4 ? (
+                    <Path4HumanReport 
+                      data={analysisData} 
+                      onUpdate={(updatedData) => {
+                        setAnalysisData(prev => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            ...updatedData,
+                            next_steps: [] // Keep next_steps empty for Path 4
+                          };
+                        });
+                      }}
+                    />
+                  ) : (
+                    <EditableAnalysis 
+                      data={analysisData} 
+                      onUpdate={(updatedData) => {
+                        setAnalysisData({
+                          ...analysisData,
+                          ...updatedData
+                        });
+                      }}
+                    />
+                  )
                 )}
               </div>
             </div>
