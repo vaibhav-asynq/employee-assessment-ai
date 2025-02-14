@@ -6,6 +6,7 @@ import { UploadSection } from './UploadSection';
 import { EditableAnalysis } from './EditableAnalysis';
 import { Path4HumanReport } from './Path4HumanReport';
 import { Path2Analysis } from './Path2Analysis';
+import { Path3Analysis } from './Path3Analysis';
 import { uploadFile, generateReport, generateWordDocument, getRawData, getFeedback } from '@/lib/api';
 import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
 import { Download } from 'lucide-react';
@@ -304,6 +305,53 @@ export function InterviewAnalysis() {
           {activeStep === 4 && (
             selectedPath === 2 ? (
               <Path2Analysis />
+            ) : selectedPath === 3 ? (
+              <Path3Analysis 
+                feedbackData={feedbackData}
+                loading={loading}
+                onUpdate={(updatedData) => {
+                  setAnalysisData(prev => ({
+                    ...prev!,
+                    ...updatedData
+                  }));
+                }}
+              />
+            ) : selectedPath === 4 ? (
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold">Interview Feedback</h2>
+                  </div>
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600">Loading feedback data...</p>
+                    </div>
+                  ) : feedbackData ? (
+                    <FeedbackDisplay data={feedbackData} />
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600">No feedback data available</p>
+                    </div>
+                  )}
+                </div>
+                <div className="border-l pl-8">
+                  {analysisData && (
+                    <Path4HumanReport 
+                      data={analysisData} 
+                      onUpdate={(updatedData) => {
+                        setAnalysisData(prev => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            ...updatedData,
+                            next_steps: [] // Keep next_steps empty for Path 4
+                          };
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-8">
                 <div>
@@ -324,31 +372,15 @@ export function InterviewAnalysis() {
                 </div>
                 <div className="border-l pl-8">
                   {analysisData && (
-                    selectedPath === 4 ? (
-                      <Path4HumanReport 
-                        data={analysisData} 
-                        onUpdate={(updatedData) => {
-                          setAnalysisData(prev => {
-                            if (!prev) return prev;
-                            return {
-                              ...prev,
-                              ...updatedData,
-                              next_steps: [] // Keep next_steps empty for Path 4
-                            };
-                          });
-                        }}
-                      />
-                    ) : (
-                      <EditableAnalysis 
-                        data={analysisData} 
-                        onUpdate={(updatedData) => {
-                          setAnalysisData({
-                            ...analysisData,
-                            ...updatedData
-                          });
-                        }}
-                      />
-                    )
+                    <EditableAnalysis 
+                      data={analysisData} 
+                      onUpdate={(updatedData) => {
+                        setAnalysisData({
+                          ...analysisData,
+                          ...updatedData
+                        });
+                      }}
+                    />
                   )}
                 </div>
               </div>
