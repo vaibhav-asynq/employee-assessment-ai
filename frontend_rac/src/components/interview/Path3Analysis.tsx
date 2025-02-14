@@ -7,6 +7,7 @@ interface Path3AnalysisProps {
   feedbackData: any;
   loading: boolean;
   onUpdate: (data: Partial<InterviewAnalysis>) => void;
+  fileId: string | null;
 }
 
 interface EditableContent {
@@ -15,7 +16,7 @@ interface EditableContent {
   next_steps: Array<string | { main: string; sub_points: string[] }>;
 }
 
-export function Path3Analysis({ feedbackData, loading, onUpdate }: Path3AnalysisProps) {
+export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3AnalysisProps) {
   // Initialize with placeholder text for each section
   const [editableContent, setEditableContent] = useState<EditableContent>({
     strengths: {
@@ -108,6 +109,7 @@ export function Path3Analysis({ feedbackData, loading, onUpdate }: Path3Analysis
         <Path3EditableAnalysis 
           data={analysisData}
           onUpdate={handleUpdate}
+          fileId={fileId}
         />
       </div>
     </div>

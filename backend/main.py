@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Union, List, Dict
+import anthropic
 import uuid
 import os
 from docx import Document
@@ -41,6 +42,10 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
 
 # Data models
+class GenerateContentRequest(BaseModel):
+    heading: str
+    file_id: str
+
 class NextStepPoint(BaseModel):
     main: str
     sub_points: List[str]
@@ -123,9 +128,6 @@ async def generate_report(file_id: str):
 #     "What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
 #     'What am I focused on in the immediate short term and for the rest of 2024?',
 #     'What kind of support do I need from Brian, Steve, and Sandra, or others?']},
-#   "Ian, after 3 years leading the Aerospace, Defense & Government Services sector at Carlyle, you find yourself managing a leaner 11-person team while splitting time between DC and NYC offices. Your sector delivered strong performance (17% growth) despite organizational changes and RIFs. You're focused on empowering your team, building the Carlyle brand in DC, and driving cross-sector collaboration, while wrestling with maintaining team cohesion and preventing burnout. This appeals to your need for building institutional credibility while developing others and making the organization better. Keep those needs in mind as you think through these suggestions for development.",
-#   {'main': 'To Increase Strategic Visibility',
-#    'sub_points': ["Consider accepting 2-3 targeted speaking engagements per quarter, focusing on areas where your investment expertise would most benefit Carlyle's market position.",
 #     "Explore opportunities to showcase team members alongside you at industry events, creating developmental moments while expanding Carlyle's presence.",
 #     "Look into establishing a regular cadence of thought leadership contributions through industry publications or Carlyle's platforms.",
 #     'Try scheduling structured time for external relationship building, particularly in areas aligned with current investment priorities.']},
@@ -267,6 +269,22 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
     
 
 # Optional: Cleanup endpoint
+@app.post("/api/generate_strength_content")
+async def generate_strength_content(request: GenerateContentRequest):
+    try:
+        # TODO: Implement strength content generation
+        return {"content": "Test Strength"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/generate_area_content")
+async def generate_area_content(request: GenerateContentRequest):
+    try:
+        # TODO: Implement area content generation
+        return {"content": "Test Areas"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.delete("/api/cleanup/{file_id}")
 async def cleanup_file(file_id: str):
     if file_id in files_store:

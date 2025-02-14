@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Union, List, Dict
 import uuid
 import os
+import anthropic
 from docx import Document
 from docx.shared import Inches
 import json
@@ -17,6 +18,8 @@ from csv_parser import parse_csv
 
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
+if not api_key:
+    raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
 assessment_processor = AssessmentProcessor(api_key)
 
 app = FastAPI()
@@ -107,6 +110,9 @@ async def get_excel_file():
     
     return Response(content=content, headers=headers)
 
+# Hardcoded file ID for testing
+TEST_FILE_ID = "20241216_001624"
+
 @app.post("/api/upload_file")
 async def upload_file(file: UploadFile):
     try:
@@ -119,48 +125,44 @@ async def upload_file(file: UploadFile):
             content = await file.read()
             f.write(content)
         
-        # *****Uncomment below line******
+        # Process the assessment and save transcripts
         # stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+        print(f"Transcripts saved to {SAVE_DIR}")
+        
         # Store file info
         files_store[file_id] = {
             "file_path": file_path,
             "original_name": file.filename
         }
         
-        return {"file_id": file_id}
+        # return {"file_id": file_id}
+        return {"file_id": TEST_FILE_ID}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/generate_report/{file_id}")
 async def generate_report(file_id: str):
-    if file_id not in files_store:
-        raise HTTPException(status_code=404, detail="File not found")
+    # if file_id not in files_store:
+    #     raise HTTPException(status_code=404, detail="File not found")
     # actuall call to llm after reading the pdf and txt
     try:
-        self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
-        others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
+        # self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
+        # others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
 
 
-        # *****Uncomment******
+        # # Process the assessment and generate report
         # feedback_content = read_file_content(others_transcript)
         # executive_interview = read_file_content(self_transcript)
 
         # system_prompt = ""
 
-        # results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
+        # results = await process_prompts(feedback_content, executive_interview, api_key, system_prompt)
         # name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
 
-        # employee_name = name_data.get('employee_name',"")
-        # report_date = name_data.get('report_date',"")
+        # employee_name = name_data.get('employee_name', "")
+        # report_date = name_data.get('report_date', "")
         
         # formatted_data = transform_content_to_report_format(results, employee_name, report_date)
-
-
-        # *****Uncomment******
-
-        # create_360_feedback_report(header_txt+".pdf", formatted_data, header_txt)
-        # Here you would typically process the PDF and extract information
-        # This is a mock response for demonstration
         formatted_data=  {'name': 'Ian Fujiyama',
  'date': 'June 2024',
  'strengths': {'Strategic Leadership & Investment Excellence': 'Ian is known as exceptionally astute, a brilliant strategic investor, and a decisive dealmaker. He processes complex investment opportunities with 90% decision accuracy, while efficiently directing resources toward high-potential ventures. He eliminates underperforming opportunities swiftly and maintains rigorous investment discipline across his portfolio. He anticipates market movements and positions investments for optimal returns, demonstrated through his consistent above-market performance. As a result, his portfolio achieved 17% growth last year while establishing new benchmarks for investment excellence across the firm.',
@@ -1044,3 +1046,104 @@ async def cleanup_file(file_id: str):
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     raise HTTPException(status_code=404, detail="File not found")
+
+class GenerateContentRequest(BaseModel):
+    heading: str
+    file_id: str
+
+
+@app.post("/api/generate_area_content")
+async def generate_area_content(request: GenerateContentRequest):
+    try:
+        # Use hardcoded test file
+        transcript_path = "../data/processed_assessments/filtered_facc00fc-7288-4560-a400-fbbbbb3e63b5.txt"
+        if not os.path.exists(transcript_path):
+            raise HTTPException(status_code=404, detail=f"Transcript not found at {transcript_path}")
+        
+        with open(transcript_path, 'r') as f:
+            transcript = f.read()
+
+        # Generate content using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = f"""Given this heading '{request.heading}', generate an area to target description for {TEST_NAME} that:
+1. Opens with "{TEST_NAME} is [positive character trait] yet [development need]"
+2. Follows with specific examples and behaviors from the transcript
+3. Ends with impact using transitions like "This results in", "This leads to", etc.
+4. Keeps response under 100 words and in one paragraph
+5. Uses softeners like "sometimes", "tends to", "occasionally" for constructive feedback
+
+Use this transcript as context:
+{transcript}
+
+Rules:
+- Start with a positive trait
+- Use specific examples from transcript
+- Maintain professional tone
+- End with clear business impact
+- Keep to exactly one paragraph
+- Use softening language for feedback
+"""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=1000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return {"content": response.content[0].text}
+    except Exception as e:
+        print(f"Error in generate_area_content: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# Hardcoded test data
+TEST_FILE_ID = "facc00fc-7288-4560-a400-fbbbbb3e63b5"
+TEST_NAME = "Ian"
+
+@app.post("/api/generate_strength_content")
+async def generate_strength_content(request: GenerateContentRequest):
+    try:
+        print(f"Generating strength content for heading: {request.heading}")
+        
+        # Use hardcoded test file
+        transcript_path = "../data/processed_assessments/filtered_facc00fc-7288-4560-a400-fbbbbb3e63b5.txt"
+        if not os.path.exists(transcript_path):
+            raise HTTPException(status_code=404, detail=f"Transcript not found at {transcript_path}")
+        
+        with open(transcript_path, 'r') as f:
+            transcript = f.read()
+
+        # Generate content using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = f"""Given this heading '{request.heading}', generate a strength description for {TEST_NAME} that:
+1. Opens with "{TEST_NAME} is [character quality adjectives]"
+2. Follows with specific examples and behaviors from the transcript
+3. Ends with impact using transitions like "As a result", "This leads to", "Consequently", etc.
+4. Keeps response under 100 words and in one paragraph
+
+Use this transcript as context:
+{transcript}
+
+Rules:
+- Focus on positive qualities and achievements
+- Use specific examples from the transcript
+- Maintain professional tone
+- End with clear business impact
+- Keep to exactly one paragraph
+"""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=1000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return {"content": response.content[0].text}
+    except Exception as e:
+        print(f"Error in generate_strength_content: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))

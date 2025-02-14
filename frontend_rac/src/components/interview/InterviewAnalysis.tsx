@@ -309,6 +309,7 @@ export function InterviewAnalysis() {
               <Path3Analysis 
                 feedbackData={feedbackData}
                 loading={loading}
+                fileId={fileId}
                 onUpdate={(updatedData) => {
                   setAnalysisData(prev => ({
                     ...prev!,

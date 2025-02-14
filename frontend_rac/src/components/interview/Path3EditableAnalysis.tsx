@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Sparkles } from 'lucide-react';
+import { generateStrengthContent, generateAreaContent } from '@/lib/api';
 import { SectionHeading } from './shared/SectionHeading';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
@@ -9,20 +10,99 @@ import { InterviewAnalysis } from '@/lib/types';
 interface EditableAnalysisProps {
   data: InterviewAnalysis;
   onUpdate: (data: InterviewAnalysis) => void;
+  fileId: string | null;
 }
 
-export function Path3EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
-  // Convert strengths object to array structure
-  const strengthsArray = Object.entries(data.strengths).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
+interface LocalSection {
+  id: string;
+  heading: string;
+  content: string;
+}
 
-  // Convert areas to target object to array structure
-  const areasArray = Object.entries(data.areas_to_target).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
+export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalysisProps) {
+  const [loadingStrength, setLoadingStrength] = useState<string | null>(null);
+  const [loadingArea, setLoadingArea] = useState<string | null>(null);
+
+  // Initialize sections with stable IDs
+  const [sections, setSections] = useState({
+    strengths: [
+      { id: 'strength-1', heading: 'Strength 1', content: '' },
+      { id: 'strength-2', heading: 'Strength 2', content: '' },
+      { id: 'strength-3', heading: 'Strength 3', content: '' },
+      { id: 'strength-4', heading: 'Strength 4', content: '' },
+      { id: 'strength-5', heading: 'Strength 5', content: '' }
+    ],
+    areas: [
+      { id: 'area-1', heading: 'Development Area 1', content: '' },
+      { id: 'area-2', heading: 'Development Area 2', content: '' },
+      { id: 'area-3', heading: 'Development Area 3', content: '' },
+      { id: 'area-4', heading: 'Development Area 4', content: '' },
+      { id: 'area-5', heading: 'Development Area 5', content: '' }
+    ]
+  });
+
+  const updateParentState = useCallback(() => {
+    const analysisData: InterviewAnalysis = {
+      ...data,
+      strengths: Object.fromEntries(
+        sections.strengths.map(s => [s.heading, s.content])
+      ),
+      areas_to_target: Object.fromEntries(
+        sections.areas.map(a => [a.heading, a.content])
+      )
+    };
+    onUpdate(analysisData);
+  }, [sections, data, onUpdate]);
+
+  const handleGenerateStrength = async (heading: string) => {
+    if (!fileId) {
+      console.error('No file ID found');
+      return;
+    }
+
+    try {
+      setLoadingStrength(heading);
+      const content = await generateStrengthContent(heading, fileId);
+      setSections(prev => ({
+        ...prev,
+        strengths: prev.strengths.map(s => 
+          s.heading === heading 
+            ? { ...s, content }
+            : s
+        )
+      }));
+      setTimeout(updateParentState, 0);
+    } catch (error) {
+      console.error('Error generating strength content:', error);
+    } finally {
+      setLoadingStrength(null);
+    }
+  };
+
+  const handleGenerateArea = async (heading: string) => {
+    if (!fileId) {
+      console.error('No file ID found');
+      return;
+    }
+
+    try {
+      setLoadingArea(heading);
+      const content = await generateAreaContent(heading, fileId);
+      setSections(prev => ({
+        ...prev,
+        areas: prev.areas.map(a => 
+          a.heading === heading 
+            ? { ...a, content }
+            : a
+        )
+      }));
+      setTimeout(updateParentState, 0);
+    } catch (error) {
+      console.error('Error generating area content:', error);
+    } finally {
+      setLoadingArea(null);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -35,63 +115,77 @@ export function Path3EditableAnalysis({ data, onUpdate }: EditableAnalysisProps)
             variant="outline" 
             size="sm"
             onClick={() => {
-              const newStrengths = { ...data.strengths };
-              const newKey = `New Strength ${Object.keys(newStrengths).length + 1}`;
-              newStrengths[newKey] = '';
-              onUpdate({
-                ...data,
-                strengths: newStrengths
-              });
+              setSections(prev => ({
+                ...prev,
+                strengths: [
+                  ...prev.strengths,
+                  {
+                    id: `strength-${prev.strengths.length + 1}`,
+                    heading: `Strength ${prev.strengths.length + 1}`,
+                    content: ''
+                  }
+                ]
+              }));
+              setTimeout(updateParentState, 0);
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
           </Button>
         </SectionHeading>
         
-        {strengthsArray.map((strength, index) => (
-          <div key={index} className="mb-8">
+        {sections.strengths.map((strength) => (
+          <div key={strength.id} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex-1">
                 <EditableSubheading
-                  value={strength.main}
-                  onChange={(newValue) => {
-                    const newStrengths = { ...data.strengths };
-                    delete newStrengths[strength.main];
-                    newStrengths[newValue] = strength.content;
-                    onUpdate({
-                      ...data,
-                      strengths: newStrengths
-                    });
+                  value={strength.heading}
+                  onChange={(newHeading) => {
+                    setSections(prev => ({
+                      ...prev,
+                      strengths: prev.strengths.map(s => 
+                        s.id === strength.id 
+                          ? { ...s, heading: newHeading }
+                          : s
+                      )
+                    }));
+                    setTimeout(updateParentState, 0);
                   }}
                   onDelete={() => {
-                    const newStrengths = { ...data.strengths };
-                    delete newStrengths[strength.main];
-                    onUpdate({
-                      ...data,
-                      strengths: newStrengths
-                    });
+                    setSections(prev => ({
+                      ...prev,
+                      strengths: prev.strengths.filter(s => s.id !== strength.id)
+                    }));
+                    setTimeout(updateParentState, 0);
                   }}
                 />
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {}}
+                onClick={() => handleGenerateStrength(strength.heading)}
+                disabled={loadingStrength === strength.heading}
                 className="text-gray-500 whitespace-nowrap flex items-center"
               >
-                <Sparkles className="h-4 w-4 mr-2" />
+                {loadingStrength === strength.heading ? (
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
                 Generate with AI
               </Button>
             </div>
             <EditableText
               value={strength.content}
-              onChange={(newValue) => {
-                const newStrengths = { ...data.strengths };
-                newStrengths[strength.main] = newValue;
-                onUpdate({
-                  ...data,
-                  strengths: newStrengths
-                });
+              onChange={(newContent) => {
+                setSections(prev => ({
+                  ...prev,
+                  strengths: prev.strengths.map(s => 
+                    s.id === strength.id 
+                      ? { ...s, content: newContent }
+                      : s
+                  )
+                }));
+                setTimeout(updateParentState, 0);
               }}
               minHeight="180px"
             />
@@ -106,63 +200,77 @@ export function Path3EditableAnalysis({ data, onUpdate }: EditableAnalysisProps)
             variant="outline" 
             size="sm"
             onClick={() => {
-              const newAreas = { ...data.areas_to_target };
-              const newKey = `New Area ${Object.keys(newAreas).length + 1}`;
-              newAreas[newKey] = '';
-              onUpdate({
-                ...data,
-                areas_to_target: newAreas
-              });
+              setSections(prev => ({
+                ...prev,
+                areas: [
+                  ...prev.areas,
+                  {
+                    id: `area-${prev.areas.length + 1}`,
+                    heading: `Development Area ${prev.areas.length + 1}`,
+                    content: ''
+                  }
+                ]
+              }));
+              setTimeout(updateParentState, 0);
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
           </Button>
         </SectionHeading>
         
-        {areasArray.map((area, index) => (
-          <div key={index} className="mb-8">
+        {sections.areas.map((area) => (
+          <div key={area.id} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex-1">
                 <EditableSubheading
-                  value={area.main}
-                  onChange={(newValue) => {
-                    const newAreas = { ...data.areas_to_target };
-                    delete newAreas[area.main];
-                    newAreas[newValue] = area.content;
-                    onUpdate({
-                      ...data,
-                      areas_to_target: newAreas
-                    });
+                  value={area.heading}
+                  onChange={(newHeading) => {
+                    setSections(prev => ({
+                      ...prev,
+                      areas: prev.areas.map(a => 
+                        a.id === area.id 
+                          ? { ...a, heading: newHeading }
+                          : a
+                      )
+                    }));
+                    setTimeout(updateParentState, 0);
                   }}
                   onDelete={() => {
-                    const newAreas = { ...data.areas_to_target };
-                    delete newAreas[area.main];
-                    onUpdate({
-                      ...data,
-                      areas_to_target: newAreas
-                    });
+                    setSections(prev => ({
+                      ...prev,
+                      areas: prev.areas.filter(a => a.id !== area.id)
+                    }));
+                    setTimeout(updateParentState, 0);
                   }}
                 />
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {}}
+                onClick={() => handleGenerateArea(area.heading)}
+                disabled={loadingArea === area.heading}
                 className="text-gray-500 whitespace-nowrap flex items-center"
               >
-                <Sparkles className="h-4 w-4 mr-2" />
+                {loadingArea === area.heading ? (
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
                 Generate with AI
               </Button>
             </div>
             <EditableText
               value={area.content}
-              onChange={(newValue) => {
-                const newAreas = { ...data.areas_to_target };
-                newAreas[area.main] = newValue;
-                onUpdate({
-                  ...data,
-                  areas_to_target: newAreas
-                });
+              onChange={(newContent) => {
+                setSections(prev => ({
+                  ...prev,
+                  areas: prev.areas.map(a => 
+                    a.id === area.id 
+                      ? { ...a, content: newContent }
+                      : a
+                  )
+                }));
+                setTimeout(updateParentState, 0);
               }}
               minHeight="180px"
             />
