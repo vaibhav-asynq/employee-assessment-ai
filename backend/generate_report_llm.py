@@ -88,7 +88,26 @@ def get_strengths_prompts():
     str2 = """Using the provided transcript of a candidate's feedback and evaluation, craft a comprehensive and detailed leadership report stating Strengths of the candidate with the following structure and guidelines:
 **Strengths:**
 - Identify and elaborate on the candidate's core strengths, organizing them under relevant subheadings that reflect their leadership qualities. Potential subheadings include, but are not limited to:
-[Previous list of subheadings remains unchanged]
+            - Selfless style
+            - People and partnership skills
+            - Depth of expertise
+            - Drive for excellence
+            - Building capability
+            - Strategic leadership
+            - Transparent communication
+            - Supporting their team
+            - Thoughtful depth
+            - Business leadership
+            - High standards
+            - Supportive leader
+            - Decisive courage
+            - Creative expert
+            - Strong relationships
+            - Inspirational leadership
+            - Big picture clarity and decisiveness
+            - Continuing to evolve
+            - Technical and business acumen
+            
 Each strength should be structured as:
 1. Opening statement demonstrating the strength (use adjectives for character qualities) in format ""[Name/Subject] is [character quality adjective]"
 Example: Known as exceptionally astute Ian is analytically brilliant strategic leader. 

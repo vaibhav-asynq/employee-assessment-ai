@@ -1,4 +1,3 @@
-# main.py
 import traceback
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -472,6 +471,555 @@ async def get_raw_data_endpoint(file_id: str):
         print(f"Error in get_raw_data_endpoint: {str(e)}")
         import traceback
         print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_strength_evidences")
+async def get_strength_evidences():
+    try:
+        raw_data = {
+        "leadershipQualities": {
+            "Selfless style": {
+            "evidence": [
+                {
+                "feedback": "Extremely smart but humble about it",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "No political ambitions, operates as an independent balanced voice",
+                "source": "Martin Sumner",
+                "role": "Sector Head Industrials"
+                },
+                {
+                "feedback": "Almost too humble but it always works for him",
+                "source": "Matt Tait",
+                "role": "CEO ManTech"
+                },
+                {
+                "feedback": "Lets others lead and take the spotlight",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                },
+                {
+                "feedback": "Outwardly has no political ambitions",
+                "source": "Martin Sumner",
+                "role": "Sector Head Industrials"
+                }
+            ]
+            },
+            "People and partnership skills": {
+            "evidence": [
+                {
+                "feedback": "Good EQ, solid sense for reading people's emotions and angles",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "His ability to read the room is great",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Strong listener and moves to the front when needed",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Can provide situational awareness around other people and constituents",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Even in disagreements he manages what people are truly focused on",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                }
+            ]
+            },
+            "Depth of expertise": {
+            "evidence": [
+                {
+                "feedback": "Industry expert with exceptional market knowledge",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "He is mister A&D, the sector that put Carlyle on the map",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Knows the market exceptionally well",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "Impressive track record, highly respected investor",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                },
+                {
+                "feedback": "Every client knows he is the person to call",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                }
+            ]
+            },
+            "Drive for excellence": {
+            "evidence": [
+                {
+                "feedback": "100% results focused",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Performance has been very good (17% last year)",
+                "source": "Matt Savino",
+                "role": "MD Head of U.S. Capital Markets"
+                },
+                {
+                "feedback": "When he decides its a deal that he wants to get done, he pushes",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                },
+                {
+                "feedback": "90% accurate, makes the right call",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                }
+            ]
+            },
+            "Building capability": {
+            "evidence": [
+                {
+                "feedback": "Excellent at spotting and growing talent",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Stretches team members and puts them in leadership roles",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Good at developing the next generation of leadership",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Champion for people's careers here",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Really works through the programs needed to improve something",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                }
+            ]
+            },
+            "Strategic leadership": {
+            "evidence": [
+                {
+                "feedback": "Strategic thinker with breadth of experience",
+                "source": "Matt Tait",
+                "role": "CEO ManTech"
+                },
+                {
+                "feedback": "Outstanding investment judgment",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Sees all playing fields before making moves",
+                "source": "Matt Savino",
+                "role": "MD Head of U.S. Capital Markets"
+                },
+                {
+                "feedback": "Strategy and tactics on a deal, sees forest in spite of trees",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                }
+            ]
+            },
+            "Transparent communication": {
+            "evidence": [
+                {
+                "feedback": "Very direct and transparent",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Good at communicating goals, priorities, updates",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Has improved enormously with communication coaching",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Great presenter and has worked hard on it",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                }
+            ]
+            },
+            "Supporting their team": {
+            "evidence": [
+                {
+                "feedback": "Gives them space to develop, lets us have the stage",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Available when we have questions",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Supportive of me when I need to have conversations and advice",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Very accommodating of team needs and flexibility",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                }
+            ]
+            },
+            "Thoughtful depth": {
+            "evidence": [
+                {
+                "feedback": "Cerebral and astute",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Super smart and processes information quickly",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Highly analytical approach",
+                "source": "Martin Sumner",
+                "role": "Sector Head Industrials"
+                },
+                {
+                "feedback": "Calm and analytical in decision-making",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "Wisdom to know how things will play out",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                }
+            ]
+            },
+            "Business leadership": {
+            "evidence": [
+                {
+                "feedback": "High business acumen",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Excellent deal execution skills",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Strong at working with the government sector",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "Solid at exiting investments",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                }
+            ]
+            },
+            "Decisive courage": {
+            "evidence": [
+                {
+                "feedback": "At a high level he's very decisive",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Chooses quickly on a course of action",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Efficient: kills bad opportunities quickly",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Makes decisions fast",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                }
+            ]
+            },
+            "Creative expert": {
+            "evidence": [
+                {
+                "feedback": "Very creative in deal structuring",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Strong strategic thinking",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "People see him as a visionary on new deals",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                },
+                {
+                "feedback": "Creative in finding solutions",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                }
+            ]
+            },
+            "Strong relationships": {
+            "evidence": [
+                {
+                "feedback": "Spends time building relationships",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "Good at collaborating across sectors",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Builds relationships across sectors",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                },
+                {
+                "feedback": "Strong network in the industry",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                }
+            ]
+            },
+            "Continuing to evolve": {
+            "evidence": [
+                {
+                "feedback": "Got a communications coach and improved enormously",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Has matured and grown into leadership role",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Became more balanced over the years",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "Receptive to feedback and implements changes",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                }
+            ]
+            }
+        }
+        }
+        return raw_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_development_areas")
+async def get_development_areas():
+    try:
+        raw_data = {
+        "developmentAreas": {
+            "Directive Leadership": {
+            "competencyAlignment": ["Communication", "Influence"],
+            "evidence": [
+                {
+                "feedback": "Email communication can look apathetic because he will send quick, brief responses even though he has read through things deeply",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Communication in general around direction, deadlines and expectations (because he tries not to be overly involved)",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "More confidence in communication - he's clear but shies away from the spotlight",
+                "source": "Martin Sumner",
+                "role": "Sector Head Industrials"
+                },
+                {
+                "feedback": "He doesn't command the room (not bad, a great ambassador but not the onstage guy)",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                }
+            ]
+            },
+            "Proactive Engagement": {
+            "competencyAlignment": ["Execution", "Driving results"],
+            "evidence": [
+                {
+                "feedback": "More proactive, always see him thinking and analyzing, gently guides those around him to the right answer, could save time with a more direct style",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "Somewhat reactive (aware of things and gets involved when he needs to)",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Proactively check in with me more, what I need and what's going on, or a regular 1:1 to check in",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                }
+            ]
+            },
+            "Team Development": {
+            "competencyAlignment": ["Develops the team", "Inspiring the team"],
+            "evidence": [
+                {
+                "feedback": "Less direct coaching and teaching, could be more involved and engaged in active coaching during the day to day work",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "Teaching others how he thinks (especially more junior people)",
+                "source": "Doug Brandely",
+                "role": "MD for ADG (direct report)"
+                },
+                {
+                "feedback": "We need more frequent feedback on how we're doing, especially the informal stuff",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                },
+                {
+                "feedback": "Could facilitate and be more involved with others' development because he has a lot of resources",
+                "source": "Wil Langenstein",
+                "role": "Principal"
+                }
+            ]
+            },
+            "External Presence": {
+            "competencyAlignment": ["Influence", "Positive relationships"],
+            "evidence": [
+                {
+                "feedback": "Needs to get out there more and represent Carlyle, he just doesn't do it but need more external leadership",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Quirky and private: lots of conferences and panels in the DC area for our business but he explicitly avoids those",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Can spend more time ingratiating himself with management teams",
+                "source": "Mark Marengo",
+                "role": "JP Morgan, MD co-head"
+                },
+                {
+                "feedback": "We need to do some brand building in aerospace",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                }
+            ]
+            },
+            "Team Resource Management": {
+            "competencyAlignment": ["Planning", "Execution"],
+            "evidence": [
+                {
+                "feedback": "We have a glaring hole in our team at the mid-level, due to departures",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "He's going with the flow a little too much and needs to be the squeaky wheel and find another VP",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "Their team has had more turnover than other teams",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                }
+            ]
+            },
+            "Decision Timing": {
+            "competencyAlignment": ["Problem solving", "Strategic thinking"],
+            "evidence": [
+                {
+                "feedback": "Can jump to conclusions too quickly",
+                "source": "Dayne Baird",
+                "role": "Managing Director with U.S. Buyout"
+                },
+                {
+                "feedback": "I might want him more involved earlier as I sift through the 12-15 possible deals so he can accelerate the decision",
+                "source": "Aaron Hurwitz",
+                "role": "Principal"
+                }
+            ]
+            },
+            "Performance Management": {
+            "competencyAlignment": ["Driving results", "Develops the team"],
+            "evidence": [
+                {
+                "feedback": "Like a lot of people at Carlyle, he avoids tough conversations and pulling the trigger on poor performers",
+                "source": "Anna Mire",
+                "role": "VP (direct report)"
+                },
+                {
+                "feedback": "Not sure what is driving turnover (is it the culture, the pace?) so is he managing the group in a way that people want to be there?",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                }
+            ]
+            },
+            "Career Advancement": {
+            "competencyAlignment": ["Org savvy", "Strategic thinking"],
+            "evidence": [
+                {
+                "feedback": "He is more capable than both of his bosses, so I don't know how hard he is pushing his own career",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "He can push his brand more on the inside, politics not the results win the day",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                },
+                {
+                "feedback": "He seems to want to be asked to do instead of positioning himself to do it",
+                "source": "Joe Logue",
+                "role": "CEO Two Six Technologies"
+                }
+            ]
+            }
+        }
+        }
+        return raw_data
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/dump_word")
