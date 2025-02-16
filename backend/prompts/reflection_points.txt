@@ -1,0 +1,28 @@
+Using these transcripts, create reflection points and context summary that:
+1. Identifies key stakeholders and current year from feedback transcript
+2. Creates a context paragraph from executive interview that includes:
+   - Time in current role
+   - Nature of sector/business
+   - Current challenges/transitions
+   - Strategic initiatives
+   - Personal drivers/needs
+
+Feedback Transcript:
+{feedback_transcript}
+
+Executive Interview:
+{executive_transcript}
+
+Format the output as:
+{{
+    "reflection_prompts": {{
+        "discussion_prompt": "Prepare to have a discussion with [names] after you have had time for reflection and they receive this report. Make sure you think through:",
+        "bullet_points": [
+            "What did I hear from the feedback that was new or different than I expected?",
+            "What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
+            "What am I focused on in the immediate short term and for the rest of [year]?",
+            "What kind of support do I need from [names], or others?"
+        ],
+        "context_summary": "[Name], after [time] in the [role], you find yourself in [situation] while [challenge]. This appeals to your need for [drivers]. Keep those needs in mind as you think through these suggestions for development."
+    }}
+}}

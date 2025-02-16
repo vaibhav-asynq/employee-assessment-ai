@@ -1,0 +1,169 @@
+{
+  "developmentAreas": {
+    "Directive Leadership": {
+      "competencyAlignment": ["Communication", "Influence"],
+      "evidence": [
+        {
+          "feedback": "Email communication can look apathetic because he will send quick, brief responses even though he has read through things deeply",
+          "source": "Wil Langenstein",
+          "role": "Principal"
+        },
+        {
+          "feedback": "Communication in general around direction, deadlines and expectations (because he tries not to be overly involved)",
+          "source": "Wil Langenstein",
+          "role": "Principal"
+        },
+        {
+          "feedback": "More confidence in communication - he's clear but shies away from the spotlight",
+          "source": "Martin Sumner",
+          "role": "Sector Head Industrials"
+        },
+        {
+          "feedback": "He doesn't command the room (not bad, a great ambassador but not the onstage guy)",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        }
+      ]
+    },
+    "Proactive Engagement": {
+      "competencyAlignment": ["Execution", "Driving results"],
+      "evidence": [
+        {
+          "feedback": "More proactive, always see him thinking and analyzing, gently guides those around him to the right answer, could save time with a more direct style",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        },
+        {
+          "feedback": "Somewhat reactive (aware of things and gets involved when he needs to)",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "Proactively check in with me more, what I need and what's going on, or a regular 1:1 to check in",
+          "source": "Wil Langenstein",
+          "role": "Principal"
+        }
+      ]
+    },
+    "Team Development": {
+      "competencyAlignment": ["Develops the team", "Inspiring the team"],
+      "evidence": [
+        {
+          "feedback": "Less direct coaching and teaching, could be more involved and engaged in active coaching during the day to day work",
+          "source": "Doug Brandely",
+          "role": "MD for ADG (direct report)"
+        },
+        {
+          "feedback": "Teaching others how he thinks (especially more junior people)",
+          "source": "Doug Brandely",
+          "role": "MD for ADG (direct report)"
+        },
+        {
+          "feedback": "We need more frequent feedback on how we're doing, especially the informal stuff",
+          "source": "Wil Langenstein",
+          "role": "Principal"
+        },
+        {
+          "feedback": "Could facilitate and be more involved with others' development because he has a lot of resources",
+          "source": "Wil Langenstein",
+          "role": "Principal"
+        }
+      ]
+    },
+    "External Presence": {
+      "competencyAlignment": ["Influence", "Positive relationships"],
+      "evidence": [
+        {
+          "feedback": "Needs to get out there more and represent Carlyle, he just doesn't do it but need more external leadership",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "Quirky and private: lots of conferences and panels in the DC area for our business but he explicitly avoids those",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "Can spend more time ingratiating himself with management teams",
+          "source": "Mark Marengo",
+          "role": "JP Morgan, MD co-head"
+        },
+        {
+          "feedback": "We need to do some brand building in aerospace",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        }
+      ]
+    },
+    "Team Resource Management": {
+      "competencyAlignment": ["Planning", "Execution"],
+      "evidence": [
+        {
+          "feedback": "We have a glaring hole in our team at the mid-level, due to departures",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "He's going with the flow a little too much and needs to be the squeaky wheel and find another VP",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "Their team has had more turnover than other teams",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        }
+      ]
+    },
+    "Decision Timing": {
+      "competencyAlignment": ["Problem solving", "Strategic thinking"],
+      "evidence": [
+        {
+          "feedback": "Can jump to conclusions too quickly",
+          "source": "Dayne Baird",
+          "role": "Managing Director with U.S. Buyout"
+        },
+        {
+          "feedback": "I might want him more involved earlier as I sift through the 12-15 possible deals so he can accelerate the decision",
+          "source": "Aaron Hurwitz",
+          "role": "Principal"
+        }
+      ]
+    },
+    "Performance Management": {
+      "competencyAlignment": ["Driving results", "Develops the team"],
+      "evidence": [
+        {
+          "feedback": "Like a lot of people at Carlyle, he avoids tough conversations and pulling the trigger on poor performers",
+          "source": "Anna Mire",
+          "role": "VP (direct report)"
+        },
+        {
+          "feedback": "Not sure what is driving turnover (is it the culture, the pace?) so is he managing the group in a way that people want to be there?",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        }
+      ]
+    },
+    "Career Advancement": {
+      "competencyAlignment": ["Org savvy", "Strategic thinking"],
+      "evidence": [
+        {
+          "feedback": "He is more capable than both of his bosses, so I don't know how hard he is pushing his own career",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        },
+        {
+          "feedback": "He can push his brand more on the inside, politics not the results win the day",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        },
+        {
+          "feedback": "He seems to want to be asked to do instead of positioning himself to do it",
+          "source": "Joe Logue",
+          "role": "CEO Two Six Technologies"
+        }
+      ]
+    }
+  }
+}

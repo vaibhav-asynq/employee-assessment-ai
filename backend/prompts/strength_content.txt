@@ -1,0 +1,15 @@
+Given this heading '{heading}', generate a strength description for {name} that:
+1. Opens with "{name} is [character quality adjectives]"
+2. Follows with specific examples and behaviors from the transcript
+3. Ends with impact using transitions like "As a result", "This leads to", "Consequently", etc.
+4. Keeps response under 100 words and in one paragraph
+
+Use this transcript as context:
+{feedback_transcript}
+
+Rules:
+- Focus on positive qualities and achievements
+- Use specific examples from the transcript
+- Maintain professional tone
+- End with clear business impact
+- Keep to exactly one paragraph

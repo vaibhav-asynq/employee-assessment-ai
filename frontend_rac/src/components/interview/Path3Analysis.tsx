@@ -33,8 +33,10 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
     },
     next_steps: [
       { main: "Next Step 1", sub_points: ["", "", ""] },
-      { main: "Next Step 2", sub_points: ["", "", ""] },
-      { main: "Next Step 3", sub_points: ["", "", ""] }
+      "",
+      { main: "Next Step 3", sub_points: ["", "", ""] },
+      { main: "Next Step 4", sub_points: ["", "", ""] },
+      { main: "Next Step 5", sub_points: ["", "", ""] }
     ]
   });
 

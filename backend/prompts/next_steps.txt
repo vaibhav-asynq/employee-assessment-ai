@@ -1,0 +1,41 @@
+Given these areas to target for {name} and the transcript, generate next steps that address each area. Format as 4-5 main points, each with 3-4 actionable sub-points.
+
+Areas to Target:
+{areas_text}
+
+Transcript for context:
+{feedback_transcript}
+
+Guidelines:
+1. Each main point should:
+   - Begin with "To [objective]"
+   - Focus on one key development area
+   - Be strategic and high-level
+
+2. Sub-points should:
+   - Start with action verbs like "Consider", "Explore", "Look into", "Try"
+   - Be specific but not prescriptive
+   - Connect to business impact
+   - Be 20-25 words each
+
+3. Ensure suggestions:
+   - Build on existing strengths
+   - Address root causes
+   - Maintain executive perspective
+   - Allow flexibility in implementation
+
+Format the response as:
+{{
+    "next_steps": [
+        {{
+            "main": "To [Area]",
+            "sub_points": [
+                "Consider [action]...",
+                "Explore [action]...",
+                "Look into [action]...",
+                "Try [action]..."
+            ]
+        }},
+        // Additional points...
+    ]
+}}

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Sparkles } from 'lucide-react';
-import { generateStrengthContent, generateAreaContent } from '@/lib/api';
+import { generateStrengthContent, generateAreaContent, generateNextSteps } from '@/lib/api';
 import { SectionHeading } from './shared/SectionHeading';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
@@ -22,22 +22,23 @@ interface LocalSection {
 export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalysisProps) {
   const [loadingStrength, setLoadingStrength] = useState<string | null>(null);
   const [loadingArea, setLoadingArea] = useState<string | null>(null);
+  const [loadingNextSteps, setLoadingNextSteps] = useState(false);
 
   // Initialize sections with stable IDs
   const [sections, setSections] = useState({
     strengths: [
       { id: 'strength-1', heading: 'Strength 1', content: '' },
       { id: 'strength-2', heading: 'Strength 2', content: '' },
-      { id: 'strength-3', heading: 'Strength 3', content: '' },
-      { id: 'strength-4', heading: 'Strength 4', content: '' },
-      { id: 'strength-5', heading: 'Strength 5', content: '' }
+      { id: 'strength-3', heading: 'Strength 3', content: '' }
+      // { id: 'strength-4', heading: 'Strength 4', content: '' },
+      // { id: 'strength-5', heading: 'Strength 5', content: '' }
     ],
     areas: [
       { id: 'area-1', heading: 'Development Area 1', content: '' },
       { id: 'area-2', heading: 'Development Area 2', content: '' },
       { id: 'area-3', heading: 'Development Area 3', content: '' },
-      { id: 'area-4', heading: 'Development Area 4', content: '' },
-      { id: 'area-5', heading: 'Development Area 5', content: '' }
+      { id: 'area-4', heading: 'Development Area 4', content: '' }
+      // { id: 'area-5', heading: 'Development Area 5', content: '' }
     ]
   });
 
@@ -305,6 +306,43 @@ export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalys
               }}
             >
               <Plus className="h-4 w-4 mr-1" /> Add Points
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!fileId) {
+                  console.error('No file ID found');
+                  return;
+                }
+
+                try {
+                  setLoadingNextSteps(true);
+                  const nextSteps = await generateNextSteps(
+                    Object.fromEntries(
+                      Object.values(sections.areas).map(area => [area.heading, area.content])
+                    ),
+                    fileId
+                  );
+                  onUpdate({
+                    ...data,
+                    next_steps: nextSteps
+                  });
+                } catch (error) {
+                  console.error('Error generating next steps:', error);
+                } finally {
+                  setLoadingNextSteps(false);
+                }
+              }}
+              disabled={loadingNextSteps}
+              className="text-gray-500 whitespace-nowrap flex items-center"
+            >
+              {loadingNextSteps ? (
+                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              Generate with AI
             </Button>
           </div>
         </SectionHeading>

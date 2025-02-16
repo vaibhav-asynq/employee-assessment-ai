@@ -72,3 +72,11 @@ export const generateAreaContent = async (heading: string, fileId: string): Prom
   const response = await axios.post(`${API_URL}/api/generate_area_content`, { heading, file_id: fileId });
   return response.data.content;
 };
+
+export const generateNextSteps = async (areasToTarget: { [key: string]: string }, fileId: string) => {
+  const response = await axios.post(`${API_URL}/api/generate_next_steps`, {
+    areas_to_target: areasToTarget,
+    file_id: fileId
+  });
+  return response.data.next_steps;
+};

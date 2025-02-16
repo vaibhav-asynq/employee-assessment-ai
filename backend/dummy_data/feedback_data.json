@@ -1,0 +1,250 @@
+{
+    "strengths": {
+        "Matt_Savino": {
+            "role": "MD Head of U.S. Capital Markets",
+            "feedback": [
+                "So even keeled it's scary: measured",
+                "Nice guy, thoughtful",
+                "Sees all the playing fields before, knows the right next move through experience",
+                "Super smart"
+            ]
+        },
+        "Mark_Marengo": {
+            "role": "JP Morgan MD",
+            "feedback": [
+                "Super smart",
+                "Very creative",
+                "Very direct and candid",
+                "Tough negotiator who has gained more balance over time",
+                "Has built a talented team",
+                "Knows how to put deals together expertly",
+                "Team is great at investing",
+                "Has made tough decisions around optimization",
+                "Very decisive",
+                "Poised and polished and polite",
+                "Great soft skills",
+                "Has great reputation outside firm as super good guy"
+            ]
+        },
+        "Matt_Tait": {
+            "role": "CEO ManTech",
+            "feedback": [
+                "High character, high integrity",
+                "Strategic thinker with broad board experience",
+                "Patient",
+                "Very balanced",
+                "Good at focusing on company success",
+                "Provides good insights",
+                "Doesn't get distracted",
+                "Good at reading the room",
+                "Has ability to be charming",
+                "Has built next generation of leadership",
+                "Team knows when to involve him appropriately"
+            ]
+        },
+        "Doug_Brandely": {
+            "role": "MD for ADG",
+            "feedback": [
+                "Extremely smart (but doesn't show it off)",
+                "Outstanding investment judgment",
+                "Efficient at decision making",
+                "High business acumen and strategic thinking",
+                "Industry expert",
+                "Good at spotting and evaluating talent",
+                "Hands off leadership style",
+                "Operates at high level",
+                "Gives team room to operate",
+                "Thinks strategically about team structure"
+            ]
+        },
+        "Martin_Sumner": {
+            "role": "Sector Head Industrials",
+            "feedback": [
+                "Highly analytical",
+                "Wicked smart",
+                "Trustworthy with no political ambitions",
+                "Seamless partner on overlapping deals",
+                "Operates above sector head level",
+                "Good at strategic thinking without making others feel inferior",
+                "Improved enormously after getting communications coach",
+                "Good at collaborating with CEOs",
+                "100% results focused",
+                "Champion for people's careers",
+                "Generates loyalty",
+                "Celebrates team performance"
+            ]
+        },
+        "Joe_Logue": {
+            "role": "CEO Two Six Technologies",
+            "feedback": [
+                "Brilliant",
+                "Knows the market exceptionally well",
+                "Calm and analytical",
+                "Respectful",
+                "Good at building relationships",
+                "Shrewd negotiator",
+                "Thinks through landscape like chess player",
+                "Has tons of credibility",
+                "More impressive in smaller groups",
+                "World class team at working with government sector"
+            ]
+        },
+        "Anna_Mire": {
+            "role": "VP",
+            "feedback": [
+                "Tone setter for group cohesion",
+                "Visionary on new deals",
+                "Impressive track record",
+                "Very accommodating of work-life balance needs",
+                "Good at developing people",
+                "Highly respected investor",
+                "Thoughtful about themes and priorities",
+                "Calm and stable in sale processes",
+                "Builds relationships across sectors",
+                "Willing to work across and learn from others"
+            ]
+        },
+        "Dayne_Baird": {
+            "role": "Managing Director",
+            "feedback": [
+                "The smartest person I know",
+                "Good mentor",
+                "Good listener",
+                "90% accurate in decisions",
+                "Good at reading people",
+                "Skilled at managing up",
+                "Sharp at reading people",
+                "Good at managing situational awareness",
+                "Even manages disagreements well",
+                "Lets people vent",
+                "Provides good recommendations",
+                "Solid at exiting investments"
+            ]
+        },
+        "Aaron_Hurwitz": {
+            "role": "Principal",
+            "feedback": [
+                "Cerebral",
+                "Astute investor",
+                "Good listener",
+                "Supportive of team members",
+                "Wise about how things will play out",
+                "Strong track record",
+                "Gives runway to run with investment leads",
+                "Supportive when needed",
+                "Good track record",
+                "Cares about team capabilities",
+                "Does more coaching than predecessor",
+                "Strong listener",
+                "Moves to front when needed",
+                "Comfortable and to the point"
+            ]
+        },
+        "Wil_Langenstein": {
+            "role": "Principal",
+            "feedback": [
+                "Incredible investor with brilliant mind",
+                "Excellent negotiator",
+                "Strong leader who gives room to run",
+                "Good at cross-sector collaboration",
+                "Great presenter",
+                "Excellent at spotting and growing talent",
+                "Good at communicating goals and priorities",
+                "Super thoughtful",
+                "Excellent at taking feedback",
+                "Great at coaching others",
+                "Phenomenal leader"
+            ]
+        }
+    },
+    "areas_to_target": {
+        "Matt_Savino": {
+            "role": "MD Head of U.S. Capital Markets",
+            "feedback": [
+                "Could be more direct more frequently",
+                "Less polished and savvy all the time"
+            ]
+        },
+        "Mark_Marengo": {
+            "role": "JP Morgan MD",
+            "feedback": [
+                "Could do more networking and relationship building",
+                "Could provide more support to team with networking",
+                "Could take advantage of capacity freed up by building talented team",
+                "Could take on broader opportunities at Carlyle"
+            ]
+        },
+        "Matt_Tait": {
+            "role": "CEO ManTech",
+            "feedback": [
+                "Could spend more time building trust with management teams",
+                "Almost too humble, doesn't fully appreciate his strengths",
+                "Could spend more time ingratiating himself with management teams",
+                "Could spend more time building trust with them"
+            ]
+        },
+        "Doug_Brandely": {
+            "role": "MD for ADG",
+            "feedback": [
+                "Could be more involved in front-line relationship building and business development",
+                "Could provide more direct coaching and teaching to junior team members",
+                "Less involved in day-to-day work with junior staff",
+                "Skews towards letting team do sourcing and relationship building",
+                "Less direct coaching and teaching"
+            ]
+        },
+        "Joe_Logue": {
+            "role": "CEO Two Six Technologies",
+            "feedback": [
+                "Not the rah rah public figure",
+                "Doesn't command the room in large settings",
+                "Team has had more turnover than others",
+                "Could be more proactive rather than analytical",
+                "Cautious around deeper relationships",
+                "More proactive instead of always analyzing",
+                "Could save time with more direct style",
+                "May be taken for granted",
+                "Uncertain if managing group culture effectively given turnover"
+            ]
+        },
+        "Anna_Mire": {
+            "role": "VP",
+            "feedback": [
+                "Avoids tough conversations with poor performers",
+                "Less available in office due to remote work",
+                "Could push his own career more actively",
+                "Tends to wait to be asked rather than positioning himself",
+                "Could make himself more available when in office",
+                "Portfolio does better than boss but doesn't push own career",
+                "Seems to want to be asked instead of positioning himself"
+            ]
+        },
+        "Aaron_Hurwitz": {
+            "role": "Principal",
+            "feedback": [
+                "Can jump to conclusions too quickly",
+                "Avoids public speaking opportunities and panels",
+                "Somewhat reactive rather than proactive",
+                "Needs to represent Carlyle more externally",
+                "Could be more present (especially when in NY)",
+                "Might want him more involved earlier in deal sifting",
+                "Better guidance needed on when to keep/toss opportunities",
+                "Could proactively check in more",
+                "Could have regular 1:1s to check in"
+            ]
+        },
+        "Wil_Langenstein": {
+            "role": "Principal",
+            "feedback": [
+                "Brief email responses can appear apathetic",
+                "Could improve communication around direction and expectations",
+                "Needs to provide more frequent informal feedback",
+                "Could be more involved in others' development",
+                "Could better utilize his network to help others' careers",
+                "Email communication can look apathetic despite deep engagement",
+                "Communication around direction/deadlines/expectations needs improvement",
+                "Need more frequent feedback especially informal"
+            ]
+        }
+    }
+}
