@@ -1,0 +1,38 @@
+You are an expert at analyzing 360-degree feedback transcripts. I will provide you with a transcript and a list of headings. Your task is to sort relevant evidence from the transcript under each heading.
+
+Transcript:
+{transcript}
+
+Headings to sort evidence under:
+{headings}
+
+For each heading, find the most relevant evidence from the transcript that supports or demonstrates that heading. Return your analysis in the following JSON format:
+
+[
+  {{
+    "heading": "Heading 1",
+    "evidence": [
+      "Direct quote or paraphrased evidence from transcript",
+      "Another piece of evidence..."
+    ]
+  }},
+  {{
+    "heading": "Heading 2", 
+    "evidence": [
+      "Evidence for heading 2...",
+      "More evidence..."
+    ]
+  }}
+]
+
+Guidelines:
+1. Each piece of evidence should be a direct quote or close paraphrase from the transcript
+2. Include 2-4 pieces of evidence per heading
+3. Evidence should be clear and specific, not vague
+4. Focus on evidence that strongly demonstrates or supports the heading
+5. Keep each evidence piece concise but include enough context to be meaningful
+6. Ensure the evidence actually matches and supports the heading
+7. Use exact quotes when possible, but you can paraphrase if needed for clarity
+8. Do not make up or infer evidence - only use what's directly stated in the transcript
+
+Return only the JSON array with no additional text or explanation.

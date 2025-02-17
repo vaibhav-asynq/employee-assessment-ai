@@ -11,6 +11,8 @@ interface EditableAnalysisProps {
   data: InterviewAnalysis;
   onUpdate: (data: InterviewAnalysis) => void;
   fileId: string | null;
+  onStrengthsComplete?: (complete: boolean) => void;
+  onAreasComplete?: (complete: boolean) => void;
 }
 
 interface LocalSection {
@@ -19,7 +21,13 @@ interface LocalSection {
   content: string;
 }
 
-export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalysisProps) {
+export function Path3EditableAnalysis({ 
+  data, 
+  onUpdate, 
+  fileId,
+  onStrengthsComplete,
+  onAreasComplete 
+}: EditableAnalysisProps) {
   const [loadingStrength, setLoadingStrength] = useState<string | null>(null);
   const [loadingArea, setLoadingArea] = useState<string | null>(null);
   const [loadingNextSteps, setLoadingNextSteps] = useState(false);
@@ -42,6 +50,21 @@ export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalys
     ]
   });
 
+  const checkSectionCompletion = useCallback(() => {
+    const strengthsComplete = sections.strengths.every(s => {
+      const defaultPattern = /^Strength \d+$/;
+      return !defaultPattern.test(s.heading);
+    });
+    
+    const areasComplete = sections.areas.every(a => {
+      const defaultPattern = /^Development Area \d+$/;
+      return !defaultPattern.test(a.heading);
+    });
+    
+    onStrengthsComplete?.(strengthsComplete);
+    onAreasComplete?.(areasComplete);
+  }, [sections, onStrengthsComplete, onAreasComplete]);
+
   const updateParentState = useCallback(() => {
     const analysisData: InterviewAnalysis = {
       ...data,
@@ -53,7 +76,13 @@ export function Path3EditableAnalysis({ data, onUpdate, fileId }: EditableAnalys
       )
     };
     onUpdate(analysisData);
-  }, [sections, data, onUpdate]);
+    checkSectionCompletion();
+  }, [sections, data, onUpdate, checkSectionCompletion]);
+
+  // Check completion on mount and when sections change
+  React.useEffect(() => {
+    checkSectionCompletion();
+  }, [sections, checkSectionCompletion]);
 
   const handleGenerateStrength = async (heading: string) => {
     if (!fileId) {

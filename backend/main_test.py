@@ -19,7 +19,8 @@ from prompt_loader import (
     format_reflection_points_prompt,
     format_next_steps_prompt,
     format_area_content_prompt,
-    format_strength_content_prompt
+    format_strength_content_prompt,
+    load_prompt
 )
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -71,6 +72,10 @@ class GenerateNextStepsRequest(BaseModel):
     areas_to_target: Dict[str, str]
     file_id: str
     executive_transcript: Optional[str] = None
+
+class SortEvidenceRequest(BaseModel):
+    file_id: str
+    headings: List[str]
 
 # Store uploaded files and their analysis
 files_store = {}
@@ -368,6 +373,119 @@ async def generate_area_content(request: GenerateContentRequest):
         return {"content": response.content[0].text}
     except Exception as e:
         print(f"Error in generate_area_content: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/sort-strengths-evidence")
+async def sort_strengths_evidence(request: SortEvidenceRequest):
+    try:
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            transcript = f.read()
+
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Load and format prompt
+        sort_prompt = load_prompt("sort_evidence.txt")
+        prompt = sort_prompt.format(
+            transcript=transcript,
+            headings="\n".join(request.headings)
+        )
+        
+        # Get sorted evidence from Claude
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=2000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in sort_strengths_evidence: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sort-areas-evidence")
+async def sort_areas_evidence(request: SortEvidenceRequest):
+    try:
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            transcript = f.read()
+
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Load and format prompt
+        sort_prompt = load_prompt("sort_evidence.txt")
+        prompt = sort_prompt.format(
+            transcript=transcript,
+            headings="\n".join(request.headings)
+        )
+        
+        # Get sorted evidence from Claude
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=2000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in sort_areas_evidence: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 

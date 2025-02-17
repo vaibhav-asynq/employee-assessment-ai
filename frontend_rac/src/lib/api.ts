@@ -80,3 +80,34 @@ export const generateNextSteps = async (areasToTarget: { [key: string]: string }
   });
   return response.data.next_steps;
 };
+
+export interface SortedEvidence {
+  heading: string;
+  evidence: string[];
+}
+
+export async function sortStrengthsEvidence(fileId: string, headings: string[]) {
+  const response = await axios.post(`${API_URL}/api/sort-strengths-evidence`, {
+    file_id: fileId,
+    headings
+  });
+
+  if (!response.data) {
+    throw new Error('Failed to sort strengths evidence');
+  }
+
+  return response.data;
+}
+
+export async function sortAreasEvidence(fileId: string, headings: string[]) {
+  const response = await axios.post(`${API_URL}/api/sort-areas-evidence`, {
+    file_id: fileId,
+    headings
+  });
+
+  if (!response.data) {
+    throw new Error('Failed to sort areas evidence');
+  }
+
+  return response.data;
+}

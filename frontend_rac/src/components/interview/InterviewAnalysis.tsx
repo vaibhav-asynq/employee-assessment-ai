@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UploadSection } from './UploadSection';
 import { EditableAnalysis } from './EditableAnalysis';
-import { Path4HumanReport } from './Path4HumanReport';
 import { Path2Analysis } from './Path2Analysis';
 import { Path3Analysis } from './Path3Analysis';
 import { uploadFile, generateReport, generateWordDocument, getRawData, getFeedback } from '@/lib/api';
@@ -164,19 +163,11 @@ export function InterviewAnalysis() {
       };
 
       // For Path 1, use the base report (AI suggestions)
-      // For Path 4, use the human report without next steps
+      // For Path 1, use the base report (AI suggestions)
       // For other paths, use the human report if available
       let reportData: InterviewAnalysisType;
       if (selectedPath === 1) {
         reportData = baseReport;
-      } else if (selectedPath === 4) {
-        reportData = {
-          name: analysisData.name,
-          date: analysisData.date,
-          strengths: analysisData.humanReport?.strengths || analysisData.strengths,
-          areas_to_target: analysisData.humanReport?.areas_to_target || analysisData.areas_to_target,
-          next_steps: [] // Empty array for Path 4
-        };
       } else {
         reportData = analysisData.humanReport || baseReport;
       }
@@ -317,42 +308,6 @@ export function InterviewAnalysis() {
                   }));
                 }}
               />
-            ) : selectedPath === 4 ? (
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold">Interview Feedback</h2>
-                  </div>
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-600">Loading feedback data...</p>
-                    </div>
-                  ) : feedbackData ? (
-                    <FeedbackDisplay data={feedbackData} />
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-600">No feedback data available</p>
-                    </div>
-                  )}
-                </div>
-                <div className="border-l pl-8">
-                  {analysisData && (
-                    <Path4HumanReport 
-                      data={analysisData} 
-                      onUpdate={(updatedData) => {
-                        setAnalysisData(prev => {
-                          if (!prev) return prev;
-                          return {
-                            ...prev,
-                            ...updatedData,
-                            next_steps: [] // Keep next_steps empty for Path 4
-                          };
-                        });
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
             ) : (
               <div className="grid grid-cols-2 gap-8">
                 <div>
