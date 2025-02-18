@@ -1,10 +1,10 @@
 // src/lib/types.ts
 
 export interface SubheadingSection {
-    [key: string]: string;
-  }
-  
-  export interface NextStepPoint {
+  [key: string]: string;
+}
+
+export interface NextStepPoint {
     main: string;
     sub_points: string[];
   }

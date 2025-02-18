@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Path3EditableAnalysis } from './Path3EditableAnalysis';
 import { FeedbackDisplay } from './FeedbackDisplay';
 import { SortedEvidenceView } from './SortedEvidenceView';
@@ -39,18 +39,20 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
   const [strengthsSorted, setStrengthsSorted] = useState(false);
   const [areasSorted, setAreasSorted] = useState(false);
   
-  // Initialize with placeholder text for each section
-  const [editableContent, setEditableContent] = useState<EditableContent>({
+  // Initialize with default sections
+  const [editableContent, setEditableContent] = useState<InterviewAnalysis>({
+    name: '',
+    date: new Date().toISOString(),
     strengths: {
-      "box1": { title: "Strength 1", content: "" },
-      "box2": { title: "Strength 2", content: "" },
-      "box3": { title: "Strength 3", content: "" }
+      "Strength 1": "",
+      "Strength 2": "",
+      "Strength 3": ""
     },
     areas_to_target: {
-      "box1": { title: "Development Area 1", content: "" },
-      "box2": { title: "Development Area 2", content: "" },
-      "box3": { title: "Development Area 3", content: "" },
-      "box4": { title: "Development Area 4", content: "" }
+      "Development Area 1": "",
+      "Development Area 2": "",
+      "Development Area 3": "",
+      "Development Area 4": ""
     },
     next_steps: [
       { main: "Next Step 1", sub_points: ["", "", ""] },
@@ -62,52 +64,8 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
   });
 
   const handleUpdate = (updatedData: InterviewAnalysis) => {
-    // Convert the updated data back to editable content format
-    const newEditableContent = {
-      strengths: Object.fromEntries(
-        Object.entries(updatedData.strengths).map(([key, value], index) => [
-          `box${index + 1}`,
-          { title: key, content: value }
-        ])
-      ),
-      areas_to_target: Object.fromEntries(
-        Object.entries(updatedData.areas_to_target).map(([key, value], index) => [
-          `box${index + 1}`,
-          { title: key, content: value }
-        ])
-      ),
-      next_steps: updatedData.next_steps
-    };
-
-    setEditableContent(newEditableContent);
-
-    // Convert editable content to analysis data format for parent update
-    const analysisData: InterviewAnalysis = {
-      name: updatedData.name,
-      date: updatedData.date,
-      strengths: Object.fromEntries(
-        Object.values(newEditableContent.strengths).map(item => [item.title || "", item.content || ""])
-      ),
-      areas_to_target: Object.fromEntries(
-        Object.values(newEditableContent.areas_to_target).map(item => [item.title || "", item.content || ""])
-      ),
-      next_steps: newEditableContent.next_steps
-    };
-
-    onUpdate(analysisData);
-  };
-
-  // Convert editable content to analysis data format for EditableAnalysis
-  const analysisData: InterviewAnalysis = {
-    name: '',
-    date: new Date().toISOString(),
-    strengths: Object.fromEntries(
-      Object.values(editableContent.strengths).map(item => [item.title || "", item.content || ""])
-    ),
-    areas_to_target: Object.fromEntries(
-      Object.values(editableContent.areas_to_target).map(item => [item.title || "", item.content || ""])
-    ),
-    next_steps: editableContent.next_steps
+    setEditableContent(updatedData);
+    onUpdate(updatedData);
   };
 
   const handleSortEvidence = useCallback(async (section: 'strengths' | 'areas') => {
@@ -117,12 +75,12 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
       setSortingLoading(true);
       
       if (section === 'strengths') {
-        const headings = Object.values(editableContent.strengths).map(s => s.title);
+        const headings = Object.keys(editableContent.strengths);
         const sortedData = await sortStrengthsEvidence(fileId, headings);
         setSortedStrengths(sortedData);
         setStrengthsSorted(true);
       } else {
-        const headings = Object.values(editableContent.areas_to_target).map(a => a.title);
+        const headings = Object.keys(editableContent.areas_to_target);
         const sortedData = await sortAreasEvidence(fileId, headings);
         setSortedAreas(sortedData);
         setAreasSorted(true);
@@ -144,8 +102,8 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
     try {
       setSortingLoading(true);
       
-      const strengthsHeadings = Object.values(editableContent.strengths).map(s => s.title);
-      const areasHeadings = Object.values(editableContent.areas_to_target).map(a => a.title);
+      const strengthsHeadings = Object.keys(editableContent.strengths);
+      const areasHeadings = Object.keys(editableContent.areas_to_target);
       
       const [strengthsData, areasData] = await Promise.all([
         sortStrengthsEvidence(fileId, strengthsHeadings),
@@ -271,7 +229,7 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
               </div>
               <div className="border-l pl-8">
                 <Path3EditableAnalysis 
-                  data={analysisData}
+                  data={editableContent}
                   onUpdate={handleUpdate}
                   fileId={fileId}
                   onStrengthsComplete={setStrengthsComplete}
@@ -294,7 +252,7 @@ export function Path3Analysis({ feedbackData, loading, onUpdate, fileId }: Path3
               </div>
               <div className="border-l pl-8">
                 <Path3EditableAnalysis 
-                  data={analysisData}
+                  data={editableContent}
                   onUpdate={handleUpdate}
                   fileId={fileId}
                   onStrengthsComplete={setStrengthsComplete}

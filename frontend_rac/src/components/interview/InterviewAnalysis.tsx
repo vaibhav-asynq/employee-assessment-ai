@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,13 +13,14 @@ import { FeedbackScreen } from './FeedbackScreen';
 import { PathSelectionScreen } from './PathSelectionScreen';
 import { DevelopmentalResources } from './DevelopmentalResources';
 import { FeedbackDisplay } from './FeedbackDisplay';
+import { Path2Provider } from './context/Path2Context';
 
 interface ExtendedInterviewAnalysis extends InterviewAnalysisType {
   humanReport?: InterviewAnalysisType;
   aiSuggestions?: InterviewAnalysisType;
 }
 
-export function InterviewAnalysis() {
+function InterviewAnalysisContent() {
   const [activeStep, setActiveStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<number | null>(null);
   const [feedbackData, setFeedbackData] = useState<any>(null);
@@ -30,11 +31,9 @@ export function InterviewAnalysis() {
   const [rawData, setRawData] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState<'uploading' | 'processing' | null>(null);
   const [fileId, setFileId] = useState<string | null>(null);
-  const [editableContent, setEditableContent] = useState<{
-    strengths: { [key: string]: { title: string; content: string } };
-    areas_to_target: { [key: string]: { title: string; content: string } };
-    next_steps: Array<string | { main: string; sub_points: string[] }>;
-  }>({
+  const [editableContent, setEditableContent] = useState<InterviewAnalysisType>({
+    name: '',
+    date: new Date().toISOString(),
     strengths: {},
     areas_to_target: {},
     next_steps: []
@@ -45,13 +44,13 @@ export function InterviewAnalysis() {
     if (rawData && analysisData) {
       if (Object.keys(editableContent.strengths).length === 0) {
         setEditableContent(prev => ({
+          ...prev,
           strengths: Object.fromEntries(
-            Object.keys(analysisData.strengths).map(key => [key, { title: key, content: '' }])
+            Object.keys(analysisData.strengths).map(key => [key, ''])
           ),
           areas_to_target: Object.fromEntries(
-            Object.keys(analysisData.areas_to_target).map(key => [key, { title: key, content: '' }])
-          ),
-          next_steps: prev.next_steps
+            Object.keys(analysisData.areas_to_target).map(key => [key, ''])
+          )
         }));
       }
     }
@@ -61,16 +60,7 @@ export function InterviewAnalysis() {
     if (analysisData && editableContent.next_steps.length === 0) {
       setEditableContent(prev => ({
         ...prev,
-        next_steps: analysisData.next_steps.map(step => {
-          if (typeof step === 'string') {
-            return '';
-          } else {
-            return {
-              main: '',
-              sub_points: step.sub_points.map(() => '')
-            };
-          }
-        })
+        next_steps: analysisData.next_steps
       }));
     }
   }, [analysisData]);
@@ -163,7 +153,6 @@ export function InterviewAnalysis() {
       };
 
       // For Path 1, use the base report (AI suggestions)
-      // For Path 1, use the base report (AI suggestions)
       // For other paths, use the human report if available
       let reportData: InterviewAnalysisType;
       if (selectedPath === 1) {
@@ -193,12 +182,8 @@ export function InterviewAnalysis() {
       // For all paths, prepare the report data
       const humanReport: InterviewAnalysisType = {
         ...analysisData!,
-        strengths: Object.fromEntries(
-          Object.entries(editableContent.strengths).map(([key, value]) => [value.title, value.content])
-        ),
-        areas_to_target: Object.fromEntries(
-          Object.entries(editableContent.areas_to_target).map(([key, value]) => [value.title, value.content])
-        ),
+        strengths: editableContent.strengths,
+        areas_to_target: editableContent.areas_to_target,
         next_steps: selectedPath === 4 ? [] : editableContent.next_steps
       };
 
@@ -215,23 +200,24 @@ export function InterviewAnalysis() {
       });
     } else if (newStep === 4 && activeStep === 5 && analysisData?.humanReport) {
       setEditableContent({
-        strengths: Object.fromEntries(
-          Object.entries(analysisData.humanReport.strengths).map(([key, value]) => [
-            key,
-            { title: key, content: value }
-          ])
-        ),
-        areas_to_target: Object.fromEntries(
-          Object.entries(analysisData.humanReport.areas_to_target).map(([key, value]) => [
-            key,
-            { title: key, content: value }
-          ])
-        ),
+        name: analysisData.humanReport.name,
+        date: analysisData.humanReport.date,
+        strengths: analysisData.humanReport.strengths,
+        areas_to_target: analysisData.humanReport.areas_to_target,
         next_steps: analysisData.humanReport.next_steps
       });
     }
     setActiveStep(newStep);
   };
+
+  const handleAnalysisUpdate = useCallback((updatedData: InterviewAnalysisType) => {
+    requestAnimationFrame(() => {
+      setAnalysisData(prev => ({
+        ...prev!,
+        ...updatedData
+      }));
+    });
+  }, []);
 
   const getTotalSteps = () => {
     // First 3 steps are common: Upload, Feedback, Path Selection
@@ -330,12 +316,7 @@ export function InterviewAnalysis() {
                   {analysisData && (
                     <EditableAnalysis 
                       data={analysisData} 
-                      onUpdate={(updatedData) => {
-                        setAnalysisData({
-                          ...analysisData,
-                          ...updatedData
-                        });
-                      }}
+                      onUpdate={handleAnalysisUpdate}
                     />
                   )}
                 </div>
@@ -362,5 +343,13 @@ export function InterviewAnalysis() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function InterviewAnalysis() {
+  return (
+    <Path2Provider>
+      <InterviewAnalysisContent />
+    </Path2Provider>
   );
 }

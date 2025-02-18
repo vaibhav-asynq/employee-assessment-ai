@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { NextStep } from './types';
 
 const API_URL = 'http://localhost:8000';
 
@@ -73,7 +74,7 @@ export const generateAreaContent = async (heading: string, fileId: string): Prom
   return response.data.content;
 };
 
-export const generateNextSteps = async (areasToTarget: { [key: string]: string }, fileId: string) => {
+export const generateNextSteps = async (areasToTarget: { [key: string]: string }, fileId: string): Promise<NextStep[]> => {
   const response = await axios.post(`${API_URL}/api/generate_next_steps`, {
     areas_to_target: areasToTarget,
     file_id: fileId

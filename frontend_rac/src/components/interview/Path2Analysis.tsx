@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { getStrengthEvidences, getDevelopmentAreas, type StrengthEvidences, type DevelopmentAreas, type Evidence } from '@/lib/api';
 import { Spinner } from '@/components/ui/spinner';
 import { Path2HumanReport } from './Path2HumanReport';
-import { InterviewAnalysis as InterviewAnalysisType, NextStepPoint } from '@/lib/types';
+import { InterviewAnalysis as InterviewAnalysisType } from '@/lib/types';
+import { usePath2Context } from './context/Path2Context';
 
-export function Path2Analysis() {
-  const [strengthEvidences, setStrengthEvidences] = useState<StrengthEvidences | null>(null);
-  const [developmentAreas, setDevelopmentAreas] = useState<DevelopmentAreas | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editableData, setEditableData] = useState<InterviewAnalysisType | null>(null);
+function Path2AnalysisContent() {
+  const { editableData, setEditableData } = usePath2Context();
+  const [strengthEvidences, setStrengthEvidences] = React.useState<StrengthEvidences | null>(null);
+  const [developmentAreas, setDevelopmentAreas] = React.useState<DevelopmentAreas | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,25 +23,27 @@ export function Path2Analysis() {
         setStrengthEvidences(strengthData);
         setDevelopmentAreas(developmentData);
 
-        // Initialize editable data with empty content but titles from the evidence
-        const initialData: InterviewAnalysisType = {
-          name: '',
-          date: new Date().toISOString(),
-          strengths: Object.keys(strengthData.leadershipQualities).reduce((acc: Record<string, string>, key: string) => {
-            acc[key] = '';
-            return acc;
-          }, {}),
-          areas_to_target: Object.keys(developmentData.developmentAreas).reduce((acc: Record<string, string>, key: string) => {
-            acc[key] = '';
-            return acc;
-          }, {}),
-          next_steps: [
-            { main: "", sub_points: [] },
-            { main: "", sub_points: [] },
-            { main: "", sub_points: [] }
-          ]
-        };
-        setEditableData(initialData);
+        // Only initialize if editableData doesn't exist
+        if (!editableData) {
+          const initialData: InterviewAnalysisType = {
+            name: '',
+            date: new Date().toISOString(),
+            strengths: Object.keys(strengthData.leadershipQualities).reduce((acc: Record<string, string>, key: string) => {
+              acc[key] = '';
+              return acc;
+            }, {}),
+            areas_to_target: Object.keys(developmentData.developmentAreas).reduce((acc: Record<string, string>, key: string) => {
+              acc[key] = '';
+              return acc;
+            }, {}),
+            next_steps: [
+              { main: "", sub_points: [] },
+              { main: "", sub_points: [] },
+              { main: "", sub_points: [] }
+            ]
+          };
+          setEditableData(initialData);
+        }
       } catch (err) {
         setError('Failed to fetch data');
         console.error('Error fetching data:', err);
@@ -50,7 +53,7 @@ export function Path2Analysis() {
     };
 
     fetchData();
-  }, []);
+  }, [editableData, setEditableData]);
 
   if (loading) {
     return (
@@ -79,17 +82,16 @@ export function Path2Analysis() {
     </div>
   );
 
-  const handleUpdate = (updatedData: Partial<InterviewAnalysisType>) => {
-    setEditableData(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        ...updatedData
-      };
-    });
-  };
 
-  return (
+  return loading ? (
+    <div className="flex justify-center items-center h-full">
+      <Spinner />
+    </div>
+  ) : error ? (
+    <div className="text-red-500 text-center p-4">
+      {error}
+    </div>
+  ) : (
     <div className="grid grid-cols-2 gap-8 h-full">
       {/* Left side - Evidence Display */}
       <div className="h-full overflow-y-auto space-y-8">
@@ -127,12 +129,13 @@ export function Path2Analysis() {
       {/* Right side - Editable Content */}
       <div className="border-l pl-8">
         {editableData && (
-          <Path2HumanReport 
-            data={editableData}
-            onUpdate={handleUpdate}
-          />
+          <Path2HumanReport />
         )}
       </div>
     </div>
   );
+}
+
+export function Path2Analysis() {
+  return <Path2AnalysisContent />;
 }

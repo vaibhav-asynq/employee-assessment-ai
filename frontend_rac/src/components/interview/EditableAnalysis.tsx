@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { SectionHeading } from './shared/SectionHeading';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
-import { InterviewAnalysis } from '@/lib/types';
+import { InterviewAnalysis, OrderedSection, SubheadingSection } from '@/lib/types';
 
 interface EditableAnalysisProps {
   data: InterviewAnalysis;
@@ -12,17 +12,21 @@ interface EditableAnalysisProps {
 }
 
 export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
-  // Convert strengths object to array structure
-  const strengthsArray = Object.entries(data.strengths).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
+  const [localData, setLocalData] = useState<InterviewAnalysis>(data);
 
-  // Convert areas to target object to array structure
-  const areasArray = Object.entries(data.areas_to_target).map(([heading, content]) => ({
-    main: heading,
-    content: content
-  }));
+  // Update parent when local data changes
+  useEffect(() => {
+    const updateTimeout = setTimeout(() => {
+      onUpdate(localData);
+    }, 300);
+
+    return () => clearTimeout(updateTimeout);
+  }, [localData, onUpdate]);
+
+  // Update local data when parent data changes
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
 
   return (
     <div className="p-6">
@@ -35,50 +39,52 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
             variant="outline" 
             size="sm"
             onClick={() => {
-              const newStrengths = { ...data.strengths };
-              const newKey = `New Strength ${Object.keys(newStrengths).length + 1}`;
-              newStrengths[newKey] = '';
-              onUpdate({
-                ...data,
-                strengths: newStrengths
-              });
+              const newHeading = `New Strength ${Object.keys(localData.strengths).length + 1}`;
+              setLocalData(prev => ({
+                ...prev,
+                strengths: {
+                  ...prev.strengths,
+                  [newHeading]: ''
+                }
+              }));
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
           </Button>
         </SectionHeading>
         
-        {strengthsArray.map((strength, index) => (
-          <div key={index} className="mb-8">
+        {Object.entries(localData.strengths).map(([heading, content]) => (
+          <div key={heading} className="mb-8">
             <EditableSubheading
-              value={strength.main}
-              onChange={(newValue) => {
-                const newStrengths = { ...data.strengths };
-                delete newStrengths[strength.main];
-                newStrengths[newValue] = strength.content;
-                onUpdate({
-                  ...data,
-                  strengths: newStrengths
-                });
+              value={heading}
+              onChange={(newHeading) => {
+                const { [heading]: oldContent, ...rest } = localData.strengths;
+                setLocalData(prev => ({
+                  ...prev,
+                  strengths: {
+                    ...rest,
+                    [newHeading]: oldContent
+                  }
+                }));
               }}
               onDelete={() => {
-                const newStrengths = { ...data.strengths };
-                delete newStrengths[strength.main];
-                onUpdate({
-                  ...data,
-                  strengths: newStrengths
-                });
+                const { [heading]: _, ...rest } = localData.strengths;
+                setLocalData(prev => ({
+                  ...prev,
+                  strengths: rest
+                }));
               }}
             />
             <EditableText
-              value={strength.content}
-              onChange={(newValue) => {
-                const newStrengths = { ...data.strengths };
-                newStrengths[strength.main] = newValue;
-                onUpdate({
-                  ...data,
-                  strengths: newStrengths
-                });
+              value={content}
+              onChange={(newContent) => {
+                setLocalData(prev => ({
+                  ...prev,
+                  strengths: {
+                    ...prev.strengths,
+                    [heading]: newContent
+                  }
+                }));
               }}
               minHeight="180px"
             />
@@ -93,50 +99,52 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
             variant="outline" 
             size="sm"
             onClick={() => {
-              const newAreas = { ...data.areas_to_target };
-              const newKey = `New Area ${Object.keys(newAreas).length + 1}`;
-              newAreas[newKey] = '';
-              onUpdate({
-                ...data,
-                areas_to_target: newAreas
-              });
+              const newHeading = `New Area ${Object.keys(localData.areas_to_target).length + 1}`;
+              setLocalData(prev => ({
+                ...prev,
+                areas_to_target: {
+                  ...prev.areas_to_target,
+                  [newHeading]: ''
+                }
+              }));
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
           </Button>
         </SectionHeading>
         
-        {areasArray.map((area, index) => (
-          <div key={index} className="mb-8">
+        {Object.entries(localData.areas_to_target).map(([heading, content]) => (
+          <div key={heading} className="mb-8">
             <EditableSubheading
-              value={area.main}
-              onChange={(newValue) => {
-                const newAreas = { ...data.areas_to_target };
-                delete newAreas[area.main];
-                newAreas[newValue] = area.content;
-                onUpdate({
-                  ...data,
-                  areas_to_target: newAreas
-                });
+              value={heading}
+              onChange={(newHeading) => {
+                const { [heading]: oldContent, ...rest } = localData.areas_to_target;
+                setLocalData(prev => ({
+                  ...prev,
+                  areas_to_target: {
+                    ...rest,
+                    [newHeading]: oldContent
+                  }
+                }));
               }}
               onDelete={() => {
-                const newAreas = { ...data.areas_to_target };
-                delete newAreas[area.main];
-                onUpdate({
-                  ...data,
-                  areas_to_target: newAreas
-                });
+                const { [heading]: _, ...rest } = localData.areas_to_target;
+                setLocalData(prev => ({
+                  ...prev,
+                  areas_to_target: rest
+                }));
               }}
             />
             <EditableText
-              value={area.content}
-              onChange={(newValue) => {
-                const newAreas = { ...data.areas_to_target };
-                newAreas[area.main] = newValue;
-                onUpdate({
-                  ...data,
-                  areas_to_target: newAreas
-                });
+              value={content}
+              onChange={(newContent) => {
+                setLocalData(prev => ({
+                  ...prev,
+                  areas_to_target: {
+                    ...prev.areas_to_target,
+                    [heading]: newContent
+                  }
+                }));
               }}
               minHeight="180px"
             />
@@ -152,10 +160,10 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
               variant="outline" 
               size="sm"
               onClick={() => {
-                onUpdate({
-                  ...data,
-                  next_steps: [...data.next_steps, '']
-                });
+                setLocalData(prev => ({
+                  ...prev,
+                  next_steps: [...prev.next_steps, '']
+                }));
               }}
             >
               <Plus className="h-4 w-4 mr-1" /> Add Text
@@ -164,10 +172,10 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
               variant="outline" 
               size="sm"
               onClick={() => {
-                onUpdate({
-                  ...data,
-                  next_steps: [...data.next_steps, { main: '', sub_points: [''] }]
-                });
+                setLocalData(prev => ({
+                  ...prev,
+                  next_steps: [...prev.next_steps, { main: '', sub_points: [''] }]
+                }));
               }}
             >
               <Plus className="h-4 w-4 mr-1" /> Add Points
@@ -176,19 +184,19 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
         </SectionHeading>
         
         <div className="space-y-4">
-          {data.next_steps.map((step, index) => (
+          {localData.next_steps.map((step, index) => (
             <div key={index} className="space-y-2">
               {typeof step === 'string' ? (
                 <div className="flex gap-2">
                   <EditableText
                     value={step}
                     onChange={(newValue) => {
-                      const newSteps = [...data.next_steps];
+                      const newSteps = [...localData.next_steps];
                       newSteps[index] = newValue;
-                      onUpdate({
-                        ...data,
+                      setLocalData(prev => ({
+                        ...prev,
                         next_steps: newSteps
-                      });
+                      }));
                     }}
                     minHeight="100px"
                   />
@@ -196,11 +204,11 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      const newSteps = data.next_steps.filter((_, i) => i !== index);
-                      onUpdate({
-                        ...data,
+                      const newSteps = localData.next_steps.filter((_, i) => i !== index);
+                      setLocalData(prev => ({
+                        ...prev,
                         next_steps: newSteps
-                      });
+                      }));
                     }}
                     className="text-gray-500 hover:text-red-600"
                   >
@@ -215,15 +223,15 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                       className="flex-1 p-2 border rounded text-lg font-semibold min-w-[500px]"
                       value={step.main}
                       onChange={(e) => {
-                        const newSteps = [...data.next_steps];
+                        const newSteps = [...localData.next_steps];
                         newSteps[index] = {
                           ...step,
                           main: e.target.value
                         };
-                        onUpdate({
-                          ...data,
+                        setLocalData(prev => ({
+                          ...prev,
                           next_steps: newSteps
-                        });
+                        }));
                       }}
                       placeholder="Enter heading..."
                     />
@@ -231,11 +239,11 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        const newSteps = data.next_steps.filter((_, i) => i !== index);
-                        onUpdate({
-                          ...data,
+                        const newSteps = localData.next_steps.filter((_, i) => i !== index);
+                        setLocalData(prev => ({
+                          ...prev,
                           next_steps: newSteps
-                        });
+                        }));
                       }}
                       className="text-gray-500 hover:text-red-600"
                     >
@@ -248,15 +256,15 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                         <EditableText
                           value={point}
                           onChange={(newValue) => {
-                            const newSteps = [...data.next_steps];
+                            const newSteps = [...localData.next_steps];
                             const newStep = { ...step };
                             newStep.sub_points = [...step.sub_points];
                             newStep.sub_points[pointIndex] = newValue;
                             newSteps[index] = newStep;
-                            onUpdate({
-                              ...data,
+                            setLocalData(prev => ({
+                              ...prev,
                               next_steps: newSteps
-                            });
+                            }));
                           }}
                           minHeight="60px"
                         />
@@ -264,14 +272,14 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            const newSteps = [...data.next_steps];
+                            const newSteps = [...localData.next_steps];
                             const newStep = { ...step };
                             newStep.sub_points = step.sub_points.filter((_, i) => i !== pointIndex);
                             newSteps[index] = newStep;
-                            onUpdate({
-                              ...data,
+                            setLocalData(prev => ({
+                              ...prev,
                               next_steps: newSteps
-                            });
+                            }));
                           }}
                           className="text-gray-500 hover:text-red-600"
                         >
@@ -283,14 +291,14 @@ export function EditableAnalysis({ data, onUpdate }: EditableAnalysisProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const newSteps = [...data.next_steps];
+                        const newSteps = [...localData.next_steps];
                         const newStep = { ...step };
                         newStep.sub_points = [...step.sub_points, ''];
                         newSteps[index] = newStep;
-                        onUpdate({
-                          ...data,
+                        setLocalData(prev => ({
+                          ...prev,
                           next_steps: newSteps
-                        });
+                        }));
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" /> Add Sub-point

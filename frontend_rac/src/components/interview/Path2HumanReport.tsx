@@ -1,16 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { EditableSubheading } from './shared/EditableSubheading';
 import { EditableText } from './shared/EditableText';
 import { SectionHeading } from './shared/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
-import { InterviewAnalysis, NextStep, NextStepPoint } from '@/lib/types';
-
-interface Path2HumanReportProps {
-  data: InterviewAnalysis;
-  onUpdate: (data: Partial<InterviewAnalysis>) => void;
-}
+import { InterviewAnalysis, NextStepPoint } from '@/lib/types';
+import { usePath2Context } from './context/Path2Context';
 
 interface LocalSection {
   id: string;
@@ -18,57 +14,106 @@ interface LocalSection {
   content: string;
 }
 
-export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
-  const [sections, setSections] = useState({
-    strengths: Object.entries(data.strengths).map(([heading, content]) => ({
+export function Path2HumanReport() {
+  const { editableData: data, updateData } = usePath2Context();
+  const [sections, setSections] = useState<{
+    strengths: LocalSection[];
+    areas: LocalSection[];
+  }>(() => ({
+    strengths: Object.entries(data?.strengths || {}).map(([heading, content]) => ({
       id: `strength-${heading}`,
       heading,
       content
     })),
-    areas: Object.entries(data.areas_to_target).map(([heading, content]) => ({
+    areas: Object.entries(data?.areas_to_target || {}).map(([heading, content]) => ({
       id: `area-${heading}`,
       heading,
       content
     }))
-  });
+  }));
+
+  // Update local sections when context data changes
+  useEffect(() => {
+    if (data) {
+      const newSections = {
+        strengths: Object.entries(data.strengths).map(([heading, content]) => ({
+          id: `strength-${heading}`,
+          heading,
+          content
+        })),
+        areas: Object.entries(data.areas_to_target).map(([heading, content]) => ({
+          id: `area-${heading}`,
+          heading,
+          content
+        }))
+      };
+      console.log('Updating sections from data:', newSections);
+      setSections(newSections);
+    }
+  }, [data]);
 
   const updateParentState = useCallback(() => {
-    onUpdate({
+    if (!data) return;
+    
+    // Create a new object with only the fields we want to update
+    const updates = {
       strengths: Object.fromEntries(
         sections.strengths.map(s => [s.heading, s.content])
       ),
       areas_to_target: Object.fromEntries(
         sections.areas.map(a => [a.heading, a.content])
       )
-    });
-  }, [sections, onUpdate]);
+    };
+    
+    console.log('Updating with:', updates);
+    updateData(updates);
+  }, [data, sections, updateData]);
 
-  const addTextStep = () => {
+  // Debounce the update to prevent rapid state changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (data) {
+        updateParentState();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [sections, data, updateParentState]);
+
+  if (!data) {
+    return null;
+  }
+
+  const addTextStep = useCallback(() => {
+    if (!data) return;
     const newSteps = [...data.next_steps, ""];
-    onUpdate({ next_steps: newSteps });
-  };
+    updateData({ ...data, next_steps: newSteps });
+  }, [data, updateData]);
 
-  const addPointsStep = () => {
+  const addPointsStep = useCallback(() => {
+    if (!data) return;
     const newStep: NextStepPoint = {
       main: "",
       sub_points: []
     };
     const newSteps = [...data.next_steps, newStep];
-    onUpdate({ next_steps: newSteps });
-  };
+    updateData({ ...data, next_steps: newSteps });
+  }, [data, updateData]);
 
-  const updateStep = (index: number, content: string | NextStepPoint) => {
+  const updateStep = useCallback((index: number, content: string | NextStepPoint) => {
+    if (!data) return;
     const newSteps = [...data.next_steps];
     newSteps[index] = content;
-    onUpdate({ next_steps: newSteps });
-  };
+    updateData({ ...data, next_steps: newSteps });
+  }, [data, updateData]);
 
-  const deleteStep = (index: number) => {
+  const deleteStep = useCallback((index: number) => {
+    if (!data) return;
     const newSteps = data.next_steps.filter((_, i) => i !== index);
-    onUpdate({ next_steps: newSteps });
-  };
+    updateData({ ...data, next_steps: newSteps });
+  }, [data, updateData]);
 
-  const addSubPoint = (stepIndex: number) => {
+  const addSubPoint = useCallback((stepIndex: number) => {
+    if (!data) return;
     const step = data.next_steps[stepIndex] as NextStepPoint;
     if (step && 'sub_points' in step) {
       const newStep = {
@@ -77,11 +122,12 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
       };
       const newSteps = [...data.next_steps];
       newSteps[stepIndex] = newStep;
-      onUpdate({ next_steps: newSteps });
+      updateData({ ...data, next_steps: newSteps });
     }
-  };
+  }, [data, updateData]);
 
-  const updateSubPoint = (stepIndex: number, pointIndex: number, content: string) => {
+  const updateSubPoint = useCallback((stepIndex: number, pointIndex: number, content: string) => {
+    if (!data) return;
     const step = data.next_steps[stepIndex] as NextStepPoint;
     if (step && 'sub_points' in step) {
       const newSubPoints = [...step.sub_points];
@@ -92,11 +138,12 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
       };
       const newSteps = [...data.next_steps];
       newSteps[stepIndex] = newStep;
-      onUpdate({ next_steps: newSteps });
+      updateData({ ...data, next_steps: newSteps });
     }
-  };
+  }, [data, updateData]);
 
-  const deleteSubPoint = (stepIndex: number, pointIndex: number) => {
+  const deleteSubPoint = useCallback((stepIndex: number, pointIndex: number) => {
+    if (!data) return;
     const step = data.next_steps[stepIndex] as NextStepPoint;
     if (step && 'sub_points' in step) {
       const newSubPoints = step.sub_points.filter((_, i) => i !== pointIndex);
@@ -106,9 +153,9 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
       };
       const newSteps = [...data.next_steps];
       newSteps[stepIndex] = newStep;
-      onUpdate({ next_steps: newSteps });
+      updateData({ ...data, next_steps: newSteps });
     }
-  };
+  }, [data, updateData]);
 
   return (
     <div className="space-y-8">
@@ -128,7 +175,6 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                   content: ''
                 }]
               }));
-              setTimeout(updateParentState, 0);
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
@@ -149,14 +195,12 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                         : s
                     )
                   }));
-                  setTimeout(updateParentState, 0);
                 }}
                 onDelete={() => {
                   setSections(prev => ({
                     ...prev,
                     strengths: prev.strengths.filter(s => s.id !== strength.id)
                   }));
-                  setTimeout(updateParentState, 0);
                 }}
               />
               <div className="mt-2">
@@ -171,7 +215,6 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                           : s
                       )
                     }));
-                    setTimeout(updateParentState, 0);
                   }}
                   placeholder="Enter content here..."
                 />
@@ -197,7 +240,6 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                   content: ''
                 }]
               }));
-              setTimeout(updateParentState, 0);
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Subheading
@@ -218,14 +260,12 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                         : a
                     )
                   }));
-                  setTimeout(updateParentState, 0);
                 }}
                 onDelete={() => {
                   setSections(prev => ({
                     ...prev,
                     areas: prev.areas.filter(a => a.id !== area.id)
                   }));
-                  setTimeout(updateParentState, 0);
                 }}
               />
               <div className="mt-2">
@@ -240,7 +280,6 @@ export function Path2HumanReport({ data, onUpdate }: Path2HumanReportProps) {
                           : a
                       )
                     }));
-                    setTimeout(updateParentState, 0);
                   }}
                   placeholder="Enter content here..."
                 />
