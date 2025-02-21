@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Edit, Eye, Loader2 } from "lucide-react";
+import { EditableWordViewer } from "./EditableWordViewer";
 import React, { useState, useEffect } from "react";
 import { ActionWrapper } from "./ActionWrapper";
 import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
@@ -10,18 +11,20 @@ import { convertFromOrderedAnalysis } from "@/components/providers/utils";
 
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [docUrl, setDocUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedContent, setEditedContent] = useState<string | null>(null);
 
   // Cleanup blob URL when component unmounts
   useEffect(() => {
     return () => {
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
+      if (docUrl) {
+        window.URL.revokeObjectURL(docUrl);
       }
     };
-  }, [pdfUrl]);
+  }, [docUrl]);
   const { templates, selectedPath } = useInterviewAnalysis();
 
   //TODO: handle downloads from template, and Gracefully
@@ -34,9 +37,9 @@ export function DownloadDataScreen() {
     : selectedPath === 2
     ? templates[templatesIds.coachParagraph]
     : templates[templatesIds.fullReport];
-  // Generate PDF and return the URL
-  const generatePDF = async () => {
-    if (!orderedAnalysisData) return;
+  // Generate Word document and return the URL
+  const generateDoc = async (): Promise<string | null> => {
+    if (!orderedAnalysisData) return null;
     setIsLoading(true);
     setError(null);
     setPreviewError(false);
@@ -53,10 +56,13 @@ export function DownloadDataScreen() {
       };
 
       const blob = await generateWordDocument(reportData);
-      console.log('Generated PDF blob:', blob);
+      console.log('Generated Word document blob:', blob);
+      if (!blob) {
+        throw new Error('Failed to generate document');
+      }
       const url = window.URL.createObjectURL(blob);
       console.log('Created URL:', url);
-      setPdfUrl(url);
+      setDocUrl(url);
       return url;
     } catch (err) {
       setError("Failed to generate document. Please try again.");
@@ -69,25 +75,25 @@ export function DownloadDataScreen() {
 
   // Handle download button click
   const handleDownload = async () => {
-    let url = pdfUrl;
+    let url = docUrl;
     if (!url) {
-      url = await generatePDF();
+      url = await generateDoc();
     }
     
     if (url) {
       const a = document.createElement("a");
       a.href = url;
-      a.download = "interview-analysis.pdf";
+      a.download = "interview-analysis.docx";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
     }
   };
 
-  // Generate PDF when component mounts
+  // Generate document when component mounts
   useEffect(() => {
     if (orderedAnalysisData) {
-      generatePDF();
+      generateDoc();
     }
   }, [orderedAnalysisData]);
 
@@ -106,63 +112,95 @@ export function DownloadDataScreen() {
           ) : (
             <Download className="mr-2 h-4 w-4" />
           )}
-          {isLoading ? "Generating PDF..." : "Download Analysis as PDF Document"}
+          {isLoading ? "Generating document..." : "Download Analysis as Word Document"}
         </Button>
         
-        {/* PDF Preview */}
-        {pdfUrl && !previewError && (
+        {/* Toggle Edit Mode Button */}
+        {docUrl && !previewError && (
+          <Button
+            onClick={() => setIsEditMode(!isEditMode)}
+            variant="outline"
+            className="w-full mt-2"
+          >
+            {isEditMode ? (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                View Mode
+              </>
+            ) : (
+              <>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Mode
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Document Preview */}
+        {docUrl && !previewError && (
           <div className="mt-4">
             <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
-              <span>PDF Preview:</span>
-              <a 
-                href={pdfUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Open in new tab
-              </a>
-            </div>
-            <object 
-              data={pdfUrl}
-              type="application/pdf"
-              className="w-full h-[900px] border rounded-lg"
-            >
-              <div className="p-4 text-center">
-                <p>Unable to display PDF preview.</p>
+              <span>{isEditMode ? "Edit Document:" : "Document Preview:"}</span>
+              {!isEditMode && (
                 <a 
-                  href={pdfUrl} 
-                  download 
+                  href={docUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Download PDF
+                  Open in new tab
                 </a>
+              )}
+            </div>
+            {isEditMode && docUrl ? (
+              <EditableWordViewer 
+                documentUrl={docUrl}
+                onContentChange={(content) => setEditedContent(content)}
+              />
+            ) : (
+              <div className="w-full h-[900px] border rounded-lg p-4">
+                <p className="text-center">
+                  Document preview not available in view mode. Please switch to edit mode to view and edit the document.
+                </p>
+                <div className="text-center mt-4">
+                  <a 
+                    href={docUrl} 
+                    download 
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Download Word Document
+                  </a>
+                </div>
               </div>
-            </object>
+            )}
           </div>
         )}
         
         {previewError && (
           <div className="mt-4 p-4 text-red-600 bg-red-50 rounded-lg">
-            <p>Failed to load PDF preview.</p>
+            <p>Failed to load document preview.</p>
             <p className="mt-2">
               You can still{' '}
-              <a 
-                href={pdfUrl} 
-                className="underline hover:text-red-800"
-                download
-              >
-                download the document
-              </a>
-              {' '}or{' '}
-              <a 
-                href={pdfUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="underline hover:text-red-800"
-              >
-                open it in a new tab
-              </a>.
+              {docUrl && (
+                <>
+                  <a 
+                    href={docUrl} 
+                    className="underline hover:text-red-800"
+                    download
+                  >
+                    download the document
+                  </a>
+                  {' '}or{' '}
+                  <a 
+                    href={docUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-red-800"
+                  >
+                    open it in a new tab
+                  </a>
+                </>
+              )}.
             </p>
           </div>
         )}
