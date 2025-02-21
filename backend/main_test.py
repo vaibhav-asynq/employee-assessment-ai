@@ -22,6 +22,18 @@ from prompt_loader import (
     format_strength_content_prompt,
     load_prompt
 )
+import aspose.words as aw
+
+# Initialize license object
+license = aw.License()
+
+# Set license
+try:
+    # Method 1: Load license from file
+    license.set_license("Aspose.WordsforPythonvia.NET.lic")
+    print("License set successfully!")
+except Exception as e:
+    print(f"Error setting license: {str(e)}")
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
@@ -190,36 +202,38 @@ async def get_development_areas():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from docx import Document
-import mammoth
-import io
-
 @app.post("/api/dump_word")
 async def generate_word_document(analysis: InterviewAnalysis):
     try:
-        # First, return the existing document for initial load
-        doc_path = "../../Output1.docx"
-        
-        # Convert DOCX to HTML for editing
-        with open(doc_path, "rb") as docx_file:
-            result = mammoth.convert_to_html(docx_file)
-            html = result.value
-        
-        # Set custom headers for HTML content
-        headers = {
-            "Content-Type": "text/html",
-            "Content-Disposition": "inline",
-            "Access-Control-Expose-Headers": "Content-Type, Content-Disposition"
-        }
-        
-        return Response(content=html, headers=headers)
-    except Exception as e:
-        print(f"Error in generate_word_document: {str(e)}")
-        # Fallback to returning the original document
+        # First generate PDF
+        output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
+        header_txt = analysis.name + ' - Qualitative 360 Feedback'
+        create_360_feedback_report(output_path, analysis, header_txt)
+
+        # Convert PDF to DOCX
+        docx_path = os.path.join(OUTPUT_DIR, "Output1.docx")
+        doc = aw.Document(output_path)
+        doc.save(docx_path)
+
+        # Return the DOCX file
         return FileResponse(
-            "../Output1.docx",
+            docx_path,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             filename="interview_analysis.docx"
+        )
+    except Exception as e:
+        print(f"Error in generate_word_document: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/api/dump_pdf")
+async def generate_pdf_docuement(analysis: InterviewAnalysis):
+    output_path = OUTPUT_DIR+"/temp.pdf" 
+    header_txt = analysis.name + ' - Qualitative 360 Feedback'
+    create_360_feedback_report(output_path, analysis, header_txt)
+    return FileResponse(
+            output_path,
+            media_type="application/pdf",
+            filename="interview_analysis.pdf"
         )
 
 # Optional: Cleanup endpoint

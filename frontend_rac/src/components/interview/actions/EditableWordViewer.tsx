@@ -5,12 +5,14 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import TextStyle from '@tiptap/extension-text-style';
-import { Download, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, List, ListOrdered } from 'lucide-react';
+import { Download, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Eye, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { generatePdfDocument } from '@/lib/api';
 
 interface EditableWordViewerProps {
   documentUrl: string;
   onContentChange?: (content: string) => void;
+  analysis?: any;
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -90,9 +92,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export function EditableWordViewer({ documentUrl, onContentChange }: EditableWordViewerProps) {
+export function EditableWordViewer({ documentUrl, onContentChange, analysis }: EditableWordViewerProps) {
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -130,6 +134,39 @@ export function EditableWordViewer({ documentUrl, onContentChange }: EditableWor
     loadContent();
   }, [documentUrl, editor]);
 
+  const loadPdf = async () => {
+    try {
+      if (!analysis) return;
+      const blob = await generatePdfDocument(analysis);
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+    } catch (error) {
+      console.error('Error loading PDF:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isEditMode && !pdfUrl && analysis) {
+      loadPdf();
+    }
+  }, [isEditMode, analysis]);
+
+  // Load PDF by default
+  useEffect(() => {
+    if (analysis && !pdfUrl) {
+      loadPdf();
+    }
+  }, [analysis]);
+
+  // Cleanup PDF URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
+
   const handleDownload = () => {
     const a = document.createElement('a');
     a.href = documentUrl;
@@ -149,16 +186,53 @@ export function EditableWordViewer({ documentUrl, onContentChange }: EditableWor
 
   return (
     <div className="w-full border rounded-lg">
-      <div className="p-4 border-b flex justify-end space-x-2">
+      <div className="p-4 border-b flex justify-between items-center">
+        <Button
+          variant="outline"
+          onClick={() => setIsEditMode(!isEditMode)}
+        >
+          {isEditMode ? (
+            <>
+              <Eye className="mr-2 h-4 w-4" />
+              View PDF
+            </>
+          ) : (
+            <>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Mode
+            </>
+          )}
+        </Button>
         <Button variant="outline" onClick={handleDownload}>
           <Download className="mr-2 h-4 w-4" />
           Download
         </Button>
       </div>
-      <MenuBar editor={editor} />
-      <div className="p-4 prose max-w-none">
-        <EditorContent editor={editor} className="min-h-[800px] border rounded-lg p-4" />
-      </div>
+      
+      {isEditMode ? (
+        <>
+          <MenuBar editor={editor} />
+          <div className="p-4 prose max-w-none">
+            <EditorContent editor={editor} className="min-h-[800px] border rounded-lg p-4" />
+          </div>
+        </>
+      ) : (
+        <div className="p-4">
+          {pdfUrl ? (
+            <object
+              data={pdfUrl}
+              type="application/pdf"
+              className="w-full h-[800px] border rounded-lg"
+            >
+              <p>PDF preview not available</p>
+            </object>
+          ) : (
+            <div className="w-full h-[800px] border rounded-lg flex items-center justify-center">
+              <p>Loading PDF preview...</p>
+            </div>
+          )}
+        </div>
+      )}
       <style jsx global>{`
         .ProseMirror {
           min-height: 800px;

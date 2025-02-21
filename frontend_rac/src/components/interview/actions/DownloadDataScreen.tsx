@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Eye, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { EditableWordViewer } from "./EditableWordViewer";
 import React, { useState, useEffect } from "react";
 import { ActionWrapper } from "./ActionWrapper";
@@ -14,8 +14,8 @@ export function DownloadDataScreen() {
   const [docUrl, setDocUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<InterviewAnalysis | null>(null);
 
   // Cleanup blob URL when component unmounts
   useEffect(() => {
@@ -27,16 +27,13 @@ export function DownloadDataScreen() {
   }, [docUrl]);
   const { templates, selectedPath } = useInterviewAnalysis();
 
-  //TODO: handle downloads from template, and Gracefully
-  // Sometime its expecting Human report?
-  // if so mention it in the types as optional, and then generate it and update the analysis template
-
   // Get the correct template based on the selected path
   const orderedAnalysisData = selectedPath === 1 
     ? templates[templatesIds.coachCometencies]
     : selectedPath === 2
     ? templates[templatesIds.coachParagraph]
     : templates[templatesIds.fullReport];
+
   // Generate Word document and return the URL
   const generateDoc = async (): Promise<string | null> => {
     if (!orderedAnalysisData) return null;
@@ -47,15 +44,16 @@ export function DownloadDataScreen() {
     try {
       // Always use the edited content from orderedAnalysisData
       const analysisData = convertFromOrderedAnalysis(orderedAnalysisData);
-      const reportData: InterviewAnalysis = {
+      const data: InterviewAnalysis = {
         name: analysisData.name,
         date: analysisData.date,
         strengths: analysisData.strengths,
         areas_to_target: analysisData.areas_to_target,
         next_steps: analysisData.next_steps,
       };
+      setReportData(data);
 
-      const blob = await generateWordDocument(reportData);
+      const blob = await generateWordDocument(data);
       console.log('Generated Word document blob:', blob);
       if (!blob) {
         throw new Error('Failed to generate document');
@@ -114,65 +112,15 @@ export function DownloadDataScreen() {
           )}
           {isLoading ? "Generating document..." : "Download Analysis as Word Document"}
         </Button>
-        
-        {/* Toggle Edit Mode Button */}
-        {docUrl && !previewError && (
-          <Button
-            onClick={() => setIsEditMode(!isEditMode)}
-            variant="outline"
-            className="w-full mt-2"
-          >
-            {isEditMode ? (
-              <>
-                <Eye className="mr-2 h-4 w-4" />
-                View Mode
-              </>
-            ) : (
-              <>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Mode
-              </>
-            )}
-          </Button>
-        )}
 
         {/* Document Preview */}
         {docUrl && !previewError && (
           <div className="mt-4">
-            <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
-              <span>{isEditMode ? "Edit Document:" : "Document Preview:"}</span>
-              {!isEditMode && (
-                <a 
-                  href={docUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  Open in new tab
-                </a>
-              )}
-            </div>
-            {isEditMode && docUrl ? (
-              <EditableWordViewer 
-                documentUrl={docUrl}
-                onContentChange={(content) => setEditedContent(content)}
-              />
-            ) : (
-              <div className="w-full h-[900px] border rounded-lg p-4">
-                <p className="text-center">
-                  Document preview not available in view mode. Please switch to edit mode to view and edit the document.
-                </p>
-                <div className="text-center mt-4">
-                  <a 
-                    href={docUrl} 
-                    download 
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Download Word Document
-                  </a>
-                </div>
-              </div>
-            )}
+            <EditableWordViewer 
+              documentUrl={docUrl}
+              onContentChange={(content) => setEditedContent(content)}
+              analysis={reportData}
+            />
           </div>
         )}
         

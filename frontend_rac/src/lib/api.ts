@@ -80,6 +80,13 @@ export const generateWordDocument = async (data: any) => {
   return response.data;
 };
 
+export const generatePdfDocument = async (data: any) => {
+  const response = await axios.post(`${API_URL}/api/dump_pdf`, data, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
+
 export const generateStrengthContent = async (heading: string, fileId: string, existingContent: string): Promise<string> => {
   const response = await axios.post(`${API_URL}/api/generate_strength_content`, { 
     heading, 
