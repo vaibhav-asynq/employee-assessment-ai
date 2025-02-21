@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { SectionHeading } from "../../shared/SectionHeading";
@@ -7,6 +7,7 @@ import { EditableText } from "../../shared/EditableText";
 import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
 import { templatesIds } from "@/lib/types";
+import { generateStrengthContent, generateAreaContent, generateNextSteps } from "@/lib/api";
 
 export function EditableTemplateAnalysis() {
   const {
@@ -14,7 +15,11 @@ export function EditableTemplateAnalysis() {
     templates,
     handleAnalysisUpdate,
     setActiveTemplate,
+    fileId
   } = useInterviewAnalysis();
+
+  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingNextSteps, setLoadingNextSteps] = useState(false);
 
   const {
     handleAddStrength,
@@ -45,6 +50,60 @@ export function EditableTemplateAnalysis() {
   }, [activeTemplateId, setActiveTemplate, templateId]);
 
   const analysisWithAiCoach = templates[templateId];
+
+  const onGenerate = async (section: "strengths" | "areas", id: string, heading: string) => {
+    setLoading(heading);
+    try {
+      if (!fileId) throw new Error("File ID is required");
+      
+      // Get existing content based on section type
+      const existingContent = section === "strengths" 
+        ? analysisWithAiCoach.strengths.items[id].content
+        : analysisWithAiCoach.areas_to_target.items[id].content;
+      
+      // Pass existing content to API
+      const content = section === "strengths" 
+        ? await generateStrengthContent(heading, fileId, existingContent)
+        : await generateAreaContent(heading, fileId, existingContent);
+        
+      if (section === "strengths") {
+        handleStrengthContentChange(id, content);
+      } else {
+        handleAreaContentChange(id, content);
+      }
+    } catch (error) {
+      console.error("Error generating content:", error);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleGenerateNextSteps = async () => {
+    setLoadingNextSteps(true);
+    try {
+      if (!fileId) throw new Error("File ID is required");
+      
+      const areasToTarget = analysisWithAiCoach.areas_to_target.order.reduce(
+        (acc, id) => ({
+          ...acc,
+          [analysisWithAiCoach.areas_to_target.items[id].heading]: 
+          analysisWithAiCoach.areas_to_target.items[id].content
+        }),
+        {}
+      );
+      
+      const nextSteps = await generateNextSteps(areasToTarget, fileId);
+      
+      // Replace existing next steps with generated ones
+      nextSteps.forEach((step, index) => {
+        handleUpdateNextStep(index, step);
+      });
+    } catch (error) {
+      console.error("Error generating next steps:", error);
+    } finally {
+      setLoadingNextSteps(false);
+    }
+  };
 
   if (!analysisWithAiCoach) {
     return (
@@ -93,15 +152,15 @@ export function EditableTemplateAnalysis() {
                 <Button
                   variant="outline"
                   size="sm"
-                  // onClick={() => onGenerate(section.heading)}
-                  // disabled={loading === section.heading}
+                  onClick={() => onGenerate("strengths", id, item.heading)}
+                  disabled={loading === item.heading}
                   className="text-gray-500 whitespace-nowrap flex items-center"
                 >
-                  {/* {loading === section.heading ? ( */}
-                  {/*   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" /> */}
-                  {/* ) : ( */}
-                  {/*   <Sparkles className="h-4 w-4 mr-2" /> */}
-                  {/* )} */}
+                  {loading === item.heading ? (
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
                   Generate with AI
                 </Button>
               </div>
@@ -144,15 +203,15 @@ export function EditableTemplateAnalysis() {
                 <Button
                   variant="outline"
                   size="sm"
-                  // onClick={() => onGenerate(section.heading)}
-                  // disabled={loading === section.heading}
+                  onClick={() => onGenerate("areas", id, item.heading)}
+                  disabled={loading === item.heading}
                   className="text-gray-500 whitespace-nowrap flex items-center"
                 >
-                  {/* {loading === section.heading ? ( */}
-                  {/*   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" /> */}
-                  {/* ) : ( */}
-                  {/*   <Sparkles className="h-4 w-4 mr-2" /> */}
-                  {/* )} */}
+                  {loading === item.heading ? (
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
                   Generate with AI
                 </Button>
               </div>
@@ -189,15 +248,15 @@ export function EditableTemplateAnalysis() {
             <Button
               variant="outline"
               size="sm"
-              // onClick={handleGenerateNextSteps}
-              // disabled={loadingNextSteps}
+              onClick={handleGenerateNextSteps}
+              disabled={loadingNextSteps}
               className="text-gray-500 whitespace-nowrap flex items-center"
             >
-              {/* {loadingNextSteps ? ( */}
-              {/*   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" /> */}
-              {/* ) : ( */}
-              {/*   <Sparkles className="h-4 w-4 mr-2" /> */}
-              {/* )} */}
+              {loadingNextSteps ? (
+                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
               Generate with AI
             </Button>
           </div>

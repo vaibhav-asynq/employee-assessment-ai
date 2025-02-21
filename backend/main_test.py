@@ -67,6 +67,7 @@ class InterviewAnalysis(BaseModel):
 class GenerateContentRequest(BaseModel):
     heading: str
     file_id: str
+    existing_content: Optional[str] = None
 
 class GenerateNextStepsRequest(BaseModel):
     areas_to_target: Dict[str, str]
@@ -349,7 +350,7 @@ async def generate_next_steps(request: GenerateNextStepsRequest):
 @app.post("/api/generate_area_content")
 async def generate_area_content(request: GenerateContentRequest):
     try:
-        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}")
+        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
         
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
@@ -361,7 +362,7 @@ async def generate_area_content(request: GenerateContentRequest):
 
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
-        prompt = format_area_content_prompt(TEST_NAME, request.heading, feedback_transcript)
+        prompt = format_area_content_prompt(TEST_NAME, request.heading, feedback_transcript, request.existing_content)
         
         response = client.messages.create(
             model="claude-3-sonnet-20240229",
@@ -492,7 +493,7 @@ async def sort_areas_evidence(request: SortEvidenceRequest):
 @app.post("/api/generate_strength_content")
 async def generate_strength_content(request: GenerateContentRequest):
     try:
-        print(f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}")
+        print(f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
         
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
@@ -504,7 +505,7 @@ async def generate_strength_content(request: GenerateContentRequest):
 
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
-        prompt = format_strength_content_prompt(TEST_NAME, request.heading, feedback_transcript)
+        prompt = format_strength_content_prompt(TEST_NAME, request.heading, feedback_transcript, request.existing_content)
         
         response = client.messages.create(
             model="claude-3-sonnet-20240229",

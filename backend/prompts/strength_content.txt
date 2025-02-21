@@ -4,6 +4,7 @@ Given this heading '{heading}', generate a strength description for {name} that:
 3. Ends with impact using transitions like "As a result", "This leads to", "Consequently", etc.
 4. Keeps response under 100 words and in one paragraph
 
+{existing_content_context} 
 Use this transcript as context:
 {feedback_transcript}
 
@@ -13,3 +14,4 @@ Rules:
 - Maintain professional tone
 - End with clear business impact
 - Keep to exactly one paragraph
+- If existing content is provided, enhance and refine it while maintaining key insights

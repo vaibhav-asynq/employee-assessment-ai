@@ -69,13 +69,21 @@ export const generateWordDocument = async (data: any) => {
   return response.data;
 };
 
-export const generateStrengthContent = async (heading: string, fileId: string): Promise<string> => {
-  const response = await axios.post(`${API_URL}/api/generate_strength_content`, { heading, file_id: fileId });
+export const generateStrengthContent = async (heading: string, fileId: string, existingContent: string): Promise<string> => {
+  const response = await axios.post(`${API_URL}/api/generate_strength_content`, { 
+    heading, 
+    file_id: fileId,
+    existing_content: existingContent 
+  });
   return response.data.content;
 };
 
-export const generateAreaContent = async (heading: string, fileId: string): Promise<string> => {
-  const response = await axios.post(`${API_URL}/api/generate_area_content`, { heading, file_id: fileId });
+export const generateAreaContent = async (heading: string, fileId: string, existingContent: string): Promise<string> => {
+  const response = await axios.post(`${API_URL}/api/generate_area_content`, { 
+    heading, 
+    file_id: fileId,
+    existing_content: existingContent 
+  });
   return response.data.content;
 };
 
