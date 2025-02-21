@@ -3,14 +3,14 @@ import { NextStep } from './types';
 
 const API_URL = 'http://localhost:8000';
 
-export interface Evidence {
+export interface FeedbackEvidence {
   feedback: string;
   source: string;
   role: string;
 }
 
 export interface Category {
-  evidence: Evidence[];
+  evidence: FeedbackEvidence[];
 }
 
 export interface StrengthEvidences {
@@ -23,6 +23,17 @@ export interface DevelopmentAreas {
   developmentAreas: {
     [key: string]: Category;
   };
+}
+
+export interface Evidence {
+  quote: string;
+  name: string;
+  position: string;
+}
+
+export interface SortedEvidence {
+  heading: string;
+  evidence: Evidence[];
 }
 
 export const uploadFile = async (file: File) => {
@@ -95,10 +106,6 @@ export const generateNextSteps = async (areasToTarget: { [key: string]: string }
   return response.data.next_steps;
 };
 
-export interface SortedEvidence {
-  heading: string;
-  evidence: string[];
-}
 
 export async function sortStrengthsEvidence(fileId: string, headings: string[]) {
   const response = await axios.post(`${API_URL}/api/sort-strengths-evidence`, {

@@ -1,9 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface Evidence {
+  quote: string;
+  name: string;
+  position: string;
+}
+
 interface SortedEvidence {
   heading: string;
-  evidence: string[];
+  evidence: Evidence[];
 }
 
 interface SortedEvidenceViewProps {
@@ -32,7 +38,10 @@ export function SortedEvidenceView({
                   <ul className="list-disc pl-6 space-y-2">
                     {item.evidence.map((evidence, idx) => (
                       <li key={idx} className="text-gray-700">
-                        {evidence}
+                        <div className="mb-1 text-sm font-medium text-gray-500">
+                          {evidence.name} - {evidence.position}
+                        </div>
+                        <div>{evidence.quote}</div>
                       </li>
                     ))}
                   </ul>
@@ -58,7 +67,10 @@ export function SortedEvidenceView({
                   <ul className="list-disc pl-6 space-y-2">
                     {item.evidence.map((evidence, idx) => (
                       <li key={idx} className="text-gray-700">
-                        {evidence}
+                        <div className="mb-1 text-sm font-medium text-gray-500">
+                          {evidence.name} - {evidence.position}
+                        </div>
+                        <div>{evidence.quote}</div>
                       </li>
                     ))}
                   </ul>

@@ -12,15 +12,31 @@ For each heading, find the most relevant evidence from the transcript that suppo
   {{
     "heading": "Heading 1",
     "evidence": [
-      "Direct quote or paraphrased evidence from transcript",
-      "Another piece of evidence..."
+      {{
+        "quote": "Direct quote or paraphrased evidence from transcript",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }},
+      {{
+        "quote": "Another piece of evidence...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }}
     ]
   }},
   {{
     "heading": "Heading 2", 
     "evidence": [
-      "Evidence for heading 2...",
-      "More evidence..."
+      {{
+        "quote": "Evidence for heading 2...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }},
+      {{
+        "quote": "More evidence...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }}
     ]
   }}
 ]
@@ -34,5 +50,8 @@ Guidelines:
 6. Ensure the evidence actually matches and supports the heading
 7. Use exact quotes when possible, but you can paraphrase if needed for clarity
 8. Do not make up or infer evidence - only use what's directly stated in the transcript
+9. Always include the full name of the person providing the feedback when available
+10. Include their role/position when mentioned in the transcript
+11. If name or position is not explicitly stated for a quote, use "Anonymous" for name and "Stakeholder" for position
 
 Return only the JSON array with no additional text or explanation.

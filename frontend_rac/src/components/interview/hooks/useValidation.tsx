@@ -3,18 +3,15 @@ import { OrderedInterviewAnalysis } from "@/lib/types";
 
 type ValidationRule = {
   defaultPattern?: RegExp; // Regex pattern to detect default headings
-  isContentRequired?: boolean; // Whether content is required
 };
 
 // Default validation rules
 const DEFAULT_VALIDATION_RULES: Record<string, ValidationRule> = {
   strengths: {
     defaultPattern: /^Strength \d+$/,
-    isContentRequired: true,
   },
   areas_to_target: {
     defaultPattern: /^Development Area \d+$/,
-    isContentRequired: true,
   },
 };
 
@@ -40,13 +37,13 @@ export function useValidation(
 
       return Object.values(section.items).every((item) => {
         // INFO: here applying validation
-        // Check if heading matches the default pattern
-        if (rules.defaultPattern && rules.defaultPattern.test(item.heading)) {
+        // Check if heading is empty or just whitespace
+        if (!item.heading || item.heading.trim() === "") {
           return false;
         }
 
-        // Check if content is required and not empty
-        if (rules.isContentRequired && item.content.trim() === "") {
+        // Check if heading matches the default pattern
+        if (rules.defaultPattern && rules.defaultPattern.test(item.heading)) {
           return false;
         }
 
