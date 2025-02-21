@@ -1,0 +1,69 @@
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ActionWrapper } from "./ActionWrapper";
+import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
+import { useStepper } from "@/components/ui/stepper";
+import { AnalysisPath } from "@/lib/types";
+
+export function PathSelectionScreen() {
+  const { setSelectedPath } = useInterviewAnalysis();
+  const { nextStep } = useStepper();
+
+  const handlePathSelection = (path: AnalysisPath) => {
+    setSelectedPath(path);
+    nextStep();
+  };
+
+  return (
+    <ActionWrapper>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-12">
+        <h2 className="text-3xl font-bold text-center">Select Analysis Path</h2>
+
+        <div className="grid grid-cols-3 gap-6 w-full max-w-5xl">
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-40 flex flex-col items-center justify-center gap-2 px-4 hover:bg-purple-50 hover:border-purple-500 hover:text-purple-700 transition-all shadow-sm hover:shadow-md"
+            onClick={() => handlePathSelection(1)}
+          >
+            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xl border-2 border-purple-200">
+              1
+            </div>
+            <div className="text-sm text-center w-full whitespace-normal">
+              Coach writes the competencies AI writes the underlying paragraphs
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-40 flex flex-col items-center justify-center gap-2 px-4 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-700 transition-all shadow-sm hover:shadow-md"
+            onClick={() => handlePathSelection(2)}
+          >
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-200">
+              2
+            </div>
+            <div className="text-sm text-center w-full whitespace-normal">
+              Have AI generate the competencies and coach writes the underlying
+              paragraphs
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-40 flex flex-col items-center justify-center gap-2 px-4 hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition-all shadow-sm hover:shadow-md"
+            onClick={() => handlePathSelection(3)}
+          >
+            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xl border-2 border-green-200">
+              3
+            </div>
+            <div className="text-sm text-center w-full">
+              Generate Full Report
+            </div>
+          </Button>
+        </div>
+      </div>
+    </ActionWrapper>
+  );
+}

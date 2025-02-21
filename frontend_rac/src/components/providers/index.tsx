@@ -1,12 +1,5 @@
-import { Path2Provider } from "../interview/context/Path2Context";
-import { InterviewProvider } from "./InterviewContext";
+//INFO: in this file wrap with Providers that needs in whole app
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <InterviewProvider>
-        <Path2Provider>{children}</Path2Provider>
-      </InterviewProvider>
-    </>
-  );
+  return <>{children}</>;
 }

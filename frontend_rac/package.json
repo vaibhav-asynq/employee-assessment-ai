@@ -18,6 +18,7 @@
     "@mescius/spread-sheets-react": "^18.0.2",
     "@mescius/spread-sheets-shapes": "^18.0.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
+    "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@types/xlsx": "^0.0.35",
@@ -30,6 +31,7 @@
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

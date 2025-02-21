@@ -15,21 +15,21 @@ interface FeedbackData {
   };
 }
 
-interface FeedbackScreenProps {
+interface FeedbackDisplayProps {
   data: FeedbackData;
 }
 
-export function FeedbackScreen({ data }: FeedbackScreenProps) {
+export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
   return (
-    <div className="pr-4 max-h-[80vh] overflow-y-auto">
-      <div className="space-y-16 pb-8">
+    <div className="pr-4">
+      <div className="space-y-8">
         {/* Strengths */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold mb-6 text-green-700 sticky top-0 bg-white py-4">Strengths</h2>
-          <div className="space-y-8">
-            {Object.entries(data.strengths).map(([name, info]) => (
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Strengths</h3>
+          <div className="space-y-6">
+            {data?.strengths && Object.entries(data.strengths).map(([name, info]) => (
               <div key={name} className="border-b pb-6">
-                <h3 className="text-xl font-semibold">{name.replace(/_/g, ' ')}</h3>
+                <h4 className="font-semibold mb-2">{name.replace(/_/g, ' ')}</h4>
                 <p className="text-gray-600 italic mb-3">{info.role}</p>
                 <ul className="list-disc pl-5 space-y-2">
                   {info.feedback.map((point, index) => (
@@ -42,12 +42,12 @@ export function FeedbackScreen({ data }: FeedbackScreenProps) {
         </div>
 
         {/* Areas to Target */}
-        <div className="space-y-6 border-t pt-8">
-          <h2 className="text-2xl font-bold mb-6 text-red-700 sticky top-0 bg-white py-4">Areas to Target</h2>
-          <div className="space-y-8">
-            {Object.entries(data.areas_to_target).map(([name, info]) => (
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Areas to Target</h3>
+          <div className="space-y-6">
+            {data?.areas_to_target && Object.entries(data.areas_to_target).map(([name, info]) => (
               <div key={name} className="border-b pb-6">
-                <h3 className="text-xl font-semibold">{name.replace(/_/g, ' ')}</h3>
+                <h4 className="font-semibold mb-2">{name.replace(/_/g, ' ')}</h4>
                 <p className="text-gray-600 italic mb-3">{info.role}</p>
                 <ul className="list-disc pl-5 space-y-2">
                   {info.feedback.map((point, index) => (
