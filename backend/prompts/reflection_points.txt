@@ -26,3 +26,19 @@ Format the output as:
         "context_summary": "[Name], after [time] in the [role], you find yourself in [situation] while [challenge]. This appeals to your need for [drivers]. Keep those needs in mind as you think through these suggestions for development."
     }}
 }}
+
+
+Example:
+{
+"reflection_prompts": {
+"discussion_prompt": "Prepare to have a discussion with Brian, Steve, and Sandra after you have had time for reflection and they receive this report. Make sure you think through:",
+"bullet_points": [
+"What did I hear from the feedback that was new or different than I expected?",
+"What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
+"What am I focused on in the immediate short term and for the rest of 2024?",
+"What kind of support do I need from Brian, Steve, and Sandra, or others?"
+],
+"context_summary": "Ian, after 3 years leading the Aerospace, Defense & Government Services sector at Carlyle, you find yourself managing a leaner 11-person team while splitting time between DC and NYC offices. Your sector delivered strong performance (17% growth) despite organizational changes and RIFs. You're focused on empowering your team, building the Carlyle brand in DC, and driving cross-sector collaboration, while wrestling with maintaining team cohesion and preventing burnout. This appeals to your need for building institutional credibility while developing others and making the organization better. Keep those needs in mind as you think through these suggestions for development."
+}
+}
+

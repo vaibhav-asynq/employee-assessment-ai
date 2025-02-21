@@ -15,3 +15,13 @@ Rules:
 - End with clear business impact
 - Keep to exactly one paragraph
 - If existing content is provided, enhance and refine it while maintaining key insights
+
+Example:
+Ian is known as exceptionally astute, a
+brilliant strategic investor, and a decisive dealmaker. He processes complex investment
+opportunities with 90% decision accuracy, while efficiently directing resources toward
+high-potential ventures. He eliminates underperforming opportunities swiftly and maintains
+rigorous investment discipline across his portfolio. He anticipates market movements and
+positions investments for optimal returns, demonstrated through his consistent above-market
+performance. As a result, his portfolio achieved 17% growth last year while establishing new
+benchmarks for investment excellence across the firm.

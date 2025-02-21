@@ -18,3 +18,14 @@ Rules:
 - Keep to exactly one paragraph
 - Use softening language for feedback
 - If existing content is provided, enhance and refine it while maintaining key insights
+
+Example:
+Ian is highly respected for his investment expertise and analytical
+depth, yet tends to minimize his leadership visibility in broader forums. He sometimes steps
+back from industry speaking engagements, occasionally declines participation in external
+panels, and often maintains a lower profile in public settings. He tends to opt for private,
+focused interactions over larger platform opportunities, particularly regarding industry
+conferences and public events. This results in missed opportunities to leverage his expertise
+for market positioning, reduced external awareness of Carlyle's capabilities, and fewer
+chances for team members to observe and learn from his strategic approach in public
+settings.

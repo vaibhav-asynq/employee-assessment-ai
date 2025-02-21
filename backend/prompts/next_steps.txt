@@ -39,3 +39,19 @@ Format the response as:
         // Additional points...
     ]
 }}
+
+
+Example next step:
+{
+"next_steps": [
+{
+"main": "To Increase Strategic Visibility",
+"sub_points": [
+"Consider accepting 2-3 targeted speaking engagements per quarter, focusing on areas where your investment expertise would most benefit Carlyle's market position",
+"Explore opportunities to showcase team members alongside you at industry events, creating developmental moments while expanding Carlyle's presence",
+"Look into establishing a regular cadence of thought leadership contributions through industry publications or Carlyle's platforms",
+"Try scheduling structured time for external relationship building, particularly in areas aligned with current investment priorities"
+]
+}
+]
+}
