@@ -15,7 +15,8 @@ export function EditableTemplateAnalysis() {
     templates,
     handleAnalysisUpdate,
     setActiveTemplate,
-    fileId
+    fileId,
+    selectedPath
   } = useInterviewAnalysis();
 
   const [loading, setLoading] = useState<string | null>(null);
@@ -42,7 +43,9 @@ export function EditableTemplateAnalysis() {
     handleAddSubPointNextStep,
   } = useEditAnalysis(handleAnalysisUpdate);
 
-  const templateId = templatesIds.coachCometencies;
+  const templateId = selectedPath === 1 
+    ? templatesIds.coachCometencies 
+    : templatesIds.fullReport;
   useEffect(() => {
     if (activeTemplateId !== templateId) {
       setActiveTemplate(templateId);

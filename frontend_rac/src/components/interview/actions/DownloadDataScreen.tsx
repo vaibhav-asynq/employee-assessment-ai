@@ -28,7 +28,12 @@ export function DownloadDataScreen() {
   // Sometime its expecting Human report?
   // if so mention it in the types as optional, and then generate it and update the analysis template
 
-  const orderedAnalysisData = templates[templatesIds.fullReport];
+  // Get the correct template based on the selected path
+  const orderedAnalysisData = selectedPath === 1 
+    ? templates[templatesIds.coachCometencies]
+    : selectedPath === 2
+    ? templates[templatesIds.coachParagraph]
+    : templates[templatesIds.fullReport];
   // Generate PDF and return the URL
   const generatePDF = async () => {
     if (!orderedAnalysisData) return;
@@ -36,25 +41,16 @@ export function DownloadDataScreen() {
     setError(null);
     setPreviewError(false);
     
-    const analysisData = convertFromOrderedAnalysis(orderedAnalysisData);
     try {
-      // Create a base report data object
-      const baseReport: InterviewAnalysis = {
+      // Always use the edited content from orderedAnalysisData
+      const analysisData = convertFromOrderedAnalysis(orderedAnalysisData);
+      const reportData: InterviewAnalysis = {
         name: analysisData.name,
         date: analysisData.date,
         strengths: analysisData.strengths,
         areas_to_target: analysisData.areas_to_target,
         next_steps: analysisData.next_steps,
       };
-
-      // For Path 1, use the base report (AI suggestions)
-      // For other paths, use the human report if available
-      let reportData: InterviewAnalysis;
-      if (selectedPath === 1) {
-        reportData = baseReport;
-      } else {
-        reportData = analysisData.humanReport || baseReport;
-      }
 
       const blob = await generateWordDocument(reportData);
       console.log('Generated PDF blob:', blob);
