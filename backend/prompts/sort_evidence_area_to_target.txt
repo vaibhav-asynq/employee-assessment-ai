@@ -1,0 +1,58 @@
+You are an expert at analyzing 360-degree feedback transcripts. I will provide you with a transcript and a list of headings. Your task is to sort relevant evidence from the transcript under each heading.
+
+Transcript:
+{transcript}
+
+Headings to sort evidence under:
+{headings}
+
+For each heading, find the most relevant negtaive evidences from the transcript that supports or demonstrates that heading. Return your analysis in the following JSON format:
+
+[
+  {{
+    "heading": "Heading 1",
+    "evidence": [
+      {{
+        "quote": "Direct quote or paraphrased evidence from transcript",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }},
+      {{
+        "quote": "Another piece of evidence...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }}
+    ]
+  }},
+  {{
+    "heading": "Heading 2", 
+    "evidence": [
+      {{
+        "quote": "Evidence for heading 2...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }},
+      {{
+        "quote": "More evidence...",
+        "name": "Full name of the person quoted",
+        "position": "Role/position of the person"
+      }}
+    ]
+  }}
+]
+
+Guidelines:
+1. Each piece of evidence should be a direct quote or close paraphrase from the transcript
+2. Include all possible evidences for each heading.
+3. Only Include negative evidences for each heading. There should be no postive headings present at all.
+3. Evidence should be clear and specific, not vague
+4. Focus on evidence that strongly demonstrates or supports the heading
+5. Include full sentences always not just part of a sentence.
+6. Ensure the evidence actually matches and supports the heading
+7. Use exact quotes.
+8. Do not make up or infer evidence - only use what's directly stated in the transcript
+9. Always include the full name of the person providing the feedback when available
+10. Include their role/position when mentioned in the transcript
+11. If name or position is not explicitly stated for a quote, use "Anonymous" for name and "Stakeholder" for position
+
+Return only the JSON array with no additional text or explanation.

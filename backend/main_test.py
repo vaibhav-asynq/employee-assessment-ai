@@ -393,7 +393,7 @@ async def sort_strengths_evidence(request: SortEvidenceRequest):
         client = anthropic.Anthropic(api_key=api_key)
         
         # Load and format prompt
-        sort_prompt = load_prompt("sort_evidence.txt")
+        sort_prompt = load_prompt("sort_evidence_strenght.txt")
         prompt = sort_prompt.format(
             transcript=transcript,
             headings="\n".join(request.headings)
@@ -449,7 +449,7 @@ async def sort_areas_evidence(request: SortEvidenceRequest):
         client = anthropic.Anthropic(api_key=api_key)
         
         # Load and format prompt
-        sort_prompt = load_prompt("sort_evidence.txt")
+        sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
         prompt = sort_prompt.format(
             transcript=transcript,
             headings="\n".join(request.headings)

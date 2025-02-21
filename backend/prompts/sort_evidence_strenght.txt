@@ -6,7 +6,7 @@ Transcript:
 Headings to sort evidence under:
 {headings}
 
-For each heading, find the most relevant evidence from the transcript that supports or demonstrates that heading. Return your analysis in the following JSON format:
+For each heading, find the most relevant postive evidences from the transcript that supports or demonstrates that heading. Return your analysis in the following JSON format:
 
 [
   {{
@@ -44,6 +44,7 @@ For each heading, find the most relevant evidence from the transcript that suppo
 Guidelines:
 1. Each piece of evidence should be a direct quote or close paraphrase from the transcript
 2. Include all possible evidences for each heading.
+3. Only Include postive evidences for each heading. There should be no negtaive headings present at all.
 3. Evidence should be clear and specific, not vague
 4. Focus on evidence that strongly demonstrates or supports the heading
 5. Include full sentences always not just part of a sentence.
