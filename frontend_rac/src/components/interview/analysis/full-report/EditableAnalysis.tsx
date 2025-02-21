@@ -84,7 +84,7 @@ export function EditableAnalysis() {
           return (
             <div key={id} className="mb-8">
               <EditableSubheading
-                value={item.content}
+                value={item.heading}
                 onChange={(newHeading) => {
                   handleStrengthHeadingChange(id, newHeading);
                 }}
@@ -93,7 +93,7 @@ export function EditableAnalysis() {
                 }}
               />
               <EditableText
-                value={analysisFullReport.strengths.items[id].content}
+                value={item.content}
                 onChange={(newContent) => {
                   handleStrengthContentChange(id, newContent);
                 }}
