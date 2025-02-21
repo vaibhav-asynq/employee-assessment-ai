@@ -518,3 +518,12 @@ async def generate_strength_content(request: GenerateContentRequest):
         print(f"Error in generate_strength_content: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_advice")
+async def get_advice():
+    try:
+        with open("dummy_data/advices.json", "r") as f:
+            advice_data = json.load(f)
+        return advice_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

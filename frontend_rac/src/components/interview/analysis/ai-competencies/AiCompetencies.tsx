@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import {
   getStrengthEvidences,
   getDevelopmentAreas,
+  getAdvice,
   type StrengthEvidences,
   type DevelopmentAreas,
   type Evidence,
@@ -23,6 +24,7 @@ export function AiCompetencies() {
     useState<StrengthEvidences | null>(null);
   const [developmentAreas, setDevelopmentAreas] =
     useState<DevelopmentAreas | null>(null);
+  const [adviceData, setAdviceData] = useState<any | null>(null);
 
   const templateId = templatesIds.coachParagraph;
   const fetchDataRef = useRef(false);
@@ -33,12 +35,14 @@ export function AiCompetencies() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [strengthData, developmentData] = await Promise.all([
+        const [strengthData, developmentData, adviceData] = await Promise.all([
           getStrengthEvidences(),
           getDevelopmentAreas(),
+          getAdvice()
         ]);
         setStrengthEvidences(strengthData);
         setDevelopmentAreas(developmentData);
+        setAdviceData(adviceData);
 
         if (templates[templateId]) {
           if (activeTemplateId !== templateId) {
@@ -149,6 +153,24 @@ export function AiCompetencies() {
                     </Card>
                   ),
                 )}
+              </div>
+            </div>
+
+            {/* Advice Section */}
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Advice</h2>
+              <div className="space-y-6">
+                <Card className="p-4">
+                  <div className="space-y-4">
+                    {adviceData && Object.entries(adviceData).flatMap(([name, info]: [string, any]) => 
+                      info.advice.map((advice: string) => renderEvidence({
+                        feedback: advice,
+                        source: name.replace(/_/g, ' '),
+                        role: info.role
+                      }))
+                    )}
+                  </div>
+                </Card>
               </div>
             </div>
           </>

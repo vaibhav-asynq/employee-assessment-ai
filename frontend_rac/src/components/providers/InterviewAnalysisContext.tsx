@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { uploadFile, generateReport, getFeedback } from "@/lib/api";
+import { uploadFile, generateReport, getFeedback, getAdvice } from "@/lib/api";
 import {
   AnalysisPath,
   FeedbackData,
@@ -30,6 +30,8 @@ interface InterviewAnalysisContextType {
   setRawData: (data: any) => void;
   feedbackData: FeedbackData | null;
   setFeedbackData: (data: FeedbackData | null) => void;
+  adviceData: any | null;
+  setAdviceData: (data: any | null) => void;
   selectedPath: AnalysisPath | null;
   setSelectedPath: (path: AnalysisPath | null) => void;
 
@@ -95,6 +97,7 @@ export function InterviewAnalysisProvider({
   );
   const [rawData, setRawData] = useState<any>(null);
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
+  const [adviceData, setAdviceData] = useState<any | null>(null);
   const [selectedPath, setSelectedPath] = useState<AnalysisPath | null>(null);
 
   const [pendingChanges, setPendingChanges] = useState<
@@ -152,12 +155,17 @@ export function InterviewAnalysisProvider({
     setLoading(true);
     try {
       console.log("Fetching feedback data...");
-      const data = await getFeedback();
-      console.log("Feedback data received:", data);
-      if (!data) {
+      const [feedbackData, adviceData] = await Promise.all([
+        getFeedback(),
+        getAdvice()
+      ]);
+      console.log("Feedback data received:", feedbackData);
+      console.log("Advice data received:", adviceData);
+      if (!feedbackData) {
         throw new Error("No feedback data received");
       }
-      setFeedbackData(data);
+      setFeedbackData(feedbackData);
+      setAdviceData(adviceData);
     } catch (err) {
       console.error("Error fetching feedback data:", err);
       setError(
@@ -319,6 +327,8 @@ export function InterviewAnalysisProvider({
         setRawData,
         feedbackData,
         setFeedbackData,
+        adviceData,
+        setAdviceData,
         selectedPath,
         setSelectedPath,
         templates,

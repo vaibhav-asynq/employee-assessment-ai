@@ -42,6 +42,11 @@ export const getFeedback = async () => {
   return response.data;
 };
 
+export const getAdvice = async () => {
+  const response = await axios.get(`${API_URL}/api/get_advice`);
+  return response.data;
+};
+
 export const getRawData = async (fileId: string) => {
   const response = await axios.get(`${API_URL}/api/get_raw_data/${fileId}`);
   return response.data;

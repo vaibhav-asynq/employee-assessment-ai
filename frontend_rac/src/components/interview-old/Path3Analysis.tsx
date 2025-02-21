@@ -207,7 +207,7 @@ export function Path3Analysis({
                   ) : (
                     <ArrowUpDown className="h-4 w-4 mr-2" />
                   )}
-                  Sort All Evidence
+                  Sort Both
                 </Button>
               </div>
             </div>

@@ -204,7 +204,7 @@ export function Sortings(props: Props) {
             : allSorted
               ? sortIndicatorIcons.sorted
               : sortIndicatorIcons.default}
-          Sort All Evidence
+          Sort Both
         </Button>
       </div>
     </div>
