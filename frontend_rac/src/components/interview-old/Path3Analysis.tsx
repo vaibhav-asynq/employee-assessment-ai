@@ -220,7 +220,8 @@ export function Path3Analysis({
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center mb-6">
             <TabsList>
-              <TabsTrigger value="edit">Edit Analysis</TabsTrigger>
+              <TabsTrigger value="edit">Interview Feedback
+              </TabsTrigger>
               <TabsTrigger
                 value="sorted"
                 disabled={!sortedStrengths && !sortedAreas}

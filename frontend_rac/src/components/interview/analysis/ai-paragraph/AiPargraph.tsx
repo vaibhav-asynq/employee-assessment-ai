@@ -49,7 +49,7 @@ export function AiPargraph() {
             <div className="flex items-center">
               <TabsList>
                 <TabsTrigger value="edit" onClick={() => setActiveTab("edit")}>
-                  Edit Analysis
+                Interview Feedback
                 </TabsTrigger>
                 <TabsTrigger
                   value="sorted"
