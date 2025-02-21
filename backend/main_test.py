@@ -220,7 +220,7 @@ async def generate_reflection_points(feedback_transcript: str, executive_transcr
         prompt = format_reflection_points_prompt(feedback_transcript, executive_transcript)
         
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -291,7 +291,7 @@ async def generate_next_steps(request: GenerateNextStepsRequest):
         prompt = format_next_steps_prompt(TEST_NAME, areas_text, feedback_transcript)
         
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -350,8 +350,8 @@ async def generate_next_steps(request: GenerateNextStepsRequest):
 @app.post("/api/generate_area_content")
 async def generate_area_content(request: GenerateContentRequest):
     try:
-        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
-        
+        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content}")
+        # print("Existing content: ",request.existing_content)
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
         if not os.path.exists(feedback_path):
@@ -363,9 +363,9 @@ async def generate_area_content(request: GenerateContentRequest):
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
         prompt = format_area_content_prompt(TEST_NAME, request.heading, feedback_transcript, request.existing_content)
-        
+        print(prompt)
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -401,7 +401,7 @@ async def sort_strengths_evidence(request: SortEvidenceRequest):
         
         # Get sorted evidence from Claude
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -457,7 +457,7 @@ async def sort_areas_evidence(request: SortEvidenceRequest):
         
         # Get sorted evidence from Claude
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -508,7 +508,7 @@ async def generate_strength_content(request: GenerateContentRequest):
         prompt = format_strength_content_prompt(TEST_NAME, request.heading, feedback_transcript, request.existing_content)
         
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]

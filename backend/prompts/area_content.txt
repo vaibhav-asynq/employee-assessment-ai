@@ -6,6 +6,7 @@ Given this heading '{heading}', generate a weakness description for {name} that:
 5. Uses softeners like "sometimes", "tends to", "occasionally" for constructive feedback
 
 {existing_content_context} 
+
 Use this transcript as context:
 {feedback_transcript}
 
@@ -17,7 +18,7 @@ Rules:
 - End with clear business impact
 - Keep to exactly one paragraph
 - Use softening language for feedback
-- If existing content is provided, enhance and refine it while maintaining key insights
+- If existing_content_context is provided, enhance and refine it while maintaining key insights
 
 Example:
 Ian is highly respected for his investment expertise and analytical
