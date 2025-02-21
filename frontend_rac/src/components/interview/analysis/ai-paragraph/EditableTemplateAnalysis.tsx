@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { GenerateAIDialog } from "./GenerateAIDialog";
 import { SectionHeading } from "../../shared/SectionHeading";
 import { EditableSubheading } from "../../shared/EditableSubheading";
 import { EditableText } from "../../shared/EditableText";
@@ -54,21 +55,24 @@ export function EditableTemplateAnalysis() {
 
   const analysisWithAiCoach = templates[templateId];
 
-  const onGenerate = async (section: "strengths" | "areas", id: string, heading: string) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeGeneration, setActiveGeneration] = useState<{
+    section: "strengths" | "areas";
+    id: string;
+    heading: string;
+  } | null>(null);
+
+  const onGenerate = async (suggestion: string) => {
+    if (!activeGeneration || !fileId) return;
+    const { section, id, heading } = activeGeneration;
+
     setLoading(heading);
     try {
-      if (!fileId) throw new Error("File ID is required");
-      
-      // Get existing content based on section type
-      const existingContent = section === "strengths" 
-        ? analysisWithAiCoach.strengths.items[id].content
-        : analysisWithAiCoach.areas_to_target.items[id].content;
-      
-      // Pass existing content to API
-      const content = section === "strengths" 
-        ? await generateStrengthContent(heading, fileId, existingContent)
-        : await generateAreaContent(heading, fileId, existingContent);
-        
+      // Pass suggestion as existing content to API
+      const content = section === "strengths"
+        ? await generateStrengthContent(heading, fileId, suggestion)
+        : await generateAreaContent(heading, fileId, suggestion);
+
       if (section === "strengths") {
         handleStrengthContentChange(id, content);
       } else {
@@ -78,7 +82,13 @@ export function EditableTemplateAnalysis() {
       console.error("Error generating content:", error);
     } finally {
       setLoading(null);
+      setActiveGeneration(null);
     }
+  };
+
+  const handleGenerateClick = (section: "strengths" | "areas", id: string, heading: string) => {
+    setActiveGeneration({ section, id, heading });
+    setDialogOpen(true);
   };
 
   const handleGenerateNextSteps = async () => {
@@ -155,7 +165,7 @@ export function EditableTemplateAnalysis() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onGenerate("strengths", id, item.heading)}
+                  onClick={() => handleGenerateClick("strengths", id, item.heading)}
                   disabled={loading === item.heading}
                   className="text-gray-500 whitespace-nowrap flex items-center"
                 >
@@ -164,7 +174,7 @@ export function EditableTemplateAnalysis() {
                   ) : (
                     <Sparkles className="h-4 w-4 mr-2" />
                   )}
-                  Generate with AI
+                  Prompt with AI
                 </Button>
               </div>
               <EditableText
@@ -206,7 +216,7 @@ export function EditableTemplateAnalysis() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onGenerate("areas", id, item.heading)}
+                  onClick={() => handleGenerateClick("areas", id, item.heading)}
                   disabled={loading === item.heading}
                   className="text-gray-500 whitespace-nowrap flex items-center"
                 >
@@ -215,7 +225,7 @@ export function EditableTemplateAnalysis() {
                   ) : (
                     <Sparkles className="h-4 w-4 mr-2" />
                   )}
-                  Generate with AI
+                  Prompt with AI
                 </Button>
               </div>
               <EditableText
@@ -347,6 +357,12 @@ export function EditableTemplateAnalysis() {
           ))}
         </div>
       </section>
+      <GenerateAIDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        heading={activeGeneration?.heading || ""}
+        onGenerate={onGenerate}
+      />
     </div>
   );
 }
