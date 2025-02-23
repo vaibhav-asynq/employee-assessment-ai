@@ -1,13 +1,20 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
 import { SectionHeading } from "../../shared/SectionHeading";
 import { EditableSubheading } from "../../shared/EditableSubheading";
 import { EditableText } from "../../shared/EditableText";
 import { templatesIds } from "@/lib/types";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import {
+  generateAreaContent,
+  generateNextSteps,
+  generateStrengthContent,
+} from "@/lib/api";
+import { GenerateAIDialog } from "../manual-report/GenerateAIDialog";
 
 export function EditableAnalysis() {
   const templates = useAnalysisStore((state) => state.templates);
@@ -18,6 +25,7 @@ export function EditableAnalysis() {
   const setActiveTemplate = useAnalysisStore(
     (state) => state.setActiveTemplate,
   );
+  const fileId = useInterviewDataStore((state) => state.fileId);
 
   const {
     handleAddStrength,
@@ -49,21 +57,81 @@ export function EditableAnalysis() {
 
   const analysisFullReport = templates[templateId];
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeGeneration, setActiveGeneration] = useState<{
+    section: "strengths" | "areas";
+    id: string;
+    heading: string;
+  } | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingNextSteps, setLoadingNextSteps] = useState(false);
+
+  const onGenerate = async (suggestion: string) => {
+    if (!activeGeneration || !fileId) return;
+    const { section, id, heading } = activeGeneration;
+
+    setLoading(heading);
+    try {
+      // Pass suggestion as existing content to API
+      const content =
+        section === "strengths"
+          ? await generateStrengthContent(heading, fileId, suggestion)
+          : await generateAreaContent(heading, fileId, suggestion);
+
+      if (section === "strengths") {
+        handleStrengthContentChange(id, content);
+      } else {
+        handleAreaContentChange(id, content);
+      }
+    } catch (error) {
+      console.error("Error generating content:", error);
+    } finally {
+      setLoading(null);
+      setActiveGeneration(null);
+    }
+  };
+
+  const handleGenerateClick = (
+    section: "strengths" | "areas",
+    id: string,
+    heading: string,
+  ) => {
+    setActiveGeneration({ section, id, heading });
+    setDialogOpen(true);
+  };
+
+  const handleGenerateNextSteps = async () => {
+    setLoadingNextSteps(true);
+    try {
+      if (!fileId) throw new Error("File ID is required");
+
+      const areasToTarget = analysisFullReport.areas_to_target.order.reduce(
+        (acc, id) => ({
+          ...acc,
+          [analysisFullReport.areas_to_target.items[id].heading]:
+            analysisFullReport.areas_to_target.items[id].content,
+        }),
+        {},
+      );
+
+      const nextSteps = await generateNextSteps(areasToTarget, fileId);
+
+      // Replace existing next steps with generated ones
+      nextSteps.forEach((step, index) => {
+        handleUpdateNextStep(index, step);
+      });
+    } catch (error) {
+      console.error("Error generating next steps:", error);
+    } finally {
+      setLoadingNextSteps(false);
+    }
+  };
+
   if (!analysisFullReport) return <p>no data</p>;
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold tracking-tight mb-8">AI Suggestions</h2>
-      {/* INFO: may want a reset button */}
-      {/* <Button */}
-      {/*   variant={"ghost"} */}
-      {/*   onClick={(e) => { */}
-      {/*     e.preventDefault(); */}
-      {/*     resetAnalysisToOriginal(); */}
-      {/*   }} */}
-      {/* > */}
-      {/*   reset */}
-      {/* </Button> */}
 
       {/* Strengths Section */}
       <section className="mb-8">
@@ -84,15 +152,35 @@ export function EditableAnalysis() {
           const item = analysisFullReport.strengths.items[id];
           return (
             <div key={id} className="mb-8">
-              <EditableSubheading
-                value={item.heading}
-                onChange={(newHeading) => {
-                  handleStrengthHeadingChange(id, newHeading);
-                }}
-                onDelete={() => {
-                  handleStrengthDelete(id);
-                }}
-              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1">
+                  <EditableSubheading
+                    value={item.heading}
+                    onChange={(newHeading) => {
+                      handleStrengthHeadingChange(id, newHeading);
+                    }}
+                    onDelete={() => {
+                      handleStrengthDelete(id);
+                    }}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleGenerateClick("strengths", id, item.heading)
+                  }
+                  disabled={loading === item.heading}
+                  className="text-gray-500 whitespace-nowrap flex items-center"
+                >
+                  {loading === item.heading ? (
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  Prompt with AI
+                </Button>
+              </div>
               <EditableText
                 value={item.content}
                 onChange={(newContent) => {
@@ -120,13 +208,31 @@ export function EditableAnalysis() {
           const item = analysisFullReport.areas_to_target.items[id];
           return (
             <div key={id} className="mb-8">
-              <EditableSubheading
-                value={item.heading}
-                onChange={(newHeading) =>
-                  handleAreaHeadingChange(id, newHeading)
-                }
-                onDelete={() => handleAreaDelete(id)}
-              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1">
+                  <EditableSubheading
+                    value={item.heading}
+                    onChange={(newHeading) =>
+                      handleAreaHeadingChange(id, newHeading)
+                    }
+                    onDelete={() => handleAreaDelete(id)}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateClick("areas", id, item.heading)}
+                  disabled={loading === item.heading}
+                  className="text-gray-500 whitespace-nowrap flex items-center"
+                >
+                  {loading === item.heading ? (
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  Prompt with AI
+                </Button>
+              </div>
               <EditableText
                 value={item.content}
                 onChange={(newContent) =>
@@ -155,6 +261,21 @@ export function EditableAnalysis() {
               onClick={handleAddPointsNextStep}
             >
               <Plus className="h-4 w-4 mr-1" /> Add Points
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateNextSteps}
+              disabled={loadingNextSteps}
+              className="text-gray-500 whitespace-nowrap flex items-center"
+            >
+              {loadingNextSteps ? (
+                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              Generate with AI
             </Button>
           </div>
         </SectionHeading>
@@ -241,6 +362,12 @@ export function EditableAnalysis() {
           ))}
         </div>
       </section>
+      <GenerateAIDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        heading={activeGeneration?.heading || ""}
+        onGenerate={onGenerate}
+      />
     </div>
   );
 }
