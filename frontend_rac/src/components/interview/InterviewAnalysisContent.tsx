@@ -18,10 +18,10 @@ function InterviewAnalysisContent() {
       title: "Select Path",
       content: <DataAnalysis />,
     },
-    // {
-    //   title: "Download Data",
-    //   content: <DownloadDataScreen />,
-    // },
+    {
+      title: "Download Data",
+      content: <DownloadDataScreen />,
+    },
   ];
 
   return (

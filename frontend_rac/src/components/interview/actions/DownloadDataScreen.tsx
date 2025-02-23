@@ -4,10 +4,12 @@ import { Download, Loader2 } from "lucide-react";
 import { EditableWordViewer } from "./EditableWordViewer";
 import React, { useState, useEffect } from "react";
 import { ActionWrapper } from "./ActionWrapper";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
-import { InterviewAnalysis, templatesIds } from "@/lib/types";
+import { InterviewAnalysis } from "@/lib/types";
 import { generateWordDocument } from "@/lib/api";
 import { convertFromOrderedAnalysis } from "@/components/providers/utils";
+import { useAnalysisStore } from "@/zustand/store/analysisStore";
+import { templatesIds } from "@/lib/types/types.analysis";
+import DocPreview from "../download-data/DocPreview";
 
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
@@ -25,25 +27,26 @@ export function DownloadDataScreen() {
       }
     };
   }, [docUrl]);
-  const { templates, selectedPath } = useInterviewAnalysis();
+
+  // const isLoading = useAnalysisStore((state) => state.loading);
+  // const error = useAnalysisStore((state) => state.error);
+  const templates = useAnalysisStore((state) => state.templates);
+  const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
 
   // Get the correct template based on the selected path
-  const orderedAnalysisData = selectedPath === 1 
-    ? templates[templatesIds.coachCometencies]
-    : selectedPath === 2
-    ? templates[templatesIds.coachParagraph]
-    : templates[templatesIds.fullReport];
+  const finalTemplateId = activeTemplateId || templatesIds.base;
+  const templateFinalData = templates[finalTemplateId];
 
   // Generate Word document and return the URL
   const generateDoc = async (): Promise<string | null> => {
-    if (!orderedAnalysisData) return null;
+    if (!templateFinalData) return null;
     setIsLoading(true);
     setError(null);
     setPreviewError(false);
-    
+
     try {
-      // Always use the edited content from orderedAnalysisData
-      const analysisData = convertFromOrderedAnalysis(orderedAnalysisData);
+      // Always use the edited content from templateFinalData
+      const analysisData = convertFromOrderedAnalysis(templateFinalData);
       const data: InterviewAnalysis = {
         name: analysisData.name,
         date: analysisData.date,
@@ -54,12 +57,12 @@ export function DownloadDataScreen() {
       setReportData(data);
 
       const blob = await generateWordDocument(data);
-      console.log('Generated Word document blob:', blob);
+      console.log("Generated Word document blob:", blob);
       if (!blob) {
-        throw new Error('Failed to generate document');
+        throw new Error("Failed to generate document");
       }
       const url = window.URL.createObjectURL(blob);
-      console.log('Created URL:', url);
+      console.log("Created URL:", url);
       setDocUrl(url);
       return url;
     } catch (err) {
@@ -77,7 +80,7 @@ export function DownloadDataScreen() {
     if (!url) {
       url = await generateDoc();
     }
-    
+
     if (url) {
       const a = document.createElement("a");
       a.href = url;
@@ -90,19 +93,19 @@ export function DownloadDataScreen() {
 
   // Generate document when component mounts
   useEffect(() => {
-    if (orderedAnalysisData) {
+    if (templateFinalData) {
       generateDoc();
     }
-  }, [orderedAnalysisData]);
+  }, [templateFinalData]);
 
   return (
     <ActionWrapper>
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Generate Report</h2>
         {error && <p className="my-3 text-center text-red-600">{error}</p>}
-        <Button 
-          onClick={handleDownload} 
-          className="w-full" 
+        <Button
+          onClick={handleDownload}
+          className="w-full"
           disabled={isLoading}
         >
           {isLoading ? (
@@ -110,48 +113,18 @@ export function DownloadDataScreen() {
           ) : (
             <Download className="mr-2 h-4 w-4" />
           )}
-          {isLoading ? "Generating document..." : "Download Analysis as Word Document"}
+          {isLoading
+            ? "Generating document..."
+            : "Download Analysis as Word Document"}
         </Button>
 
         {/* Document Preview */}
-        {docUrl && !previewError && (
-          <div className="mt-4">
-            <EditableWordViewer 
-              documentUrl={docUrl}
-              onContentChange={(content) => setEditedContent(content)}
-              analysis={reportData}
-            />
-          </div>
-        )}
-        
-        {previewError && (
-          <div className="mt-4 p-4 text-red-600 bg-red-50 rounded-lg">
-            <p>Failed to load document preview.</p>
-            <p className="mt-2">
-              You can still{' '}
-              {docUrl && (
-                <>
-                  <a 
-                    href={docUrl} 
-                    className="underline hover:text-red-800"
-                    download
-                  >
-                    download the document
-                  </a>
-                  {' '}or{' '}
-                  <a 
-                    href={docUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="underline hover:text-red-800"
-                  >
-                    open it in a new tab
-                  </a>
-                </>
-              )}.
-            </p>
-          </div>
-        )}
+
+        <DocPreview
+          docUrl={docUrl}
+          previewError={previewError}
+          reportData={reportData}
+        />
       </div>
     </ActionWrapper>
   );
