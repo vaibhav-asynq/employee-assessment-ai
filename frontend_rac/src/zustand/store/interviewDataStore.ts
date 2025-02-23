@@ -22,7 +22,7 @@ type InterviewDataState = {
   ) => Promise<void>;
 };
 
-export const useInterviewDataStore = create<InterviewDataState>((set) => ({
+export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   // initial States
   loading: false,
   error: "",
@@ -70,12 +70,14 @@ export const useInterviewDataStore = create<InterviewDataState>((set) => ({
   },
 
   fetchFeedbackData: async () => {
+    const { fileId } = get();
+    if (!fileId) return;
     set({ loading: true, error: "" });
     try {
       console.log("Fetching feedback data...");
       const [feedbackData, adviceData] = await Promise.all([
-        getFeedback(),
-        getAdvice(),
+        getFeedback(fileId),
+        getAdvice(fileId),
       ]);
       //TODO: i think not doing anything from using feedback data.
       console.log("Feedback data received:", feedbackData);

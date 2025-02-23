@@ -38,6 +38,7 @@ import {
   convertAdviceToOrderedAdvice,
   convertInterviewAnalysisDataToTemplatedData,
 } from "@/lib/utils/analysisUtils";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 
 const formSchema = z.object({
   noOfGenerate: z.string({
@@ -47,6 +48,7 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 export function GenerateCompetencies() {
+  const fileId = useInterviewDataStore((state) => state.fileId);
   const templates = useAnalysisStore((state) => state.templates);
   const addTemplate = useAnalysisStore((state) => state.addTemplate);
   const addTab = useUserPreferencesStore((state) => state.addPath);
@@ -58,13 +60,14 @@ export function GenerateCompetencies() {
   });
 
   async function onSubmit(data: FormSchema) {
+    if (!fileId) return;
     try {
       const templateId = templatesIds.aiCompetencies;
 
       const [strengthData, developmentData, adviceData] = await Promise.all([
-        getStrengthEvidences(),
-        getDevelopmentAreas(),
-        getAdvice(),
+        getStrengthEvidences(fileId),
+        getDevelopmentAreas(fileId),
+        getAdvice(fileId),
       ]);
 
       const orderedAdviceData = convertAdviceToOrderedAdvice(adviceData);
