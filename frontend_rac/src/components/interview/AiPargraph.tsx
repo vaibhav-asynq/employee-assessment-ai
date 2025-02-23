@@ -9,12 +9,20 @@ import { EditableTemplateAnalysis } from "./EditableTemplateAnalysis";
 import { Sortings } from "./Sortings";
 import { SortedEvidenceView } from "./SortedEvidenceView";
 import { cn } from "@/lib/utils";
+import OtherActionsBar from "./OtherActionsBar";
+import { AiCompetencies } from "../ai-competencies/AiCompetencies";
+import { templatesIds } from "@/lib/types";
 
-export type Tab = "edit" | "sorted";
+export type Tab = "edit" | "sorted" | "ai-competencies";
 
 export function AiPargraph() {
-  const { loading, feedbackData } = useInterviewAnalysis();
-  const [activeTab, setActiveTab] = useState<Tab>("edit");
+  const {
+    loading,
+    feedbackData,
+    setActiveTemplate,
+    selectedPath,
+    setSelectedPath,
+  } = useInterviewAnalysis();
 
   const [sortedStrengths, setSortedStrengths] = useState<
     SortedEvidence[] | undefined
@@ -37,35 +45,54 @@ export function AiPargraph() {
     <div className="flex">
       {/* Main Content */}
       <div className="flex-1">
-        <Tabs value={activeTab}>
+        <Tabs value={selectedPath}>
+          {/* header */}
           <div
             className={cn(
               "sticky top-0",
               "py-2 pb-4",
               "bg-background shadow",
-              "flex items-center justify-between ",
+              "flex flex-col gap-6 justify-between ",
             )}
           >
-            <div className="flex items-center">
-              <TabsList>
-                <TabsTrigger value="edit" onClick={() => setActiveTab("edit")}>
-                Interview Feedback
-                </TabsTrigger>
-                <TabsTrigger
-                  value="sorted"
-                  onClick={() => setActiveTab("sorted")}
-                  disabled={!sortedStrengths && !sortedAreas}
-                >
-                  Sorted Evidence
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            <OtherActionsBar />
+            <div className={cn("flex items-center justify-between ")}>
+              <div className="flex items-center">
+                <TabsList>
+                  <TabsTrigger
+                    value="base-edit"
+                    onClick={() => {
+                      setActiveTemplate(templatesIds.coachParagraph);
+                      setSelectedPath("base-edit");
+                    }}
+                  >
+                    Interview Feedback
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="sorted-evidence"
+                    onClick={() => setSelectedPath("sorted-evidence")}
+                    disabled={!sortedStrengths && !sortedAreas}
+                  >
+                    Sorted Evidence
+                  </TabsTrigger>
 
-            <Sortings
-              setSortedAreas={setSortedAreas}
-              setSortedStrengths={setSortedStrengths}
-              setActiveTab={setActiveTab}
-            />
+                  <TabsTrigger
+                    value="ai-competencies"
+                    onClick={() => setSelectedPath("ai-competencies")}
+                    // disabled={}
+                  >
+                    AI-Generated competencies
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {["sorted", "edit"].includes(selectedPath) && (
+                <Sortings
+                  setSortedAreas={setSortedAreas}
+                  setSortedStrengths={setSortedStrengths}
+                />
+              )}
+            </div>
           </div>
 
           <TabsContent value="edit">
@@ -79,7 +106,9 @@ export function AiPargraph() {
                     <p className="text-gray-600">Loading feedback data...</p>
                   </div>
                 ) : feedbackData ? (
-                  <FeedbackDisplay data={feedbackData} />
+                  <>
+                    <FeedbackDisplay data={feedbackData} />
+                  </>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-gray-600">No feedback data available</p>
@@ -91,6 +120,7 @@ export function AiPargraph() {
               </div>
             </div>
           </TabsContent>
+
           <TabsContent value="sorted">
             <div className="grid grid-cols-2 gap-8">
               <div>
@@ -105,6 +135,12 @@ export function AiPargraph() {
               <div className="border-l pl-8">
                 <EditableTemplateAnalysis />
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ai-competencies">
+            <div>
+              <AiCompetencies />
             </div>
           </TabsContent>
         </Tabs>

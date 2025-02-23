@@ -1,6 +1,5 @@
-"use client"
+"use client";
 import { InterviewAnalysis } from "@/components/interview/InterviewAnalysis";
-// import { InterviewAnalysis } from "@/components/interview-old/InterviewAnalysis";
 
 export default function HomePage() {
   return (

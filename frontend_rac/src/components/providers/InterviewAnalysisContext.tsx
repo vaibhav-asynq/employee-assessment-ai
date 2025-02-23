@@ -11,7 +11,7 @@ import {
   templatesIds,
 } from "@/lib/types";
 import { convertFromOrderedAnalysis, convertToOrderedAnalysis } from "./utils";
-import { coachCompetenciesTemplate } from "@/lib/analysis/templates";
+import { base } from "@/lib/analysis/templates";
 
 // Define the context type
 interface InterviewAnalysisContextType {
@@ -32,8 +32,10 @@ interface InterviewAnalysisContextType {
   setFeedbackData: (data: FeedbackData | null) => void;
   adviceData: any | null;
   setAdviceData: (data: any | null) => void;
-  selectedPath: AnalysisPath | null;
-  setSelectedPath: (path: AnalysisPath | null) => void;
+
+  //Path [as Tabs in the analysis step]
+  selectedPath: AnalysisPath;
+  setSelectedPath: (path: AnalysisPath) => void;
 
   // Templates Management
   templates: Record<TemplateId, OrderedInterviewAnalysis>;
@@ -83,14 +85,12 @@ export function InterviewAnalysisProvider({
   const [originalTemplates, setOriginalTemplates] = useState<
     Record<TemplateId, InterviewAnalysis>
   >({
-    [templatesIds.coachCometencies]: coachCompetenciesTemplate,
+    [templatesIds.base]: base,
   });
   const [templates, setTemplates] = useState<
     Record<TemplateId, OrderedInterviewAnalysis>
   >({
-    [templatesIds.coachCometencies]: convertToOrderedAnalysis(
-      coachCompetenciesTemplate,
-    ),
+    [templatesIds.base]: convertToOrderedAnalysis(base),
   });
   const [activeTemplateId, setActiveTemplateId] = useState<TemplateId | null>(
     null,
@@ -98,7 +98,7 @@ export function InterviewAnalysisProvider({
   const [rawData, setRawData] = useState<any>(null);
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [adviceData, setAdviceData] = useState<any | null>(null);
-  const [selectedPath, setSelectedPath] = useState<AnalysisPath | null>(null);
+  const [selectedPath, setSelectedPath] = useState<AnalysisPath>("base-edit");
 
   const [pendingChanges, setPendingChanges] = useState<
     Partial<OrderedInterviewAnalysis>
@@ -127,18 +127,6 @@ export function InterviewAnalysisProvider({
       console.log("File uploaded, ID:", id);
       setFileId(id);
       setUploadProgress("processing");
-      const data = await generateReport(id);
-      console.log("Report generated:", data);
-
-      // Add the fetched data as a new template
-      const template = data;
-      addTemplate(templatesIds.fullReport, template);
-      // setTemplates((prev) => ({
-      //   ...prev,
-      //   [templateId]: template,
-      // }));
-      // setActiveTemplateId(templateId); // Set the newly added template as active
-
       setRawData(null);
       if (callback) callback();
     } catch (error) {
@@ -150,6 +138,7 @@ export function InterviewAnalysisProvider({
     }
   };
 
+  //TODO: use react-query for making api requests
   // Fetch Feedback Data
   const fetchFeedbackData = async () => {
     setLoading(true);
@@ -159,8 +148,13 @@ export function InterviewAnalysisProvider({
       }
       console.log("Fetching feedback data for file:", fileId);
       const [feedbackData, adviceData] = await Promise.all([
+<<<<<<< HEAD
         getFeedback(fileId),
         getAdvice(fileId)
+=======
+        getFeedback(),
+        getAdvice(),
+>>>>>>> 3e875e4 (add: tabbed analysis basic)
       ]);
       console.log("Feedback data received:", feedbackData);
       console.log("Advice data received:", adviceData);
@@ -192,7 +186,11 @@ export function InterviewAnalysisProvider({
   );
 
   const addTemplate = useCallback(
-    (id: TemplateId, template: InterviewAnalysis) => {
+    (
+      id: TemplateId,
+      template: InterviewAnalysis,
+      activateTemplate: boolean = false,
+    ) => {
       setOriginalTemplates((prev) => {
         if (prev[id]) {
           console.warn(
@@ -218,8 +216,9 @@ export function InterviewAnalysisProvider({
           [id]: convertToOrderedAnalysis(template),
         };
       });
-
-      setActiveTemplateId(id);
+      if (activateTemplate) {
+        setActiveTemplateId(id);
+      }
     },
     [],
   );

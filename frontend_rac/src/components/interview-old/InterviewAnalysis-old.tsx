@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UploadSection } from "./UploadSection";
+import { UploadScreen } from "./UploadSection";
 import { EditableAnalysis } from "./EditableAnalysis";
 import { Path2Analysis } from "./Path2Analysis";
 import { Path3Analysis } from "./Path3Analysis";
@@ -294,7 +294,7 @@ function InterviewAnalysisContent() {
       <Card>
         <CardContent className="p-6">
           {activeStep === 1 && (
-            <UploadSection
+            <UploadScreen
               loading={loading}
               file={file}
               onFileUpload={handleFileUpload}

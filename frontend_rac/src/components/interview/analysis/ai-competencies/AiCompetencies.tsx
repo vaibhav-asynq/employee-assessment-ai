@@ -1,94 +1,33 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import {
-  getStrengthEvidences,
-  getDevelopmentAreas,
-  getAdvice,
-  type StrengthEvidences,
-  type DevelopmentAreas,
-  type Evidence,
-} from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
-import { Path2HumanReport } from "./Path2HumanReport";
-import { templatesIds } from "@/lib/types";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
+import { useAnalysisStore } from "@/zustand/store/analysisStore";
+import { EditableCopetencies } from "./EditableCopetencies";
+import { templatesIds } from "@/lib/types/types.analysis";
+import { EvidenceOfFeedback } from "@/lib/types/types.interview-data";
 
 export function AiCompetencies() {
-  const { activeTemplateId, templates, setActiveTemplate, addTemplate } =
-    useInterviewAnalysis();
+  const isLoading = useAnalysisStore((state) => state.loading);
+  const error = useAnalysisStore((state) => state.error);
+  const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
+  const templates = useAnalysisStore((state) => state.templates);
+  const setActiveTemplate = useAnalysisStore(
+    (state) => state.setActiveTemplate,
+  );
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [strengthEvidences, setStrengthEvidences] =
-    useState<StrengthEvidences | null>(null);
-  const [developmentAreas, setDevelopmentAreas] =
-    useState<DevelopmentAreas | null>(null);
-  const [adviceData, setAdviceData] = useState<any | null>(null);
-
-  const templateId = templatesIds.coachParagraph;
-  const fetchDataRef = useRef(false);
+  const templateId = templatesIds.aiCompetencies;
 
   useEffect(() => {
-    if (fetchDataRef.current) return;
+    if (activeTemplateId !== templateId) {
+      setActiveTemplate(templateId);
+    }
+  }, [activeTemplateId, setActiveTemplate, templateId]);
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [strengthData, developmentData, adviceData] = await Promise.all([
-          getStrengthEvidences(),
-          getDevelopmentAreas(),
-          getAdvice()
-        ]);
-        setStrengthEvidences(strengthData);
-        setDevelopmentAreas(developmentData);
-        setAdviceData(adviceData);
-
-        if (templates[templateId]) {
-          if (activeTemplateId !== templateId) {
-            setActiveTemplate(templateId);
-          }
-        } else {
-          // INFO: update only if no data preset
-          // Create the template on the fly
-          addTemplate(templateId, {
-            name: "",
-            date: new Date().toISOString(),
-            strengths: Object.keys(strengthData.leadershipQualities).reduce(
-              (acc: Record<string, string>, key: string) => {
-                acc[key] = "";
-                return acc;
-              },
-              {},
-            ),
-            areas_to_target: Object.keys(
-              developmentData.developmentAreas,
-            ).reduce((acc: Record<string, string>, key: string) => {
-              acc[key] = "";
-              return acc;
-            }, {}),
-            next_steps: [
-              { main: "", sub_points: [] },
-              { main: "", sub_points: [] },
-              { main: "", sub_points: [] },
-            ],
-          });
-        }
-        // Mark the fetch as completed
-        fetchDataRef.current = true;
-      } catch (err) {
-        setError("Failed to fetch data");
-        console.error("Error fetching data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [activeTemplateId, addTemplate, setActiveTemplate, templateId, templates]);
+  const analysisAiCompetencies = templates[templateId];
 
   const renderEvidence = useCallback(
-    (evidence: Evidence) => (
+    (evidence: EvidenceOfFeedback) => (
       <div
         key={`${evidence.source}-${evidence.feedback}`}
         className="mb-4 p-4 bg-gray-50 rounded-lg"
@@ -120,65 +59,65 @@ export function AiCompetencies() {
     <div className="grid grid-cols-2 gap-8 h-full">
       {/* Left side - Evidence Display */}
       <div className="h-full overflow-y-auto space-y-8">
-        {strengthEvidences && developmentAreas && (
-          <>
-            {/* Leadership Qualities Section */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Leadership Qualities</h2>
-              <div className="space-y-6">
-                {Object.entries(strengthEvidences.leadershipQualities).map(
-                  ([quality, data]) => (
-                    <Card key={quality} className="p-4">
-                      <h3 className="text-lg font-semibold mb-4">{quality}</h3>
-                      <div className="space-y-4">
-                        {data.evidence.map(renderEvidence)}
-                      </div>
-                    </Card>
-                  ),
-                )}
-              </div>
-            </div>
-
-            {/* Development Areas Section */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Areas of Development</h2>
-              <div className="space-y-6">
-                {Object.entries(developmentAreas.developmentAreas).map(
-                  ([area, data]) => (
-                    <Card key={area} className="p-4">
-                      <h3 className="text-lg font-semibold mb-4">{area}</h3>
-                      <div className="space-y-4">
-                        {data.evidence.map(renderEvidence)}
-                      </div>
-                    </Card>
-                  ),
-                )}
-              </div>
-            </div>
-
-            {/* Advice Section */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Advice</h2>
-              <div className="space-y-6">
-                <Card className="p-4">
+        {/* Leadership Qualities Section */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">Leadership Qualities</h2>
+          <div className="space-y-6">
+            {analysisAiCompetencies.strengths.order.map((id) => {
+              const item = analysisAiCompetencies.strengths.items[id];
+              return (
+                <Card key={id} className="p-4">
+                  <h3 className="text-lg font-semibold mb-4">{item.heading}</h3>
                   <div className="space-y-4">
-                    {adviceData && Object.entries(adviceData).flatMap(([name, info]: [string, any]) => 
-                      info.advice.map((advice: string) => renderEvidence({
-                        feedback: advice,
-                        source: name.replace(/_/g, ' '),
-                        role: info.role
-                      }))
-                    )}
+                    {item.evidence.map((item) => renderEvidence(item))}
                   </div>
                 </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Development Areas Section */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">Areas of Development</h2>
+          <div className="space-y-6">
+            {analysisAiCompetencies.areas_to_target.order.map((id) => {
+              const item = analysisAiCompetencies.areas_to_target.items[id];
+              return (
+                <Card key={id} className="p-4">
+                  <h3 className="text-lg font-semibold mb-4">{item.heading}</h3>
+                  <div className="space-y-4">
+                    {item.evidence.map((item) => renderEvidence(item))}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Advice Section */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">Advice</h2>
+          <div className="space-y-6">
+            <Card className="p-4">
+              <div className="space-y-4">
+                {analysisAiCompetencies.advices.map((advice) => {
+                  return renderEvidence({
+                    feedback: advice.advice.join(". "),
+                    source: advice.name.replace(/_/g, " "),
+                    role: advice.role,
+                  });
+                })}
               </div>
-            </div>
-          </>
-        )}
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Right side - Editable Content */}
-      <div className="border-l pl-8">{<Path2HumanReport />}</div>
+      <div className="border-l pl-8">
+        <EditableCopetencies />
+      </div>
     </div>
   );
 }

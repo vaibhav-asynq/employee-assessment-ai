@@ -1,15 +1,14 @@
 import { type Step, Stepper } from "../ui/stepper";
-import { UploadSection } from "./actions/UploadSection";
+import { UploadScreen } from "./actions/UploadScreen";
 import { FeedbackScreen } from "./actions/FeedbackScreen";
-import { PathSelectionScreen } from "./actions/PathSelectionScreen";
 import { DownloadDataScreen } from "./actions/DownloadDataScreen";
-import { AnaylysisByPath } from "./actions/AnaylysisByPath";
+import DataAnalysis from "./actions/DataAnalysis";
 
 function InterviewAnalysisContent() {
   const _steps: Step[] = [
     {
       title: "Upload pdf",
-      content: <UploadSection />,
+      content: <UploadScreen />,
     },
     {
       title: "Feedback",
@@ -17,16 +16,12 @@ function InterviewAnalysisContent() {
     },
     {
       title: "Select Path",
-      content: <PathSelectionScreen />,
+      content: <DataAnalysis />,
     },
-    {
-      title: "Analysis",
-      content: <AnaylysisByPath />,
-    },
-    {
-      title: "Download Data",
-      content: <DownloadDataScreen />,
-    },
+    // {
+    //   title: "Download Data",
+    //   content: <DownloadDataScreen />,
+    // },
   ];
 
   return (

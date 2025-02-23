@@ -1,6 +1,6 @@
 import { InterviewAnalysis } from "@/lib/types";
 
-export const coachCompetenciesTemplate: InterviewAnalysis = {
+export const base: InterviewAnalysis = {
   name: "",
   date: new Date().toISOString(),
   strengths: {

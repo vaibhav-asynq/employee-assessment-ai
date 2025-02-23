@@ -1,26 +1,26 @@
 "use client";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { Loader2 } from "lucide-react";
 import React, { useEffect } from "react";
 import { ActionWrapper } from "./ActionWrapper";
 import { Button } from "@/components/ui/button";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 
 export function FeedbackScreen() {
-  const {
-    loading,
-    fileId,
-    error,
-    feedbackData: data,
-    fetchFeedbackData,
-  } = useInterviewAnalysis();
+  const error = useInterviewDataStore((state) => state.error);
+  const loading = useInterviewDataStore((state) => state.loading);
+  const fileId = useInterviewDataStore((state) => state.fileId);
+  const feedbackData = useInterviewDataStore((state) => state.feedbackData);
+  const fetchFeedbackData = useInterviewDataStore(
+    (state) => state.fetchFeedbackData,
+  );
 
   useEffect(() => {
-    if (fileId && !data) {
+    if (fileId && !feedbackData) {
       fetchFeedbackData();
     }
-  }, [data, fetchFeedbackData, fileId]);
+  }, [feedbackData, fetchFeedbackData, fileId]);
 
-  if (loading && !data) {
+  if (loading && !feedbackData) {
     return (
       <ActionWrapper>
         <div className="grid place-items-center animate-spin">
@@ -29,7 +29,7 @@ export function FeedbackScreen() {
       </ActionWrapper>
     );
   }
-  if (!loading && error && !data) {
+  if (!loading && error && !feedbackData) {
     return (
       <ActionWrapper>
         <div className="grid place-items-center">
@@ -38,7 +38,7 @@ export function FeedbackScreen() {
       </ActionWrapper>
     );
   }
-  if (!loading && !data) {
+  if (!loading && !feedbackData) {
     return (
       <ActionWrapper>
         <div className="grid place-items-center">
@@ -47,7 +47,7 @@ export function FeedbackScreen() {
       </ActionWrapper>
     );
   }
-  if (!data) {
+  if (!feedbackData) {
     return (
       <ActionWrapper>
         <div className="grid place-items-center">
@@ -74,7 +74,7 @@ export function FeedbackScreen() {
               Strengths
             </h2>
             <div className="space-y-8">
-              {Object.entries(data.strengths).map(([name, info]) => (
+              {Object.entries(feedbackData.strengths).map(([name, info]) => (
                 <div key={name} className="border-b pb-6">
                   <h3 className="text-xl font-semibold">
                     {name.replace(/_/g, " ")}
@@ -98,21 +98,23 @@ export function FeedbackScreen() {
               Areas to Target
             </h2>
             <div className="space-y-8">
-              {Object.entries(data.areas_to_target).map(([name, info]) => (
-                <div key={name} className="border-b pb-6">
-                  <h3 className="text-xl font-semibold">
-                    {name.replace(/_/g, " ")}
-                  </h3>
-                  <p className="text-gray-600 italic mb-3">{info.role}</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              {Object.entries(feedbackData.areas_to_target).map(
+                ([name, info]) => (
+                  <div key={name} className="border-b pb-6">
+                    <h3 className="text-xl font-semibold">
+                      {name.replace(/_/g, " ")}
+                    </h3>
+                    <p className="text-gray-600 italic mb-3">{info.role}</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      {info.feedback.map((point, index) => (
+                        <li key={index} className="text-gray-800">
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         </div>

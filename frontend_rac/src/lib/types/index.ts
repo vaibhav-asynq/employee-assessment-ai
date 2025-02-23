@@ -24,8 +24,10 @@ export type StepNumber = 1 | 2 | 3;
 // ADDED SOME TYPES HERE. [BY ZAMAN]
 //INFO: mention expected templates
 export const templatesIds = {
+  base: "base",
+  //TODO: remove that, has no reference/use
   fullReport: "full-report",
-  coachCometencies: "coach-competencies",
+  coachCompetencies: "coach-competencies",
   coachParagraph: "coach-paragraph",
 };
 export type TemplateId =
@@ -68,4 +70,4 @@ export interface FeedbackData {
   areas_to_target: AreasToTargetFeedback;
 }
 
-export type AnalysisPath = 1 | 2 | 3 | null;
+export type AnalysisPath = "base-edit" | "sorted-evidence" | "ai-competencies";

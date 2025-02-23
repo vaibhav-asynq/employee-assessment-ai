@@ -6,11 +6,14 @@ import { SectionHeading } from "../../shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { templatesIds } from "@/lib/types";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
+import { useAnalysisStore } from "@/zustand/store/analysisStore";
 
 export function Path2HumanReport() {
-  const { templates, handleAnalysisUpdate } = useInterviewAnalysis();
+  const templates = useAnalysisStore((state) => state.templates);
+  const handleAnalysisUpdate = useAnalysisStore(
+    (state) => state.handleAnalysisUpdate,
+  );
 
   const {
     handleAddStrength,

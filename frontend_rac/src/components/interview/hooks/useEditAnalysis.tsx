@@ -1,11 +1,9 @@
-import { NextStep, NextStepPoint, OrderedInterviewAnalysis } from "@/lib/types";
+import { NextStep, NextStepPoint } from "@/lib/types";
+import { TemplatedData } from "@/lib/types/types.analysis";
 import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useValidation } from "./useValidation";
 
-type UpdateFunction = (
-  updater: (prev: OrderedInterviewAnalysis) => OrderedInterviewAnalysis,
-) => void;
+type UpdateFunction = (updater: (prev: TemplatedData) => TemplatedData) => void;
 
 export function useEditAnalysis(handleAnalysisUpdate: UpdateFunction) {
   // Strengths
@@ -20,7 +18,7 @@ export function useEditAnalysis(handleAnalysisUpdate: UpdateFunction) {
             order: [id, ...prev.strengths.order],
             items: {
               ...prev.strengths.items,
-              [id]: { id, heading: newHeading, content: "" },
+              [id]: { id, heading: newHeading, content: "", evidence: [] },
             },
           },
         };
@@ -99,7 +97,13 @@ export function useEditAnalysis(handleAnalysisUpdate: UpdateFunction) {
             order: [id, ...prev.areas_to_target.order],
             items: {
               ...prev.areas_to_target.items,
-              [id]: { id, heading: newHeading, content: "" },
+              [id]: {
+                id,
+                heading: newHeading,
+                content: "",
+                evidence: [],
+                competencyAlignment: [],
+              },
             },
           },
         };

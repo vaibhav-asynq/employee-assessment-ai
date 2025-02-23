@@ -8,7 +8,11 @@ import { EditableText } from "../../shared/EditableText";
 import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
 import { templatesIds } from "@/lib/types";
-import { generateStrengthContent, generateAreaContent, generateNextSteps } from "@/lib/api";
+import {
+  generateStrengthContent,
+  generateAreaContent,
+  generateNextSteps,
+} from "@/lib/api";
 
 export function EditableTemplateAnalysis() {
   const {
@@ -17,7 +21,6 @@ export function EditableTemplateAnalysis() {
     handleAnalysisUpdate,
     setActiveTemplate,
     fileId,
-    selectedPath
   } = useInterviewAnalysis();
 
   const [loading, setLoading] = useState<string | null>(null);
@@ -44,9 +47,8 @@ export function EditableTemplateAnalysis() {
     handleAddSubPointNextStep,
   } = useEditAnalysis(handleAnalysisUpdate);
 
-  const templateId = selectedPath === 1 
-    ? templatesIds.coachCometencies 
-    : templatesIds.fullReport;
+  const templateId = templatesIds.base;
+
   useEffect(() => {
     if (activeTemplateId !== templateId) {
       setActiveTemplate(templateId);
@@ -69,9 +71,10 @@ export function EditableTemplateAnalysis() {
     setLoading(heading);
     try {
       // Pass suggestion as existing content to API
-      const content = section === "strengths"
-        ? await generateStrengthContent(heading, fileId, suggestion)
-        : await generateAreaContent(heading, fileId, suggestion);
+      const content =
+        section === "strengths"
+          ? await generateStrengthContent(heading, fileId, suggestion)
+          : await generateAreaContent(heading, fileId, suggestion);
 
       if (section === "strengths") {
         handleStrengthContentChange(id, content);
@@ -86,7 +89,11 @@ export function EditableTemplateAnalysis() {
     }
   };
 
-  const handleGenerateClick = (section: "strengths" | "areas", id: string, heading: string) => {
+  const handleGenerateClick = (
+    section: "strengths" | "areas",
+    id: string,
+    heading: string,
+  ) => {
     setActiveGeneration({ section, id, heading });
     setDialogOpen(true);
   };
@@ -95,18 +102,18 @@ export function EditableTemplateAnalysis() {
     setLoadingNextSteps(true);
     try {
       if (!fileId) throw new Error("File ID is required");
-      
+
       const areasToTarget = analysisWithAiCoach.areas_to_target.order.reduce(
         (acc, id) => ({
           ...acc,
-          [analysisWithAiCoach.areas_to_target.items[id].heading]: 
-          analysisWithAiCoach.areas_to_target.items[id].content
+          [analysisWithAiCoach.areas_to_target.items[id].heading]:
+            analysisWithAiCoach.areas_to_target.items[id].content,
         }),
-        {}
+        {},
       );
-      
+
       const nextSteps = await generateNextSteps(areasToTarget, fileId);
-      
+
       // Replace existing next steps with generated ones
       nextSteps.forEach((step, index) => {
         handleUpdateNextStep(index, step);
@@ -165,7 +172,9 @@ export function EditableTemplateAnalysis() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleGenerateClick("strengths", id, item.heading)}
+                  onClick={() =>
+                    handleGenerateClick("strengths", id, item.heading)
+                  }
                   disabled={loading === item.heading}
                   className="text-gray-500 whitespace-nowrap flex items-center"
                 >

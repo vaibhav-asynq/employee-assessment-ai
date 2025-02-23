@@ -1,40 +1,66 @@
 "use client";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
-import { FeedbackDisplay } from "../FeedbackDisplay";
-import { EditableAnalysis } from "./EditableAnalysis";
-import { useEffect } from "react";
-import { templatesIds } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import {
+  ChildPath,
+  ChildPathIds,
+  parseHierarchicalPath,
+  SelectPathIds,
+} from "@/lib/types/types.user-preferences";
+import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
+import { cn } from "@/lib/utils";
+import { SubTabs } from "../SubTabs";
+import { FullReportView } from "./FullReportView";
 
 export function FullReport() {
-  const { setActiveTemplate, loading, activeTemplateId, feedbackData } =
-    useInterviewAnalysis();
+  const parentTabId: SelectPathIds = "ai-agent-full-report";
+  const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
+  const getChildTabs = useUserPreferencesStore((state) => state.getChildTabs);
+
+  const [currentTab, setCurrentTab] = useState<ChildPathIds>();
+  const [availableTabs, setAvailableTabs] = useState<ChildPath[]>([]);
+
+  const tabComponentsMap: Record<ChildPathIds, JSX.ElementType> = {
+    "interview-feedback": FullReportView,
+    // "sorted-evidence": FullReport,
+  };
+
+  const renderTabComponent = (tabPathId: ChildPathIds, key: string) => {
+    const TabComponent = tabComponentsMap[tabPathId];
+
+    if (!TabComponent) {
+      return (
+        <TabsContent value={tabPathId} key={key}>
+          Invalid Tab
+        </TabsContent>
+      );
+    }
+
+    return (
+      <TabsContent value={tabPathId} key={key}>
+        <TabComponent />
+      </TabsContent>
+    );
+  };
 
   useEffect(() => {
-    if (activeTemplateId !== templatesIds.fullReport) {
-      setActiveTemplate(templatesIds.fullReport);
-    }
-  }, [activeTemplateId, setActiveTemplate]);
+    //TODO: handle tab selection gracefully
+    const tab =
+      parseHierarchicalPath(selectedPath).childId || "interview-feedback";
+    setCurrentTab(tab);
+
+    setAvailableTabs(getChildTabs(parentTabId));
+  }, [getChildTabs, selectedPath]);
 
   return (
-    <div className="grid grid-cols-2 gap-8">
-      <div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold">Interview Feedback</h2>
-        </div>
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Loading feedback data...</p>
-          </div>
-        ) : feedbackData ? (
-          <FeedbackDisplay data={feedbackData} />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-600">No feedback data available</p>
-          </div>
-        )}
-      </div>
-      <div className="border-l pl-8">
-        <EditableAnalysis />
+    <div className="flex">
+      <div className="flex-1">
+        <Tabs value={currentTab}>
+          <SubTabs parentTabId={parentTabId} />
+          {availableTabs.map((path) => {
+            return renderTabComponent(path.id, path.id);
+          })}
+        </Tabs>
       </div>
     </div>
   );

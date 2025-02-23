@@ -1,4 +1,1 @@
-export {
-  coachCompetenciesTemplate,
-  coachParagraph,
-} from "./analysis-templates";
+export { base } from "./analysis-templates";

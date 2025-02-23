@@ -6,11 +6,10 @@ import {
 } from "@/lib/api";
 import { templatesIds } from "@/lib/types";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { Tab } from "./AiPargraph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown, CheckCircle2, Loader2 } from "lucide-react";
-import { useValidation } from "../../hooks/useValidation";
+import { useValidation } from "../hooks/useValidation";
 
 const sortIndicatorIcons = {
   loading: <Loader2 className="h-4 w-4 mr-2 animate-spin" />,
@@ -21,16 +20,20 @@ const sortIndicatorIcons = {
 type SortSection = "strengths" | "areas" | "all" | null;
 
 interface Props {
-  setSortedStrengths: Dispatch<SetStateAction<SortedEvidence[] | undefined>>;
-  setSortedAreas: Dispatch<SetStateAction<SortedEvidence[] | undefined>>;
-  setActiveTab: Dispatch<SetStateAction<Tab>>;
+  setSortedStrengths: Dispatch<SetStateAction<SortedEvidence[]>>;
+  setSortedAreas: Dispatch<SetStateAction<SortedEvidence[]>>;
 }
 
 export function Sortings(props: Props) {
   const templateId = templatesIds.coachCometencies;
 
-  const { activeTemplateId, templates, setActiveTemplate, fileId } =
-    useInterviewAnalysis();
+  const {
+    activeTemplateId,
+    templates,
+    setActiveTemplate,
+    fileId,
+    setSelectedPath,
+  } = useInterviewAnalysis();
 
   const [error, setError] = useState("");
 
@@ -91,7 +94,7 @@ export function Sortings(props: Props) {
       const sortedData = await sortStrengths();
       props.setSortedStrengths(sortedData);
 
-      props.setActiveTab("sorted");
+      setSelectedPath("sorted-evidence");
       setStrengthsSorted(true);
     } catch (error) {
       console.error("Error sorting strengths:", error);
@@ -109,7 +112,7 @@ export function Sortings(props: Props) {
       const sortedData = await sortAreas();
       props.setSortedAreas(sortedData);
 
-      props.setActiveTab("sorted");
+      setSelectedPath("sorted-evidence");
       setAreasSorted(true);
     } catch (error) {
       console.error("Error sorting areas:", error);
@@ -135,7 +138,7 @@ export function Sortings(props: Props) {
 
       // Update UI state after both operations complete
       setAllSorted(true);
-      props.setActiveTab("sorted");
+      setSelectedPath("sorted-evidence");
     } catch (error) {
       console.error("Error sorting all evidence:", error);
       setError("Failed to sort all evidence. Please try again.");

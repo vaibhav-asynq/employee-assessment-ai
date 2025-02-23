@@ -9,7 +9,7 @@ interface UploadSectionProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function UploadSection({ loading, file, uploadProgress, onFileUpload }: UploadSectionProps) {
+export function UploadScreen({ loading, file, uploadProgress, onFileUpload }: UploadSectionProps) {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Upload Interview Transcript</h2>

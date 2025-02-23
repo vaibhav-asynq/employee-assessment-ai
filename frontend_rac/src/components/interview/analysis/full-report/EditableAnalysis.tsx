@@ -6,17 +6,18 @@ import { SectionHeading } from "../../shared/SectionHeading";
 import { EditableSubheading } from "../../shared/EditableSubheading";
 import { EditableText } from "../../shared/EditableText";
 import { templatesIds } from "@/lib/types";
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
+import { useAnalysisStore } from "@/zustand/store/analysisStore";
 
 export function EditableAnalysis() {
-  const {
-    activeTemplateId,
-    templates,
-    handleAnalysisUpdate,
-    setActiveTemplate,
-    resetAnalysisToOriginal,
-  } = useInterviewAnalysis();
+  const templates = useAnalysisStore((state) => state.templates);
+  const handleAnalysisUpdate = useAnalysisStore(
+    (state) => state.handleAnalysisUpdate,
+  );
+  const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
+  const setActiveTemplate = useAnalysisStore(
+    (state) => state.setActiveTemplate,
+  );
 
   const {
     handleAddStrength,
