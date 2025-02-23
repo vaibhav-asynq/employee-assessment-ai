@@ -108,6 +108,15 @@ def load_dummy_data(filename: str) -> dict:
             status_code=500,
             detail=f"Failed to load dummy data from {filename}"
         )
+    
+def get_name_from_report(file_id: str) -> str:
+    report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
+    if not os.path.exists(report_file_path):
+        raise HTTPException(status_code=404, detail="Report not found. Please generate the report first.")
+    
+    with open(report_file_path, 'r') as f:
+        report_data = json.load(f)
+    return report_data.get('name', '')
 
 @app.options("/api/excel")
 async def excel_options():
