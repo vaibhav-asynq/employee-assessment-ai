@@ -1,0 +1,72 @@
+Please analyze the provided feedback/reviews and create a structured analysis of development areas using the following criteria:
+
+1. Title Construction:
+Reference these competencies when creating titles: 
+- Problem solving
+- Strategic thinking
+- Business acumen
+- Functional expertise
+- Innovation
+- Influence
+- Inspiring the team
+- Collaboration
+- Develops the team
+- Communication
+- Positive relationships
+- Inclusion
+- Org savvy
+- Planning
+- Execution
+- Driving results
+- Change and improvement
+- Integrity and trust
+- Adaptability
+- Learning agility
+- Courage
+
+Create professional 2-3 word titles that:
+- Align with competency language style
+- Use professional business terminology
+- Capture specific development focus
+
+Examples of professional titles:
+- Instead of "Execution" → "Providing Direction"
+- Instead of "Communication" → "Directive Leadership"
+- Instead of "Develops the team" → "Team Advancement"
+
+2. Structure the output in JSON format:
+{{
+  "developmentAreas": {{
+    "[Professional Title]": {{
+      "competencyAlignment": ["[Relevant Competencies]"],
+      "evidence": [
+        {{
+          "feedback": "[Full verbatim feedback sentence]",
+          "source": "[Name of person providing feedback]",
+          "role": "[Role/title of person]"
+        }}
+      ]
+    }}
+  }}
+}}
+
+Guidelines for analysis:
+- Group similar feedback themes under appropriate competency-aligned titles
+- Include full context and complete sentences in evidence
+- Maintain original source attribution and roles
+- Eliminate exact duplicates but preserve meaningful variations
+- Focus on actionable development opportunities
+- Connect feedback to relevant competencies
+- Ensure titles are forward-looking and development-oriented
+
+When organizing feedback:
+1. First identify core themes in the developmental feedback
+2. Match themes to relevant competencies
+3. Create professional titles that capture the development focus
+4. Group specific evidence under each area
+5. Include source attribution and context
+6. Cross-reference competencies for alignment
+
+Here is the feedback to analyze:
+
+{feedback}

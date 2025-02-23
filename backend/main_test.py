@@ -175,31 +175,40 @@ async def generate_report(file_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/get_feedback")
-async def get_feedback():
-    return load_dummy_data('feedback_data.json')
-
-@app.get("/api/get_raw_data/{file_id}")
-async def get_raw_data_endpoint(file_id: str):
+@app.get("/api/get_feedback/{file_id}")
+async def get_feedback(file_id: str):
     try:
-        return load_dummy_data('raw_data.json')
+        return load_dummy_data('feedback_data.json')
     except Exception as e:
-        print(f"Error in get_raw_data_endpoint: {str(e)}")
+        print(f"Error in get_feedback: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/get_strength_evidences")
-async def get_strength_evidences():
+@app.get("/api/get_advice/{file_id}")
+async def get_advice(file_id: str):
+    try:
+        return load_dummy_data('advices.json')
+    except Exception as e:
+        print(f"Error in get_advice: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_strength_evidences/{file_id}")
+async def get_strength_evidences(file_id: str):
     try:
         return load_dummy_data('strength_evidences.json')
     except Exception as e:
+        print(f"Error in get_strength_evidences: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/get_development_areas")
-async def get_development_areas():
+@app.get("/api/get_development_areas/{file_id}")
+async def get_development_areas(file_id: str):
     try:
         return load_dummy_data('development_areas.json')
     except Exception as e:
+        print(f"Error in get_development_areas: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/dump_word")
@@ -288,17 +297,34 @@ async def generate_reflection_points(feedback_transcript: str, executive_transcr
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.options("/api/generate_next_steps")
+async def generate_next_steps_options():
+    headers = {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+    }
+    return Response(content="", headers=headers)
+
 @app.post("/api/generate_next_steps")
-async def generate_next_steps(request: GenerateNextStepsRequest):
+async def generate_next_steps(request: dict):
     try:
         print("\n=== Generate Next Steps Request ===")
-        print(f"File ID: {request.file_id}")
-        print(f"Areas to Target: {json.dumps(request.areas_to_target, indent=2)}")
-        print(f"Number of areas: {len(request.areas_to_target)}")
+        file_id = request.get("file_id")
+        areas_to_target = request.get("areas_to_target")
+        if not file_id:
+            raise HTTPException(status_code=400, detail="file_id is required")
+        if not areas_to_target:
+            raise HTTPException(status_code=400, detail="areas_to_target is required")
+            
+        print(f"File ID: {file_id}")
+        print(f"Areas to Target: {json.dumps(areas_to_target, indent=2)}")
+        print(f"Number of areas: {len(areas_to_target)}")
         
         # Load both transcripts using file ID
-        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
-        executive_path = f"../data/processed_assessments/executive_{request.file_id}.txt"
+        feedback_path = f"../data/processed_assessments/filtered_{file_id}.txt"
+        executive_path = f"../data/processed_assessments/executive_{file_id}.txt"
         
         if not os.path.exists(feedback_path):
             raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
@@ -317,13 +343,14 @@ async def generate_next_steps(request: GenerateNextStepsRequest):
         print(json.dumps(reflection_points, indent=2))
         
         # Format areas to target for action steps prompt
-        areas_text = "\n".join([f"{title}: {content}" for title, content in request.areas_to_target.items()])
+        areas_text = "\n".join([f"{title}: {content}" for title, content in areas_to_target.items()])
         print("\n=== Formatted Areas Text ===")
         print(areas_text)
 
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
-        prompt = format_next_steps_prompt(TEST_NAME, areas_text, feedback_transcript)
+        name = get_name_from_report(file_id)
+        prompt = format_next_steps_prompt(name, areas_text, feedback_transcript)
         
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
@@ -553,13 +580,4 @@ async def generate_strength_content(request: GenerateContentRequest):
     except Exception as e:
         print(f"Error in generate_strength_content: {str(e)}")
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/get_advice")
-async def get_advice():
-    try:
-        with open("dummy_data/advices.json", "r") as f:
-            advice_data = json.load(f)
-        return advice_data
-    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

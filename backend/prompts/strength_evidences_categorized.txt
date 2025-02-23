@@ -1,0 +1,85 @@
+Please analyze the provided feedback/reviews and create a structured analysis of leadership strengths using the following format:
+
+1. Leadership Quality Categories:
+Group evidence under categories such as (but not limited to):
+- Selfless style
+- People and partnership skills
+- Depth of expertise
+- Drive for excellence
+- Building capability
+- Strategic leadership
+- Transparent communication
+- Supporting their team
+- Thoughtful depth
+- Business leadership
+- High standards
+- Supportive leader
+- Decisive courage
+- Creative expert
+- Strong relationships
+- Inspirational leadership
+- Big picture clarity
+- Technical acumen
+- Emotional intelligence
+- Change leadership
+
+2. Structure the output in JSON format:
+{{
+  "leadershipQualities": {{
+    "[Leadership Quality Category]": {{
+      "evidence": [
+        {{
+          "feedback": "[Full verbatim feedback sentence]",
+          "source": "[Name of person providing feedback]",
+          "role": "[Role/title of person]"
+        }}
+      ]
+    }}
+  }}
+}}
+
+Guidelines for analysis:
+
+Evidence Collection:
+- Include complete sentences and full context
+- Maintain original wording from feedback
+- Preserve source attribution and roles
+- Capture specific examples and situations
+- Include impact where mentioned
+- Note consistent themes across multiple sources
+
+Category Creation:
+- Create categories that reflect enduring leadership qualities
+- Use professional, positive terminology
+- Focus on demonstrated strengths
+- Group related feedback themes
+- Consider both technical and behavioral strengths
+- Identify unique differentiators
+
+Quality Standards:
+- Each piece of evidence should be substantial and specific
+- Include context when relevant
+- Maintain proper attribution
+- Eliminate exact duplicates but keep meaningful variations
+- Preserve nuanced differences in similar feedback
+- Cross-reference evidence that could fit multiple categories
+
+Organization Principles:
+1. First identify core strength themes in the feedback
+2. Create appropriate category headings
+3. Group specific evidence under each strength
+4. Include source attribution and role context
+5. Note patterns of consistent feedback
+6. Highlight unique or distinctive qualities
+
+When categorizing evidence:
+- Look for patterns across multiple sources
+- Identify recurring themes
+- Note strength areas mentioned by different levels (peers, reports, superiors)
+- Consider both technical and leadership strengths
+- Capture both natural talents and developed capabilities
+- Include impact and results where mentioned
+
+Here is the feedback to analyze:
+
+{feedback}

@@ -1,0 +1,52 @@
+Context: You are reviewing 360-degree feedback for a professional. Your task is to systematically analyze the document and create a structured JSON of all constructive criticism and areas for improvement.
+
+Required Output Format:
+{{
+  "areas_to_target": {{
+    "[Person_Name]": {{
+      "role": "[Their Role/Relationship]",
+      "feedback": [
+        "Complete verbatim quote of constructive feedback 1",
+        "Complete verbatim quote of constructive feedback 2"
+      ]
+    }}
+  }}
+}}
+
+Guidelines:
+1. Include full, verbatim sentences/quotes, not paraphrased versions
+2. Capture feedback from all sections, not just those explicitly labeled as "weaknesses" or "opportunities"
+3. Include:
+   - Direct criticism
+   - Areas for improvement
+   - Development needs
+   - Concerns raised
+   - Constructive feedback
+   - Performance gaps
+   - Behavioral challenges
+   - Risk areas
+   - Team/organizational impact issues
+   - Communication issues
+   - Leadership style concerns
+   - Relationship management challenges
+4. Maintain person's exact role/title as mentioned in the document
+5. Create a "General_Updates" category for negative feedback not attributed to specific individuals
+6. Preserve the original language and context of the feedback
+
+Important:
+- Review document page by page systematically
+- Look for constructive feedback in all sections, not just designated "negative feedback" areas
+- Include full context when feedback spans multiple sentences
+- Maintain exact names and titles as they appear in the document
+- Keep feedback verbatim, including any qualifying statements
+- Include feedback about:
+  * What the person should do more of
+  * What the person should do less of
+  * What the person should do differently
+  * What's missing in their current approach
+  * Where they fall short of expectations
+  * What others find challenging about working with them
+
+Here is the feedback to analyze:
+
+{feedback}

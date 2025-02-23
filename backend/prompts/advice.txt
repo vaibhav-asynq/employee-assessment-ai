@@ -1,0 +1,43 @@
+Given interview transcripts, extract all advice statements and structure them in JSON format following these guidelines:
+
+1. Capture the exact, complete sentences from the source material
+2. Group advice by the person giving it
+3. Include their role and organizational relationship
+4. Return the data in this specific JSON structure:
+
+{{
+  "Person_Name": {{
+    "role": "Their exact role (including relationship like 'direct report' if applicable)",
+    "advice": [
+      "Complete advice sentence 1",
+      "Complete advice sentence 2",
+      "etc..."
+    ]
+  }},
+  "Next_Person": {{
+    ...
+  }}
+}}
+
+Requirements:
+- Preserve full sentences exactly as written
+- Include all advice given, even if similar to other advice
+- Only include actual advice statements (not general observations)
+- Be precise about roles and relationships
+- Include any qualifying context within the advice sentences
+- Remove exact duplicates but keep meaningful variations
+
+Example format:
+{{
+  "John_Smith": {{
+    "role": "VP Finance (direct report)",
+    "advice": [
+      "He should be more proactive in cross-team communications during project transitions",
+      "While his analysis is strong, he needs to present findings earlier in the process"
+    ]
+  }}
+}}
+
+Here is the feedback to analyze:
+
+{feedback}

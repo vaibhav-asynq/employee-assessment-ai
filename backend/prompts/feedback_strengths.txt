@@ -1,0 +1,37 @@
+Context: You are reviewing 360-degree feedback for a professional. Your task is to systematically analyze the document and create a structured JSON of all positive feedback evidence.
+
+Required Output Format:
+{{
+  "strengths": {{
+    "[Person_Name]": {{
+      "role": "[Their Role/Relationship]",
+      "feedback": [
+        "Complete verbatim quote of positive feedback 1",
+        "Complete verbatim quote of positive feedback 2"
+      ]
+    }}
+  }}
+}}
+
+Guidelines:
+1. Include full, verbatim sentences/quotes, not paraphrased versions
+2. Capture feedback from all sections, not just those explicitly labeled as "strengths" or "positive"
+3. Include positive feedback even if embedded within constructive criticism
+4. Maintain person's exact role/title as mentioned in the document
+5. Create a "General_Updates" category for positive feedback not attributed to specific individuals
+6. Preserve the original language and context of the feedback
+7. Include positive observations about performance, skills, behaviors, and impact
+8. Consider feedback about potential and demonstrated capabilities
+9. Capture both direct praise and implicit positive feedback
+10. Include positive feedback about management style, leadership, and interpersonal skills
+
+Important:
+- Review document page by page systematically
+- Look for positive feedback in all sections, not just designated "positive feedback" areas
+- Include full context when feedback spans multiple sentences
+- Maintain exact names and titles as they appear in the document
+- Keep feedback verbatim, including any qualifying statements
+
+Here is the feedback to analyze:
+
+{feedback}

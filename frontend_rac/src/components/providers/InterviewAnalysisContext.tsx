@@ -154,10 +154,13 @@ export function InterviewAnalysisProvider({
   const fetchFeedbackData = async () => {
     setLoading(true);
     try {
-      console.log("Fetching feedback data...");
+      if (!fileId) {
+        throw new Error("No file ID available");
+      }
+      console.log("Fetching feedback data for file:", fileId);
       const [feedbackData, adviceData] = await Promise.all([
-        getFeedback(),
-        getAdvice()
+        getFeedback(fileId),
+        getAdvice(fileId)
       ]);
       console.log("Feedback data received:", feedbackData);
       console.log("Advice data received:", adviceData);

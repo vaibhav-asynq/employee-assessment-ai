@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 import anthropic
 import uuid
 import os
@@ -15,10 +15,32 @@ from process_pdf import AssessmentProcessor
 from generate_report_llm import read_file_content, transform_content_to_report_format, process_prompts, extract_employee_info
 from report_generation import create_360_feedback_report
 from generate_raw_data import get_raw_data,get_strengths_data,get_areas_to_target_data
+import aspose.words as aw
+from prompt_loader import (
+    format_reflection_points_prompt,
+    format_next_steps_prompt,
+    format_area_content_prompt,
+    format_strength_content_prompt,
+    load_prompt
+)
 
+# Initialize license object
+license = aw.License()
+
+# Set license
+try:
+    # Method 1: Load license from file
+    license.set_license("Aspose.WordsforPythonvia.NET.lic")
+    print("License set successfully!")
+except Exception as e:
+    print(f"Error setting license: {str(e)}")
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
+if not api_key:
+    raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
 assessment_processor = AssessmentProcessor(api_key)
+
+
 
 app = FastAPI()
 
@@ -42,10 +64,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
 
 # Data models
-class GenerateContentRequest(BaseModel):
-    heading: str
-    file_id: str
-
 class NextStepPoint(BaseModel):
     main: str
     sub_points: List[str]
@@ -56,6 +74,29 @@ class InterviewAnalysis(BaseModel):
     strengths: Dict[str, str]
     areas_to_target: Dict[str, str]
     next_steps: List[Union[str, NextStepPoint]]
+
+class GenerateContentRequest(BaseModel):
+    heading: str
+    file_id: str
+    existing_content: Optional[str] = None
+
+class GenerateNextStepsRequest(BaseModel):
+    areas_to_target: Dict[str, str]
+    file_id: str
+    executive_transcript: Optional[str] = None
+
+class SortEvidenceRequest(BaseModel):
+    file_id: str
+    headings: List[str]
+
+def get_name_from_report(file_id: str) -> str:
+    report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
+    if not os.path.exists(report_file_path):
+        raise HTTPException(status_code=404, detail="Report not found. Please generate the report first.")
+    
+    with open(report_file_path, 'r') as f:
+        report_data = json.load(f)
+    return report_data.get('name', '')
 
 # Store uploaded files and their analysis
 files_store = {}
@@ -108,44 +149,6 @@ async def generate_report(file_id: str):
         
         formatted_data = transform_content_to_report_format(results, employee_name, report_date)
 
-
-        # *****Uncomment******
-
-        # create_360_feedback_report(header_txt+".pdf", formatted_data, header_txt)
-        # Here you would typically process the PDF and extract information
-        # This is a mock response for demonstration
-#         formatted_data=  {'name': 'Ian Fujiyama',
-#  'date': 'June 2024',
-#  'strengths': {'Strategic Leadership & Investment Excellence': 'Ian is known as exceptionally astute, a brilliant strategic investor, and a decisive dealmaker. He processes complex investment opportunities with 90% decision accuracy, while efficiently directing resources toward high-potential ventures. He eliminates underperforming opportunities swiftly and maintains rigorous investment discipline across his portfolio. He anticipates market movements and positions investments for optimal returns, demonstrated through his consistent above-market performance. As a result, his portfolio achieved 17% growth last year while establishing new benchmarks for investment excellence across the firm.',
-#   'People Development & Collaborative Leadership': 'Ian is recognized as an empowering mentor, cross-functional collaborator, and culture builder. He creates structured growth opportunities for team members while fostering autonomy and accountability. He builds bridges across sectors, promotes knowledge sharing, and develops next-generation leaders through hands-on guidance. He has successfully developed two vertical leaders who now independently drive significant business units. This leads to a high-performing, self-sufficient team culture that consistently delivers results while maintaining strong cross-organizational relationships.',
-#   'Stakeholder Management & Industry Expertise': 'Ian is identified as a composed negotiator, industry authority, and relationship architect in the A&D sector. He navigates complex stakeholder dynamics with remarkable emotional intelligence and strategic insight. He leverages deep market knowledge to guide portfolio companies through critical decisions and maintains strong relationships across the industry ecosystem. He consistently demonstrates mastery in high-stakes negotiations while preserving long-term partnerships. Consequently, he has established himself and Carlyle as the premier advisors in aerospace, defense, and government services sectors.'},
-#  'areas_to_target': {'STRATEGIC INFLUENCE': "Ian is highly respected for his investment expertise and analytical depth, yet tends to minimize his leadership visibility in broader forums. He sometimes steps back from industry speaking engagements, occasionally declines participation in external panels, and often maintains a lower profile in public settings. He tends to opt for private, focused interactions over larger platform opportunities, particularly regarding industry conferences and public events. This results in missed opportunities to leverage his expertise for market positioning, reduced external awareness of Carlyle's capabilities, and fewer chances for team members to observe and learn from his strategic approach in public settings.",
-#   'TALENT ACCELERATION': 'Ian is astute at identifying and evaluating talent, though his development approach sometimes remains selective rather than systematic. He tends to concentrate coaching efforts on senior direct reports while maintaining a more hands-off stance with junior team members during daily operations. He engages deeply in development conversations when specifically approached but occasionally hesitates to initiate teaching moments or provide unsolicited guidance. This leads to uneven skill development across the team, particularly at mid-levels, creating structural gaps in team capability and impacting succession readiness.',
-#   'DIRECTIVE LEADERSHIP': 'Ian is thoughtful and measured in his decision-making approach, yet his subtle guidance style can sometimes create ambiguity. He tends to guide teams through indirect suggestions rather than explicit direction, often sending brief email responses that belie his deep consideration of issues. He generally maintains a pattern of empowering team members by avoiding direct intervention in their work processes. This results in team members occasionally experiencing uncertainty about expectations and timelines, leading to decreased efficiency when more explicit guidance would accelerate progress.',
-#   'ORGANIZATIONAL PRESENCE': "Ian is skilled at building focused relationships and trust, yet his physical presence and informal engagement have sometimes become intermittent. He tends to divide his time between multiple office locations, which can limit spontaneous interactions and informal coaching opportunities. His split presence sometimes affects the frequency and consistency of team interactions across locations. This creates challenges for maintaining team cohesion, reduces opportunities for informal mentoring, and impacts the team's ability to maintain consistent communication patterns."},
-#  'next_steps': [{'main': 'Prepare to have a discussion with Brian, Steve, and Sandra after you have had time for reflection and they receive this report. Make sure you think through:',
-#    'sub_points': ['What did I hear from the feedback that was new or different than I expected?',
-#     "What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
-#     'What am I focused on in the immediate short term and for the rest of 2024?',
-#     'What kind of support do I need from Brian, Steve, and Sandra, or others?']},
-#     "Explore opportunities to showcase team members alongside you at industry events, creating developmental moments while expanding Carlyle's presence.",
-#     "Look into establishing a regular cadence of thought leadership contributions through industry publications or Carlyle's platforms.",
-#     'Try scheduling structured time for external relationship building, particularly in areas aligned with current investment priorities.']},
-#   {'main': 'To Strengthen Team Development',
-#    'sub_points': ['Consider implementing regular strategy sessions where junior team members can observe and learn from your decision-making process.',
-#     'Explore creating informal mentoring moments during deal reviews by sharing specific insights about your analytical approach.',
-#     'Look into establishing weekly office hours or drop-in times when team members can seek guidance more readily.',
-#     'Try incorporating teaching moments into regular team meetings by sharing specific examples from past experiences.']},
-#   {'main': 'To Enhance Direct Communication',
-#    'sub_points': ['Consider prefacing indirect guidance with explicit statements of expectations or timelines to ensure clarity of direction.',
-#     'Explore expanding brief email responses with additional context when addressing complex or strategic matters.',
-#     'Look into establishing regular check-in points during projects where direct feedback and guidance can be provided.',
-#     'Try incorporating more specific deadlines and success metrics when delegating responsibilities to team members.']},
-#   {'main': 'To Increase Organizational Connection',
-#    'sub_points': ["Consider scheduling regular in-person team days when you're in each office location, focusing on relationship-building activities.",
-#     'Explore using video conferences for informal team connections beyond scheduled meetings when working remotely.',
-#     'Look into creating structured touchpoints with different team levels during your office visits.',
-#     'Try establishing consistent communication patterns that work across locations and time zones.']}]}
     
     # Save the formatted data to a file
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
@@ -254,13 +257,31 @@ async def get_raw_data_endpoint(file_id: str):
 
 
 @app.post("/api/dump_word")
+async def generate_word_document(analysis: InterviewAnalysis):
+    try:
+        # First generate PDF
+        output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
+        header_txt = analysis.name + ' - Qualitative 360 Feedback'
+        create_360_feedback_report(output_path, analysis, header_txt)
+
+        # Convert PDF to DOCX
+        docx_path = os.path.join(OUTPUT_DIR, "Output1.docx")
+        doc = aw.Document(output_path)
+        doc.save(docx_path)
+
+        # Return the DOCX file
+        return FileResponse(
+            docx_path,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            filename="interview_analysis.docx"
+        )
+    except Exception as e:
+        print(f"Error in generate_word_document: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/api/dump_pdf")
 async def generate_pdf_docuement(analysis: InterviewAnalysis):
     output_path = OUTPUT_DIR+"/temp.pdf" 
-    # header_txt = analysis + ' - Qualitative 360 Feedback June 2024'
-    # print(analysis)
-    # print(analysis.name)
-    # print(analysis.date)
-    \
     header_txt = analysis.name + ' - Qualitative 360 Feedback'
     create_360_feedback_report(output_path, analysis, header_txt)
     return FileResponse(
@@ -270,22 +291,6 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
         )
     
 
-# Optional: Cleanup endpoint
-@app.post("/api/generate_strength_content")
-async def generate_strength_content(request: GenerateContentRequest):
-    try:
-        # TODO: Implement strength content generation
-        return {"content": "Test Strength"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/generate_area_content")
-async def generate_area_content(request: GenerateContentRequest):
-    try:
-        # TODO: Implement area content generation
-        return {"content": "Test Areas"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/cleanup/{file_id}")
 async def cleanup_file(file_id: str):
@@ -297,3 +302,602 @@ async def cleanup_file(file_id: str):
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     raise HTTPException(status_code=404, detail="File not found")
+
+
+async def generate_reflection_points(feedback_transcript: str, executive_transcript: str) -> dict:
+    """Generate reflection points and context summary using both transcripts."""
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = format_reflection_points_prompt(feedback_transcript, executive_transcript)
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=1000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Extract JSON from response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing reflection points response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse reflection points response"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error generating reflection points: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.options("/api/generate_next_steps")
+async def generate_next_steps_options():
+    headers = {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+    }
+    return Response(content="", headers=headers)
+
+@app.post("/api/generate_next_steps")
+async def generate_next_steps(request: dict):
+    try:
+        print("\n=== Generate Next Steps Request ===")
+        file_id = request.get("file_id")
+        areas_to_target = request.get("areas_to_target")
+        if not file_id:
+            raise HTTPException(status_code=400, detail="file_id is required")
+        if not areas_to_target:
+            raise HTTPException(status_code=400, detail="areas_to_target is required")
+            
+        print(f"File ID: {file_id}")
+        print(f"Areas to Target: {json.dumps(areas_to_target, indent=2)}")
+        print(f"Number of areas: {len(areas_to_target)}")
+        
+        # Load both transcripts using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{file_id}.txt"
+        executive_path = f"../data/processed_assessments/executive_{file_id}.txt"
+        
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+            
+        executive_transcript = ""
+        if os.path.exists(executive_path):
+            with open(executive_path, 'r') as f:
+                executive_transcript = f.read()
+
+        # Get reflection points first
+        reflection_points = await generate_reflection_points(feedback_transcript, executive_transcript)
+        print("\n=== Reflection Points ===")
+        print(json.dumps(reflection_points, indent=2))
+        
+        # Format areas to target for action steps prompt
+        areas_text = "\n".join([f"{title}: {content}" for title, content in areas_to_target.items()])
+        print("\n=== Formatted Areas Text ===")
+        print(areas_text)
+
+        # Generate content using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        name = get_name_from_report(file_id)
+        prompt = format_next_steps_prompt(name, areas_text, feedback_transcript)
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=2000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Extract JSON from response
+        response_text = response.content[0].text
+        print("\n=== Claude Response ===")
+        print(response_text)
+        try:
+            # Try to parse the entire response as JSON first
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            # If that fails, try to extract JSON from the text
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        # Ensure the response has the expected structure
+        if 'next_steps' not in result:
+            result = {'next_steps': result}
+            
+        # Combine reflection points and action steps
+        if 'reflection_prompts' in reflection_points:
+            prompts = reflection_points['reflection_prompts']
+            result['next_steps'] = [
+                {
+                    'main': prompts['discussion_prompt'],
+                    'sub_points': prompts['bullet_points']
+                },
+                prompts['context_summary'],
+                *result['next_steps']
+            ]
+        
+        print("\n=== Final Result ===")
+        print(json.dumps(result, indent=2))
+        return result
+    except Exception as e:
+        print(f"Error in generate_next_steps: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/api/generate_area_content")
+async def generate_area_content(request: GenerateContentRequest):
+    try:
+        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content}")
+        # print("Existing content: ",request.existing_content)
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Generate content using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        name = get_name_from_report(request.file_id)
+        prompt = format_area_content_prompt(name, request.heading, feedback_transcript, request.existing_content)
+        print(prompt)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=1000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return {"content": response.content[0].text}
+    except Exception as e:
+        print(f"Error in generate_area_content: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/sort-strengths-evidence")
+async def sort_strengths_evidence(request: SortEvidenceRequest):
+    try:
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            transcript = f.read()
+
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Load and format prompt
+        sort_prompt = load_prompt("sort_evidence_strenght.txt")
+        prompt = sort_prompt.format(
+            transcript=transcript,
+            headings="\n".join(request.headings)
+        )
+        
+        # Get sorted evidence from Claude
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=2000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in sort_strengths_evidence: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_strength_evidences/{file_id}")
+async def get_strength_evidences(file_id: str):
+    try:
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompt
+        strength_prompt = load_prompt("strength_evidences_categorized.txt")
+        prompt = strength_prompt.format(feedback=feedback_transcript)
+        
+        # Generate analysis using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in get_strength_evidences: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_advice/{file_id}")
+async def get_advice(file_id: str):
+    try:
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompt
+        advice_prompt = load_prompt("advice.txt")
+        prompt = advice_prompt.format(feedback=feedback_transcript)
+        
+        # Generate analysis using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in get_advice: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_feedback/{file_id}")
+async def get_feedback(file_id: str):
+    try:
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            print(feedback_path)
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompts
+        strengths_prompt = load_prompt("feedback_strengths.txt")
+        areas_prompt = load_prompt("feedback_areas.txt")
+        
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Get strengths analysis
+        strengths_response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": strengths_prompt.format(feedback=feedback_transcript)}]
+        )
+        
+        # Get areas analysis
+        areas_response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": areas_prompt.format(feedback=feedback_transcript)}]
+        )
+        
+        # Parse JSON responses
+        try:
+            strengths_text = strengths_response.content[0].text
+            areas_text = areas_response.content[0].text
+            
+            # Extract JSON from strengths response
+            try:
+                strengths_data = json.loads(strengths_text)
+            except json.JSONDecodeError:
+                start = strengths_text.find('{')
+                end = strengths_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    strengths_data = json.loads(strengths_text[start:end])
+                else:
+                    raise ValueError("No JSON content found in strengths response")
+            
+            # Extract JSON from areas response
+            try:
+                areas_data = json.loads(areas_text)
+            except json.JSONDecodeError:
+                start = areas_text.find('{')
+                end = areas_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    areas_data = json.loads(areas_text[start:end])
+                else:
+                    raise ValueError("No JSON content found in areas response")
+            
+            # Combine results
+            result = {
+                "strengths": strengths_data.get("strengths", {}),
+                "areas_to_target": areas_data.get("areas_to_target", {})
+            }
+            
+            return result
+            
+        except Exception as e:
+            print(f"Error parsing responses: {str(e)}")
+            print(f"Strengths response: {strengths_text}")
+            print(f"Areas response: {areas_text}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to parse AI responses into valid JSON"
+            )
+        
+    except Exception as e:
+        print(f"Error in get_feedback: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_development_areas/{file_id}")
+async def get_development_areas(file_id: str):
+    try:
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompt
+        development_prompt = load_prompt("development_areas_categorized.txt")
+        prompt = development_prompt.format(feedback=feedback_transcript)
+        
+        # Generate analysis using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in get_development_areas: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sort-areas-evidence")
+async def sort_areas_evidence(request: SortEvidenceRequest):
+    try:
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            transcript = f.read()
+
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Load and format prompt
+        sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
+        prompt = sort_prompt.format(
+            transcript=transcript,
+            headings="\n".join(request.headings)
+        )
+        
+        # Get sorted evidence from Claude
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=2000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
+    except Exception as e:
+        print(f"Error in sort_areas_evidence: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.options("/api/excel")
+async def excel_options():
+    headers = {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+    }
+    return Response(content="", headers=headers)
+
+@app.get("/api/excel")
+async def get_excel_file():
+    file_path = "../Developmental Suggestions & Resources.xlsx"
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Excel file not found")
+    
+    with open(file_path, "rb") as f:
+        content = f.read()
+    
+    headers = {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": "attachment; filename=Developmental Suggestions & Resources.xlsx",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+    }
+    
+    return Response(content=content, headers=headers)
+
+@app.post("/api/generate_strength_content")
+async def generate_strength_content(request: GenerateContentRequest):
+    try:
+        print(f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
+        
+        # Load transcript using file ID
+        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Generate content using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        name = get_name_from_report(request.file_id)
+        prompt = format_strength_content_prompt(name, request.heading, feedback_transcript, request.existing_content)
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=1000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return {"content": response.content[0].text}
+    except Exception as e:
+        print(f"Error in generate_strength_content: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
