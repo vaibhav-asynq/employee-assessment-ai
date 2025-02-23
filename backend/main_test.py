@@ -254,6 +254,29 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
             filename="interview_analysis.pdf"
         )
 
+@app.post("/api/dump_html")
+async def generate_html_document(analysis: InterviewAnalysis):
+    try:
+        # First generate PDF
+        output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
+        header_txt = analysis.name + ' - Qualitative 360 Feedback'
+        create_360_feedback_report(output_path, analysis, header_txt)
+
+        # Convert PDF to HTML
+        html_path = os.path.join(OUTPUT_DIR, "output.html")
+        doc = aw.Document(output_path)
+        doc.save(html_path)
+
+        # Return the HTML file
+        return FileResponse(
+            html_path,
+            media_type="text/html",
+            filename="interview_analysis.html"
+        )
+    except Exception as e:
+        print(f"Error in generate_html_document: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Optional: Cleanup endpoint
 @app.delete("/api/cleanup/{file_id}")
 async def cleanup_file(file_id: str):
