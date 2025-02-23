@@ -10,6 +10,7 @@ import { convertFromOrderedAnalysis } from "@/components/providers/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import DocPreview from "../download-data/DocPreview";
+import { ModifyContent } from "../download-data/DocEditor";
 
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
@@ -91,12 +92,29 @@ export function DownloadDataScreen() {
     }
   };
 
-  // Generate document when component mounts
+  //TODO: uncommment when endpoint integrated
+  // // Generate document when component mounts
+  // useEffect(() => {
+  //   if (templateFinalData) {
+  //     generateDoc();
+  //   }
+  // }, [templateFinalData]);
+
+  //TODO: remove when endpoint integrated
+  const [htmlContent, setHtmlContent] = useState<string>("");
   useEffect(() => {
-    if (templateFinalData) {
-      generateDoc();
-    }
-  }, [templateFinalData]);
+    const fetchHtmlContent = async () => {
+      try {
+        const response = await fetch("/test.html");
+        const content = await response.text();
+        setHtmlContent(content);
+      } catch (error) {
+        console.error("Error fetching HTML:", error);
+      }
+    };
+
+    fetchHtmlContent();
+  }, []);
 
   return (
     <ActionWrapper>
@@ -125,6 +143,8 @@ export function DownloadDataScreen() {
           previewError={previewError}
           reportData={reportData}
         />
+
+        <ModifyContent htmlContentRes={htmlContent} />
       </div>
     </ActionWrapper>
   );
