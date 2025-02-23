@@ -10,6 +10,10 @@ interface Props {
 }
 export function SubTabs({ parentTabId }: Props) {
   const getChildTabs = useUserPreferencesStore((state) => state.getChildTabs);
+  const avilablePaths = useUserPreferencesStore(
+    (state) => state.availablePaths,
+  );
+  const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
   const setSelectedPath = useUserPreferencesStore(
     (state) => state.setSelectedPath,
   );
@@ -18,7 +22,7 @@ export function SubTabs({ parentTabId }: Props) {
 
   useEffect(() => {
     setAvailableTabs(getChildTabs(parentTabId));
-  }, [getChildTabs, parentTabId]);
+  }, [getChildTabs, parentTabId, selectedPath, avilablePaths.length]);
 
   return (
     <div
