@@ -58,13 +58,8 @@ export const getFeedback = async (fileId: string) => {
   return response.data;
 };
 
-<<<<<<< HEAD
 export const getAdvice = async (fileId: string) => {
   const response = await axios.get(`${API_URL}/api/get_advice/${fileId}`);
-=======
-export const getAdvice = async (): Promise<AdviceData> => {
-  const response = await axios.get(`${API_URL}/api/get_advice`);
->>>>>>> 3e875e4 (add: tabbed analysis basic)
   return response.data;
 };
 
@@ -73,13 +68,21 @@ export const getRawData = async (fileId: string) => {
   return response.data;
 };
 
-export const getStrengthEvidences = async (fileId: string): Promise<StrengthEvidences> => {
-  const response = await axios.get(`${API_URL}/api/get_strength_evidences/${fileId}`);
+export const getStrengthEvidences = async (
+  fileId: string,
+): Promise<StrengthEvidences> => {
+  const response = await axios.get(
+    `${API_URL}/api/get_strength_evidences/${fileId}`,
+  );
   return response.data;
 };
 
-export const getDevelopmentAreas = async (fileId: string): Promise<DevelopmentAreas> => {
-  const response = await axios.get(`${API_URL}/api/get_development_areas/${fileId}`);
+export const getDevelopmentAreas = async (
+  fileId: string,
+): Promise<DevelopmentAreas> => {
+  const response = await axios.get(
+    `${API_URL}/api/get_development_areas/${fileId}`,
+  );
   return response.data;
 };
 

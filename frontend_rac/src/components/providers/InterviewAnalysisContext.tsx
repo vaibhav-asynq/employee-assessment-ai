@@ -148,13 +148,8 @@ export function InterviewAnalysisProvider({
       }
       console.log("Fetching feedback data for file:", fileId);
       const [feedbackData, adviceData] = await Promise.all([
-<<<<<<< HEAD
         getFeedback(fileId),
-        getAdvice(fileId)
-=======
-        getFeedback(),
-        getAdvice(),
->>>>>>> 3e875e4 (add: tabbed analysis basic)
+        getAdvice(fileId),
       ]);
       console.log("Feedback data received:", feedbackData);
       console.log("Advice data received:", adviceData);
