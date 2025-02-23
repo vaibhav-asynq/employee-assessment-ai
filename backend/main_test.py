@@ -257,19 +257,26 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
 @app.post("/api/dump_html")
 async def generate_html_document(analysis: InterviewAnalysis):
     try:
-        # First generate PDF
-        output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
-        header_txt = analysis.name + ' - Qualitative 360 Feedback'
-        create_360_feedback_report(output_path, analysis, header_txt)
+        # # First generate PDF
+        # output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
+        # header_txt = analysis.name + ' - Qualitative 360 Feedback'
+        # create_360_feedback_report(output_path, analysis, header_txt)
 
-        # Convert PDF to HTML
-        html_path = os.path.join(OUTPUT_DIR, "output.html")
-        doc = aw.Document(output_path)
-        doc.save(html_path)
+        # # Convert PDF to HTML
+        # html_path = os.path.join(OUTPUT_DIR, "output.html")
+        # doc = aw.Document(output_path)
+        # doc.save(html_path)
+
 
         # Return the HTML file
+        # return FileResponse(
+        #     html_path,
+        #     media_type="text/html",
+        #     filename="interview_analysis.html"
+        # )
+        # Return the hardcoded HTML file
         return FileResponse(
-            html_path,
+            "dummy_data/ian_report.html",
             media_type="text/html",
             filename="interview_analysis.html"
         )
