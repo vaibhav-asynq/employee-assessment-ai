@@ -78,7 +78,8 @@ export function AnalysisDisplay() {
         <Tabs value={currentTab}>
           <div
             className={cn(
-              "sticky top-0",
+              "sticky top-0 z-10",
+              "pt-3 ",
               "bg-background",
               !haveSubTab && "pb-3 shadow",
               "flex flex-col gap-6 justify-between ",
@@ -87,16 +88,6 @@ export function AnalysisDisplay() {
             <ActionsBar />
             <div className={cn("flex items-center justify-between ")}>
               <TabsComponent />
-              {/* <Sortings */}
-              {/*   setSortedAreas={setSortedAreas} */}
-              {/*   setSortedStrengths={setSortedStrengths} */}
-              {/* /> */}
-              {["sorted", "edit"].includes(selectedPath) && (
-                <Sortings
-                  setSortedAreas={setSortedAreas}
-                  setSortedStrengths={setSortedStrengths}
-                />
-              )}
             </div>
           </div>
           {availablePaths.map((path) => {

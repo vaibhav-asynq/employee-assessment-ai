@@ -18,7 +18,11 @@ export function TabsComponent() {
         {availablePaths.map((path) => {
           return (
             <TabsTrigger
-              className={cn("data-[state=active]:text-black  rounded-none")}
+              className={cn(
+                "rounded-none",
+                "data-[state=active]:text-white",
+                " data-[state=active]:bg-slate-500",
+              )}
               key={path.id}
               value={path.id}
               onClick={() => {
