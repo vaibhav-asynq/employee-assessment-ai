@@ -1,58 +1,27 @@
-import React, { useState } from "react";
-import { EditableWordViewer } from "./EditableWordViewer";
+import React from "react";
 import { InterviewAnalysis } from "@/lib/types";
 
 interface Props {
   docUrl: string | null;
-  previewError: boolean;
   reportData: InterviewAnalysis | null;
 }
 
-export function DocPreview({ reportData, docUrl, previewError }: Props) {
-  const [editedContent, setEditedContent] = useState<string | null>(null);
-
+export function DocPreview({ reportData, docUrl }: Props) {
   return (
     <>
-      {/* Document Preview */}
-      {docUrl && !previewError && (
-        <div className="mt-4">
-          <EditableWordViewer
-            documentUrl={docUrl}
-            onContentChange={(content) => setEditedContent(content)}
-            analysis={reportData}
+      <div className="mt-4">
+        {docUrl ? (
+          <iframe
+            src={docUrl}
+            className="w-full h-[600px] border rounded-lg"
+            title="Document Preview"
           />
-        </div>
-      )}
-
-      {previewError && (
-        <div className="mt-4 p-4 text-red-600 bg-red-50 rounded-lg">
-          <p>Failed to load document preview.</p>
-          <p className="mt-2">
-            You can still{" "}
-            {docUrl && (
-              <>
-                <a
-                  href={docUrl}
-                  className="underline hover:text-red-800"
-                  download
-                >
-                  download the document
-                </a>{" "}
-                or{" "}
-                <a
-                  href={docUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-red-800"
-                >
-                  open it in a new tab
-                </a>
-              </>
-            )}
-            .
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-[600px] border rounded-lg flex items-center justify-center bg-gray-50">
+            <p className="text-gray-500">Loading document preview...</p>
+          </div>
+        )}
+      </div>
     </>
   );
 }

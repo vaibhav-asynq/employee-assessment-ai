@@ -289,7 +289,23 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
             media_type="application/pdf",
             filename="interview_analysis.pdf"
         )
-    
+
+@app.post("/api/upload_updated_report")
+async def upload_updated_report(file: UploadFile):
+    try:
+        # Validate file type
+        if not file.filename.endswith('.docx'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only Word documents (.docx) are allowed"
+            )
+            
+        # Just pass through
+        return {"message": "Report uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.delete("/api/cleanup/{file_id}")

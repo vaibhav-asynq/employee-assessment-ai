@@ -100,6 +100,17 @@ export const generatePdfDocument = async (data: any) => {
   return response.data;
 };
 
+export const uploadUpdatedReport = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axios.post(`${API_URL}/api/upload_updated_report`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const generateStrengthContent = async (
   heading: string,
   fileId: string,

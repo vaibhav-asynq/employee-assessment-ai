@@ -620,3 +620,20 @@ async def generate_strength_content(request: GenerateContentRequest):
         print(f"Error in generate_strength_content: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/api/upload_updated_report")
+async def upload_updated_report(file: UploadFile):
+    try:
+        # Validate file type
+        if not file.filename.endswith('.docx'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only Word documents (.docx) are allowed"
+            )
+            
+        # Just pass through
+        return {"message": "Report uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
