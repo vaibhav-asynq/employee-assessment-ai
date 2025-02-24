@@ -1,10 +1,10 @@
 "use client";
 import { FeedbackDisplay } from "../FeedbackDisplay";
-import { EditableAnalysis } from "./EditableAnalysis";
 import { useEffect } from "react";
 import { templatesIds } from "@/lib/types";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
+import { EditableReport } from "./EditableReport";
 
 export function FullReportView() {
   const loading = useInterviewDataStore((state) => state.loading);
@@ -39,7 +39,7 @@ export function FullReportView() {
         )}
       </div>
       <div className="border-l pl-8">
-        <EditableAnalysis />
+        <EditableReport />
       </div>
     </div>
   );
