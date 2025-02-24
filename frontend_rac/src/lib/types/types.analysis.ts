@@ -35,6 +35,7 @@ interface NextStepPoint {
   sub_points: string[];
 }
 type NextStep = string | NextStepPoint;
+export type NextSteps = NextStep[];
 
 interface AreasToTargetItem {
   id: string;
@@ -70,6 +71,6 @@ export interface TemplatedData {
   date: string;
   strengths: Strengths;
   areas_to_target: AreasToTarget;
-  next_steps: NextStep[];
+  next_steps: NextSteps;
   advices: OrderedAdvice;
 }

@@ -16,7 +16,7 @@ interface EditAreasProps {
   placeholderSubheading?: string;
   placeholderContent?: string;
   addBtnText?: string;
-  propmtBtnText?: string;
+  promptBtnText?: string;
 }
 export function EditAreas({
   areas,
@@ -26,7 +26,7 @@ export function EditAreas({
   placeholderSubheading = "Enter Subheading...",
   placeholderContent = "Enter text...",
   addBtnText = "Add Subheading",
-  propmtBtnText = "Prompt with AI",
+  promptBtnText = "Prompt with AI",
 }: EditAreasProps) {
   const handleAnalysisUpdate = useAnalysisStore(
     (state) => state.handleAnalysisUpdate,
@@ -65,7 +65,7 @@ export function EditAreas({
                 </div>
                 {aiPropmt && (
                   <GenerateAreasAi
-                    btnText={propmtBtnText}
+                    btnText={promptBtnText}
                     templateId={templateId}
                     strenghtItemId={id}
                   />

@@ -1,8 +1,8 @@
 "use client";
 import { FeedbackDisplay } from "../FeedbackDisplay";
 import { Loader2 } from "lucide-react";
-import { EditableTemplateAnalysis } from "./EditableTemplateAnalysis";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { EditableReport } from "./EditableReport";
 
 export function ManualReportView() {
   const loading = useInterviewDataStore((state) => state.loading);
@@ -39,8 +39,7 @@ export function ManualReportView() {
         )}
       </div>
       <div className="border-l pl-8">
-        {/* TODO: change this to a more meaningful component */}
-        <EditableTemplateAnalysis />
+        <EditableReport />
       </div>
     </div>
   );

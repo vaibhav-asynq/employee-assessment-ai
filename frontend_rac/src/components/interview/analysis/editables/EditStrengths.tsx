@@ -11,22 +11,22 @@ import { EditableText } from "./shared/EditableText";
 interface EditableStrengthsProps {
   strengths: Strengths;
   templateId: TemplateId;
-  aiPropmt?: boolean;
+  aiPrompt?: boolean;
   heading?: string;
   placeholderSubheading?: string;
   placeholderContent?: string;
   addBtnText?: string;
-  propmtBtnText?: string;
+  promptBtnText?: string;
 }
 export function EditStrengths({
   strengths,
   templateId,
-  aiPropmt = true,
+  aiPrompt = true,
   heading = "STRENGTHS",
   placeholderSubheading = "Enter Subheading...",
   placeholderContent = "Enter text...",
   addBtnText = "Add Subheading",
-  propmtBtnText = "Prompt with AI",
+  promptBtnText = "Prompt with AI",
 }: EditableStrengthsProps) {
   const handleAnalysisUpdate = useAnalysisStore(
     (state) => state.handleAnalysisUpdate,
@@ -63,9 +63,9 @@ export function EditStrengths({
                     }}
                   />
                 </div>
-                {aiPropmt && (
+                {aiPrompt && (
                   <GenerateStrengthsAi
-                    btnText={propmtBtnText}
+                    btnText={promptBtnText}
                     templateId={templateId}
                     strenghtItemId={id}
                   />

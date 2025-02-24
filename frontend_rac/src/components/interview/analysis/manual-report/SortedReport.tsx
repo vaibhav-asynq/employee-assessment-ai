@@ -1,6 +1,6 @@
 import { SortedEvidenceView } from "../sorted-evidence/SortedEvidenceView";
 import { SortedEvidence } from "@/lib/api";
-import { EditableTemplateAnalysis } from "./EditableTemplateAnalysis";
+import { EditableReport } from "./EditableReport";
 
 interface Props {
   sortedStrengths: SortedEvidence[] | undefined;
@@ -22,7 +22,7 @@ export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
         />
       </div>
       <div className="border-l pl-8">
-        <EditableTemplateAnalysis />
+        <EditableReport />
       </div>
     </div>
   );
