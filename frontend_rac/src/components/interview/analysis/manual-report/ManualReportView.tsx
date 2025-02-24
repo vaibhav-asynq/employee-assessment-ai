@@ -29,9 +29,7 @@ export function ManualReportView() {
             <p className="text-gray-600">Loading feedback data...</p>
           </div>
         ) : feedbackData ? (
-          <>
-            <FeedbackDisplay data={feedbackData} />
-          </>
+          <FeedbackDisplay data={feedbackData} />
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-600">No feedback data available</p>

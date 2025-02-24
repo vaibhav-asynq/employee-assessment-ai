@@ -40,7 +40,7 @@ export function AiCompetencies() {
       <EvidanceDisplay />
 
       {/* Right side - Editable Content */}
-      <div className="border-l pl-8">
+      <div className="border-l pl-4">
         <EditableCopetencies />
       </div>
     </div>
