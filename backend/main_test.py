@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from typing import Union, List, Dict, Optional
+from io import BytesIO
 import uuid
 import os
 import anthropic
@@ -632,8 +633,49 @@ async def upload_updated_report(file: UploadFile):
                 detail="Only Word documents (.docx) are allowed"
             )
             
-        # Just pass through
-        return {"message": "Report uploaded successfully"}
+        # Read docx content
+        content = await file.read()
+        doc = Document(BytesIO(content))
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        
+        # Use Claude to parse the content
+        client = anthropic.Anthropic(api_key=api_key)
+        # Load and format prompt
+        prompt = load_prompt("upload_updated_report.txt").format(text=text)
+
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=4000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse response with better error handling
+        response_text = response.content[0].text
+        try:
+            # Try direct JSON parsing first
+            parsed_data = json.loads(response_text)
+        except json.JSONDecodeError:
+            # Try to extract JSON if surrounded by other text
+            try:
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    parsed_data = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return parsed_data
         
     except Exception as e:
+        print(f"Error in upload_updated_report: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))

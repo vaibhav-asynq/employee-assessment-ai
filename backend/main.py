@@ -1,6 +1,7 @@
 # main.py
 import traceback
 from fastapi import FastAPI, UploadFile, HTTPException
+from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -300,10 +301,59 @@ async def upload_updated_report(file: UploadFile):
                 detail="Only Word documents (.docx) are allowed"
             )
             
-        # Just pass through
-        return {"message": "Report uploaded successfully"}
+        # Read docx content
+        content = await file.read()
+        doc = Document(BytesIO(content))
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        
+        # Use Claude to parse the content
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = """Extract and structure the content from this report into the following JSON format:
+
+{
+  "name": "Person's full name",
+  "date": "Month Year",
+  "strengths": {
+    "[Heading]": "[Full content]"
+    // Extract all strengths sections
+  },
+  "areas_to_target": {
+    "[Heading]": "[Full content]"
+    // Extract all areas sections
+  },
+  "next_steps": [
+    // Can include any of these types:
+    {
+      "main": "Discussion or action point",
+      "sub_points": ["List of related points"]
+    },
+    "Paragraph of text without sub-points",
+    // Extract all next steps in order they appear
+  ]
+}
+
+Important:
+1. Extract all content exactly as written - do not modify or summarize
+2. Preserve the exact headings used in the document
+3. Include all sections found in the document
+
+Here's the document content:
+{text}"""
+
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=4000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse and return the data
+        parsed_data = json.loads(response.content[0].text)
+        return parsed_data
         
     except Exception as e:
+        print(f"Error in upload_updated_report: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -1,0 +1,49 @@
+IMPORTANT: You must return ONLY a valid JSON object with no additional text or explanation.
+
+Here is the document content to parse:
+
+{text}
+
+Convert the content into this exact JSON structure:
+{{
+  "name": "Person's full name",
+  "date": "Month Year",
+  "strengths": {{
+    "Heading 1": "Content for strength 1"
+  }},
+  "areas_to_target": {{
+    "Area 1": "Content for area 1"
+  }},
+  "next_steps": [
+    {{
+      "main": "[Main discussion point]",
+      "sub_points": [
+        "Key reflection 1",
+        "Key reflection 2"
+      ]
+    }},
+    "Context summary paragraph",
+    {{
+      "main": "[Main development area]",
+      "sub_points": [
+        "Development step 1",
+        "Development step 2"
+      ]
+    }}
+  ]
+}}
+
+Critical requirements:
+1. Return ONLY the JSON object - no other text
+2. Use double quotes for ALL property names and string values
+3. Escape any quotes in content values
+4. Extract content exactly as written
+5. Preserve the exact headings from the document
+6. Include all sections found in the document
+7. For next_steps:
+   - First item should be a reflection point with sub-points
+   - Second item should be a context summary paragraph (string)
+   - Remaining items should be action/development points with sub-points
+   - Each main point should clearly indicate if it's a reflection, action, or development point
+
+Remember: Your response must be a single, valid JSON object that can be parsed by json.loads().

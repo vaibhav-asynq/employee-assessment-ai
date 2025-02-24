@@ -70,7 +70,7 @@ export function EvidanceDisplay() {
                 key={id}
                 className={cn(
                   "p-4 cursor-pointer",
-                  // isCardSelected(id) && "border-black"
+                  isCardSelected(id) && "border-black"
                 )}
                 onClick={() => handleCardSelect(id)}
               >

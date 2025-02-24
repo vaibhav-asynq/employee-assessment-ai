@@ -8,8 +8,7 @@ import { generateWordDocument, generatePdfDocument, uploadUpdatedReport } from "
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import DocPreview from "../download-data/DocPreview";
-import { convertFromOrderedAnalysis } from "@/lib/utils/analysisUtils";
-
+import { convertFromOrderedAnalysis, convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -22,6 +21,8 @@ export function DownloadDataScreen() {
 
   const templates = useAnalysisStore((state) => state.templates);
   const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
+  const handleAnalysisUpdate = useAnalysisStore((state) => state.handleAnalysisUpdate);
+
   const finalTemplateId = activeTemplateId || templatesIds.base;
   const templateFinalData = templates[finalTemplateId];
 
@@ -142,7 +143,15 @@ export function DownloadDataScreen() {
     setUploadSuccess(false);
 
     try {
-      await uploadUpdatedReport(file);
+      const data = await uploadUpdatedReport(file);
+
+      // Convert to TemplatedData format
+      const templatedData = convertInterviewAnalysisDataToTemplatedData(data);
+      
+
+      // Update current template
+      handleAnalysisUpdate(() => templatedData);
+      
       setUploadSuccess(true);
       event.target.value = ''; // Reset file input
     } catch (err) {
