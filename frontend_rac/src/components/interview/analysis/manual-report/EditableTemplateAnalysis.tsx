@@ -14,6 +14,8 @@ import {
 } from "@/lib/api";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { EditStrengths } from "../editables/EditStrengths";
+import { EditAreas } from "../editables/EditAreas";
 
 export function EditableTemplateAnalysis() {
   const [loading, setLoading] = useState<string | null>(null);
@@ -142,115 +144,19 @@ export function EditableTemplateAnalysis() {
     <div className="p-6">
       <h2 className="text-2xl font-bold tracking-tight mb-8">AI Suggestions</h2>
 
-      {/* Strengths Section */}
-      <section className="mb-8">
-        <SectionHeading
-          title="STRENGTHS"
-          className="text-xl font-semibold text-gray-900"
-        >
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleAddStrength()}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Add Subheading
-          </Button>
-        </SectionHeading>
-        {analysisWithAiCoach.strengths.order.map((id) => {
-          const item = analysisWithAiCoach.strengths.items[id];
-          return (
-            <div key={id} className="mb-8">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex-1">
-                  <EditableSubheading
-                    value={item.heading}
-                    onChange={(newHeading) => {
-                      handleStrengthHeadingChange(id, newHeading);
-                    }}
-                    onDelete={() => {
-                      handleStrengthDelete(id);
-                    }}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleGenerateClick("strengths", id, item.heading)
-                  }
-                  disabled={loading === item.heading}
-                  className="text-gray-500 whitespace-nowrap flex items-center"
-                >
-                  {loading === item.heading ? (
-                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-2" />
-                  )}
-                  Prompt with AI
-                </Button>
-              </div>
-              <EditableText
-                value={item.content}
-                onChange={(newContent) => {
-                  handleStrengthContentChange(id, newContent);
-                }}
-                minHeight="180px"
-              />
-            </div>
-          );
-        })}
-      </section>
+      {/* Strength Section */}
+      <EditStrengths
+        strengths={analysisWithAiCoach.strengths}
+        templateId={templateId}
+        propmtBtnText="Prompt"
+      />
 
       {/* Areas to Target Section */}
-      <section className="mb-8">
-        <SectionHeading
-          title="AREAS TO TARGET"
-          className="text-xl font-semibold text-gray-900"
-        >
-          <Button variant="outline" size="sm" onClick={() => handleAddArea()}>
-            <Plus className="h-4 w-4 mr-1" /> Add Subheading
-          </Button>
-        </SectionHeading>
-        {analysisWithAiCoach.areas_to_target.order.map((id) => {
-          const item = analysisWithAiCoach.areas_to_target.items[id];
-          return (
-            <div key={id} className="mb-8">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex-1">
-                  <EditableSubheading
-                    value={item.heading}
-                    onChange={(newHeading) =>
-                      handleAreaHeadingChange(id, newHeading)
-                    }
-                    onDelete={() => handleAreaDelete(id)}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleGenerateClick("areas", id, item.heading)}
-                  disabled={loading === item.heading}
-                  className="text-gray-500 whitespace-nowrap flex items-center"
-                >
-                  {loading === item.heading ? (
-                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-2" />
-                  )}
-                  Prompt with AI
-                </Button>
-              </div>
-              <EditableText
-                value={item.content}
-                onChange={(newContent) =>
-                  handleAreaContentChange(id, newContent)
-                }
-                minHeight="180px"
-              />
-            </div>
-          );
-        })}
-      </section>
+      <EditAreas
+        areas={analysisWithAiCoach.areas_to_target}
+        templateId={templateId}
+        propmtBtnText="Prompt"
+      />
 
       {/* Next Steps Section */}
       <section className="mb-8">

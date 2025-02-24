@@ -43,7 +43,7 @@ interface AreasToTargetItem {
   evidence: EvidenceOfFeedback[];
   competencyAlignment: CompetenciesAlignment;
 }
-interface AreasToTarget {
+export interface AreasToTarget {
   order: string[];
   items: Record<string, AreasToTargetItem>;
 }
@@ -54,7 +54,7 @@ interface StrengthItem {
   content: string;
   evidence: EvidenceOfFeedback[];
 }
-interface Strengths {
+export interface Strengths {
   order: string[];
   items: Record<string, StrengthItem>;
 }
