@@ -6,11 +6,11 @@ import React, { useState, useEffect } from "react";
 import { ActionWrapper } from "./ActionWrapper";
 import { InterviewAnalysis } from "@/lib/types";
 import { generateWordDocument } from "@/lib/api";
-import { convertFromOrderedAnalysis } from "@/components/providers/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import DocPreview from "../download-data/DocPreview";
 import { ModifyContent } from "../download-data/DocEditor";
+import { convertFromOrderedAnalysis } from "@/lib/utils/analysisUtils";
 
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
