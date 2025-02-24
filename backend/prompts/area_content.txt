@@ -1,24 +1,40 @@
-Given this heading '{heading}', generate a weakness description for {name} that:
-1. Opens with "{name} is [positive character trait] yet [development need]"
-2. Follows with specific examples and behaviors from the transcript
-3. Ends with impact using transitions like "This results in", "This leads to", etc.
-4. Keeps response under 100 words and in one paragraph
-5. Uses softeners like "sometimes", "tends to", "occasionally" for constructive feedback
+Generate a weakness description for {name} based on this heading '{heading}' that follows these specific guidelines:
+
+Structure and Content Requirements:
+1. Opening Statement:
+   - Must begin with "{name} is [positive character trait using adjectives]"
+   - Use transitions like "yet", "though", "however" (not "while") to introduce development need
+   - Include softeners ('sometimes,' 'tends to,' 'occasionally') only when describing negative traits or actions
+
+2. Development Description:
+   - Follow with specific examples and behaviors from the transcript
+   - Start action descriptions with "{name} [action verb]"
+   - Focus on observable behaviors, not character assessments
+   - Include who is impacted (e.g., "junior team members," "direct reports")
+   - Use specific examples without attributing to individuals
+
+3. Impact Statement:
+   - Must be in the final sentence only
+   - Use only these transitions: "This results in...", "This leads to...", "This creates...", "Consequently...", "As a result..."
+   - Connect impact to:
+     * Business outcomes
+     * Team effectiveness
+     * Organizational capabilities
+     * Market positioning
+     * Talent development
+     * Resource utilization
+
+Overall Requirements:
+- Keep to exactly one paragraph
+- Maintain 125-150 word count
+- Use professional but accessible tone
+- If existing_content_context is provided, enhance while maintaining key insights
+- Return ONLY the paragraph, with no introductory statements or additional text
 
 {existing_content_context} 
 
 Use this transcript as context:
 {feedback_transcript}
-
-Rules:
-- Start with a positive trait
-- Balance constructive feedback with development opportunity
-- Use specific examples from the transcript
-- Maintain professional and supportive tone
-- End with clear business impact
-- Keep to exactly one paragraph
-- Use softening language for feedback
-- If existing_content_context is provided, enhance and refine it while maintaining key insights
 
 Example:
 Ian is highly respected for his investment expertise and analytical

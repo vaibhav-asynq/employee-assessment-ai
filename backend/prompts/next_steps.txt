@@ -1,44 +1,81 @@
-Given these areas to target for {name} and the transcript, generate next steps that address each area. Format as 4-5 main points, each with 3-4 actionable sub-points.
+Generate next steps for {name} that address these areas to target:
 
-Areas to Target:
 {areas_text}
 
-Transcript for context:
+Structure and Content Requirements:
+1. Heading Format:
+   - Begin each heading with "To [Clear Objective]"
+   - Use simple, direct language
+   - Make the objective immediately clear
+   Example: "To Enhance Team Development" (not "For Strategic Team Enhancement")
+
+2. Action Items:
+   - Start each point with these direct but gentle verbs:
+     * "Consider..."
+     * "Explore..."
+     * "Look into..."
+     * "Try..."
+     * "Examine..."
+     * "Investigate..."
+   - Avoid phrases like:
+     * "Could explore..."
+     * "Might benefit from..."
+     * "Could create..."
+     * "Could establish..."
+
+3. Content Guidelines:
+   - Address specific behaviors that need adjustment
+   - Make accountability clear but non-confrontational
+   - Suggest concrete actions with specific scenarios
+   - Maintain senior executive perspective
+   - Focus on opportunities rather than corrections
+   - Include 4 bullet points per area
+   - Keep each bullet point between 20-25 words
+   - Connect suggestions to:
+     * Business outcomes
+     * Team effectiveness
+     * Organizational capabilities
+     * Market positioning
+     * Leadership visibility
+     * Resource utilization
+
+4. Overall Requirements:
+   - Build on existing strengths
+   - Allow flexibility in implementation
+   - Use natural, flowing sentences
+   - Maintain professional but accessible tone
+   - Focus on strategic rather than tactical suggestions
+   - Avoid explicit metrics or quantified targets
+
+Use this transcript for context:
 {feedback_transcript}
 
-Guidelines:
-1. Each main point should:
-   - Begin with "To [objective]"
-   - Focus on one key development area
-   - Be strategic and high-level
-
-2. Sub-points should:
-   - Start with action verbs like "Consider", "Explore", "Look into", "Try"
-   - Be specific but not prescriptive
-   - Connect to business impact
-   - Be 20-25 words each
-
-3. Ensure suggestions:
-   - Build on existing strengths
-   - Address root causes
-   - Maintain executive perspective
-   - Allow flexibility in implementation
-
-Format the response as:
+Return the response in this exact JSON structure (note the escaped quotes):
 {{
-    "next_steps": [
+    \"next_steps\": [
         {{
-            "main": "To [Area]",
-            "sub_points": [
-                "Consider [action]...",
-                "Explore [action]...",
-                "Look into [action]...",
-                "Try [action]..."
+            \"main\": \"To [Clear Objective]\",
+            \"sub_points\": [
+                \"Consider [specific action] by [detailed approach], focusing on [specific outcome]\",
+                \"Explore [specific action] through [detailed method]\",
+                \"Look into [specific action] where [context and purpose]\",
+                \"Try [specific action] to [desired outcome]\"
             ]
-        }},
-        // Additional points...
+        }}
     ]
 }}
 
-
-
+Example (with escaped quotes):
+{{
+    \"next_steps\": [
+        {{
+            \"main\": \"To Enhance Market Visibility\",
+            \"sub_points\": [
+                \"Consider developing a quarterly thought leadership series focused on aerospace trends, sharing insights through industry publications and targeted forums\",
+                \"Explore opportunities to mentor rising leaders in monthly roundtables, sharing investment perspectives while developing next-generation talent\",
+                \"Look into creating strategic partnerships with industry associations, positioning the firm as a leading voice in aerospace investment\",
+                \"Try establishing regular briefing sessions with key stakeholders, providing unique market insights while building stronger relationships\"
+            ]
+        }}
+    ]
+}}

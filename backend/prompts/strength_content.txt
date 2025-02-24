@@ -1,27 +1,48 @@
-Given this heading '{heading}', generate a strength description for {name} that:
-1. Opens with "{name} is [character quality adjectives]"
-2. Follows with specific examples and behaviors from the transcript
-3. Ends with impact using transitions like "As a result", "This leads to", "Consequently", etc.
-4. Keeps response under 100 words and in one paragraph
+Generate a strength description for {name} based on this heading '{heading}' that follows these specific guidelines:
+
+Structure and Content Requirements:
+1. Opening Statement:
+   - Must begin with "{name} is [known as/described as/identified as]" followed by exactly 3 key traits
+   - Use strong character quality adjectives and professional identity descriptors
+   - Example: "{name} is known as exceptionally astute, a brilliant strategic investor, and a talent developer"
+
+2. Development Description:
+   - Use active verb-led sentences that start with pronouns (He/She)
+   - Focus on direct statements of capability and action
+   - Include specific examples from transcript without attributions
+   - Demonstrate impact through concrete examples and achievements
+   - Remove phrases like "colleagues describe," "team members note"
+
+3. Impact Statement:
+   - Must be in the final sentence only
+   - Use only these transitions: "As a result", "This leads to", "Consequently", "This creates"
+   - Combine quantitative and qualitative impacts when available
+   - Connect to:
+     * Business outcomes
+     * Team effectiveness
+     * Organizational capabilities
+     * Market position
+     * Innovation and growth
+     * Stakeholder value
+
+Overall Requirements:
+- Keep to exactly one paragraph
+- Maintain 100-word limit
+- Use professional but accessible tone
+- Return ONLY the paragraph, with no introductory statements or additional text
+- If existing_content_context is provided, enhance while maintaining key insights
 
 {existing_content_context} 
+
 Use this transcript as context:
 {feedback_transcript}
 
-Rules:
-- Focus on positive qualities and achievements
-- Use specific examples from the transcript
-- Maintain professional tone
-- End with clear business impact
-- Keep to exactly one paragraph
-- If existing content is provided, enhance and refine it while maintaining key insights
-
 Example:
-Ian is known as exceptionally astute, a
-brilliant strategic investor, and a decisive dealmaker. He processes complex investment
-opportunities with 90% decision accuracy, while efficiently directing resources toward
-high-potential ventures. He eliminates underperforming opportunities swiftly and maintains
-rigorous investment discipline across his portfolio. He anticipates market movements and
-positions investments for optimal returns, demonstrated through his consistent above-market
-performance. As a result, his portfolio achieved 17% growth last year while establishing new
-benchmarks for investment excellence across the firm.
+Ian is known as exceptionally astute, a brilliant strategic investor, and a decisive
+dealmaker. He processes complex investment opportunities with 90% decision accuracy,
+while efficiently directing resources toward high-potential ventures. He eliminates
+underperforming opportunities swiftly and maintains rigorous investment discipline
+across his portfolio. He anticipates market movements and positions investments for
+optimal returns, demonstrated through his consistent above-market performance. As a
+result, his portfolio achieved 17% growth last year while establishing new benchmarks
+for investment excellence across the firm.
