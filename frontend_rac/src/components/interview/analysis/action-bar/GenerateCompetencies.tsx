@@ -51,6 +51,7 @@ export function GenerateCompetencies() {
   const fileId = useInterviewDataStore((state) => state.fileId);
   const templates = useAnalysisStore((state) => state.templates);
   const addTemplate = useAnalysisStore((state) => state.addTemplate);
+  const handleAnalysisUpdate = useAnalysisStore((state) => state.handleAnalysisUpdate);
   const addTab = useUserPreferencesStore((state) => state.addPath);
   const selectTab = useUserPreferencesStore((state) => state.setSelectedPath);
 
@@ -64,9 +65,10 @@ export function GenerateCompetencies() {
     try {
       const templateId = templatesIds.aiCompetencies;
 
+      const numCompetencies = parseInt(data.noOfGenerate);
       const [strengthData, developmentData, adviceData] = await Promise.all([
-        getStrengthEvidences(fileId),
-        getDevelopmentAreas(fileId),
+        getStrengthEvidences(fileId, numCompetencies),
+        getDevelopmentAreas(fileId, numCompetencies),
         getAdvice(fileId),
       ]);
 
@@ -112,9 +114,8 @@ export function GenerateCompetencies() {
       };
 
       if (templates[templateId]) {
-        //TODO: return or activate tab or update data
+        handleAnalysisUpdate(() => templatedData);
       } else {
-        //create template
         addTemplate(templateId, templatedData, false);
       }
       addTab("ai-competencies", ANALYSIS_TAB_NAMES.aiCompetencies);

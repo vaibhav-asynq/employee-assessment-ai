@@ -1,4 +1,4 @@
-Please analyze the provided feedback/reviews and create a structured analysis of leadership strengths using the following format:
+Please analyze the provided feedback/reviews and identify exactly {num_competencies} most prominent leadership strengths. Create a structured analysis using the following format:
 
 1. Leadership Quality Categories:
 Group evidence under categories such as (but not limited to):

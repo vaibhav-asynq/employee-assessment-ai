@@ -203,19 +203,131 @@ async def get_advice(file_id: str):
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+# @app.get("/api/get_strength_evidences/{file_id}")
+# async def get_strength_evidences(file_id: str, numCompetencies: int):
+#     try:
+#         return load_dummy_data('strength_evidences.json')
+#     except Exception as e:
+#         print(f"Error in get_strength_evidences: {str(e)}")
+#         print(traceback.format_exc())
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/get_strength_evidences/{file_id}")
-async def get_strength_evidences(file_id: str):
+async def get_strength_evidences(file_id: str, numCompetencies: int):
     try:
-        return load_dummy_data('strength_evidences.json')
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompt
+        strength_prompt = load_prompt("strength_evidences_categorized.txt")
+        prompt = strength_prompt.format(
+            feedback=feedback_transcript,
+            num_competencies=numCompetencies
+        )
+        # print(prompt)
+        
+        # Generate analysis using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        # print(result)
+        return result
     except Exception as e:
         print(f"Error in get_strength_evidences: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+# @app.get("/api/get_development_areas/{file_id}")
+# async def get_development_areas(file_id: str, numCompetencies: int):
+#     try:
+#         return load_dummy_data('development_areas.json')
+#     except Exception as e:
+#         print(f"Error in get_development_areas: {str(e)}")
+#         print(traceback.format_exc())
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/get_development_areas/{file_id}")
-async def get_development_areas(file_id: str):
+async def get_development_areas(file_id: str, numCompetencies: int):
     try:
-        return load_dummy_data('development_areas.json')
+        # Get the feedback transcript
+        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+        if not os.path.exists(feedback_path):
+            raise HTTPException(status_code=404, detail="Feedback transcript not found")
+        
+        with open(feedback_path, 'r') as f:
+            feedback_transcript = f.read()
+
+        # Load and format prompt
+        development_prompt = load_prompt("development_areas_categorized.txt")
+        prompt = development_prompt.format(
+            feedback=feedback_transcript,
+            num_competencies=numCompetencies
+        )
+        
+        # Generate analysis using Claude
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        # Parse JSON response
+        response_text = response.content[0].text
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError:
+            try:
+                # Find JSON-like content between curly braces
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    result = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
+        return result
     except Exception as e:
         print(f"Error in get_development_areas: {str(e)}")
         print(traceback.format_exc())

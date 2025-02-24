@@ -1,4 +1,4 @@
-Please analyze the provided feedback/reviews and create a structured analysis of development areas using the following criteria:
+Please analyze the provided feedback/reviews and identify exactly {num_competencies} most significant development areas. Create a structured analysis using the following criteria:
 
 1. Title Construction:
 Reference these competencies when creating titles: 

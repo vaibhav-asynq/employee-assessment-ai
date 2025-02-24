@@ -70,18 +70,22 @@ export const getRawData = async (fileId: string) => {
 
 export const getStrengthEvidences = async (
   fileId: string,
+  numCompetencies: number
 ): Promise<StrengthEvidences> => {
   const response = await axios.get(
     `${API_URL}/api/get_strength_evidences/${fileId}`,
+    { params: { numCompetencies } }
   );
   return response.data;
 };
 
 export const getDevelopmentAreas = async (
   fileId: string,
+  numCompetencies: number
 ): Promise<DevelopmentAreas> => {
   const response = await axios.get(
     `${API_URL}/api/get_development_areas/${fileId}`,
+    { params: { numCompetencies } }
   );
   return response.data;
 };

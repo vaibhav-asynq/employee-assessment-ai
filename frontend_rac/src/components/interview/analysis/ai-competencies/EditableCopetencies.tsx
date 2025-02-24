@@ -38,7 +38,7 @@ export function EditableCopetencies() {
       <EditStrengths
         strengths={analysisAiCompetencies.strengths}
         templateId={templateId}
-        heading="Leadership Qualities"
+        heading="Strengths"
         promptBtnText="Prompt"
       />
 
@@ -47,7 +47,7 @@ export function EditableCopetencies() {
         areas={analysisAiCompetencies.areas_to_target}
         templateId={templateId}
         promptBtnText="Prompt"
-        heading="Areas of Development"
+        heading="Areas To Target"
       />
 
       {/* Next Steps Section */}

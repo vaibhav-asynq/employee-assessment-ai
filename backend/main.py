@@ -308,37 +308,8 @@ async def upload_updated_report(file: UploadFile):
         
         # Use Claude to parse the content
         client = anthropic.Anthropic(api_key=api_key)
-        prompt = """Extract and structure the content from this report into the following JSON format:
-
-{
-  "name": "Person's full name",
-  "date": "Month Year",
-  "strengths": {
-    "[Heading]": "[Full content]"
-    // Extract all strengths sections
-  },
-  "areas_to_target": {
-    "[Heading]": "[Full content]"
-    // Extract all areas sections
-  },
-  "next_steps": [
-    // Can include any of these types:
-    {
-      "main": "Discussion or action point",
-      "sub_points": ["List of related points"]
-    },
-    "Paragraph of text without sub-points",
-    // Extract all next steps in order they appear
-  ]
-}
-
-Important:
-1. Extract all content exactly as written - do not modify or summarize
-2. Preserve the exact headings used in the document
-3. Include all sections found in the document
-
-Here's the document content:
-{text}"""
+        # Load and format prompt
+        prompt = load_prompt("upload_updated_report.txt").format(text=text)
 
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
@@ -347,14 +318,36 @@ Here's the document content:
             messages=[{"role": "user", "content": prompt}]
         )
         
-        # Parse and return the data
-        parsed_data = json.loads(response.content[0].text)
+        # Parse response with better error handling
+        response_text = response.content[0].text
+        try:
+            # Try direct JSON parsing first
+            parsed_data = json.loads(response_text)
+        except json.JSONDecodeError:
+            # Try to extract JSON if surrounded by other text
+            try:
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    parsed_data = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON content found in response")
+            except Exception as e:
+                print(f"Error parsing response: {str(e)}")
+                print(f"Raw response: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to parse AI response into valid JSON"
+                )
+        
         return parsed_data
         
     except Exception as e:
         print(f"Error in upload_updated_report: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
@@ -612,7 +605,7 @@ async def sort_strengths_evidence(request: SortEvidenceRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_strength_evidences/{file_id}")
-async def get_strength_evidences(file_id: str):
+async def get_strength_evidences(file_id: str, numCompetencies: int):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -624,7 +617,10 @@ async def get_strength_evidences(file_id: str):
 
         # Load and format prompt
         strength_prompt = load_prompt("strength_evidences_categorized.txt")
-        prompt = strength_prompt.format(feedback=feedback_transcript)
+        prompt = strength_prompt.format(
+            feedback=feedback_transcript,
+            num_competencies=numCompetencies
+        )
         
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
@@ -800,7 +796,7 @@ async def get_feedback(file_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_development_areas/{file_id}")
-async def get_development_areas(file_id: str):
+async def get_development_areas(file_id: str, numCompetencies: int):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -812,7 +808,10 @@ async def get_development_areas(file_id: str):
 
         # Load and format prompt
         development_prompt = load_prompt("development_areas_categorized.txt")
-        prompt = development_prompt.format(feedback=feedback_transcript)
+        prompt = development_prompt.format(
+            feedback=feedback_transcript,
+            num_competencies=numCompetencies
+        )
         
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)

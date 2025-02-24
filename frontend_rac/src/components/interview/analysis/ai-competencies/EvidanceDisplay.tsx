@@ -1,16 +1,22 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidenceOfFeedback } from "@/lib/types/types.interview-data";
 import { cn } from "@/lib/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 export function EvidanceDisplay() {
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [newHeading, setNewHeading] = useState("");
+  const [lastMergedId, setLastMergedId] = useState<string | null>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
   const templates = useAnalysisStore((state) => state.templates);
-  const setActiveTemplate = useAnalysisStore(
-    (state) => state.setActiveTemplate,
-  );
+  const setActiveTemplate = useAnalysisStore((state) => state.setActiveTemplate);
+  const handleAnalysisUpdate = useAnalysisStore((state) => state.handleAnalysisUpdate);
 
   const templateId = templatesIds.aiCompetencies;
 
@@ -36,6 +42,73 @@ export function EvidanceDisplay() {
     });
   };
 
+  const handleMerge = () => {
+    if (selectedEvidanceFeedback.length < 2) return;
+    setMergeDialogOpen(true);
+  };
+
+  const handleMergeConfirm = () => {
+    if (!newHeading.trim() || selectedEvidanceFeedback.length < 2) return;
+
+    const templateId = templatesIds.aiCompetencies;
+    const template = templates[templateId];
+    
+    // Combine evidence from selected cards
+    const mergedEvidence: EvidenceOfFeedback[] = [];
+    selectedEvidanceFeedback.forEach(id => {
+      const item = template.strengths.items[id];
+      if (item) {
+        mergedEvidence.push(...item.evidence);
+      }
+    });
+
+    // Create new card with merged evidence
+    const newId = `merged-${Date.now()}`;
+    
+    // Find the highest index among selected cards
+    const currentOrder = template.strengths.order;
+    const selectedIndices = selectedEvidanceFeedback.map(id => currentOrder.indexOf(id));
+    const maxIndex = Math.max(...selectedIndices);
+    
+    // Count how many selected cards appear before the max index
+    const removedBefore = selectedIndices.filter(index => index < maxIndex).length;
+    
+    // Adjust insertion index by subtracting the number of removed cards before it
+    const adjustedIndex = maxIndex - removedBefore;
+    
+    // Create new order array with merged card at the right position
+    const newOrder = currentOrder.filter(id => !selectedEvidanceFeedback.includes(id));
+    newOrder.splice(adjustedIndex, 0, newId);
+    
+    const updatedTemplate = {
+      ...template,
+      strengths: {
+        ...template.strengths,
+        items: {
+          ...template.strengths.items,
+          [newId]: {
+            id: newId,
+            heading: newHeading,
+            evidence: mergedEvidence,
+            content: "" // Empty content for editable card
+          }
+        },
+        order: newOrder
+      }
+    };
+
+    // Update store with merged changes
+    handleAnalysisUpdate(() => updatedTemplate);
+
+    // Set the last merged id for scrolling
+    setLastMergedId(newId);
+
+    // Reset state
+    setSelectedEvidanceFeedback([]);
+    setNewHeading("");
+    setMergeDialogOpen(false);
+  };
+
   const isCardSelected = (cardId: string) => {
     return selectedEvidanceFeedback.includes(cardId);
   };
@@ -57,28 +130,99 @@ export function EvidanceDisplay() {
     [],
   );
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Effect to handle scrolling to merged card
+  useEffect(() => {
+    if (lastMergedId) {
+      // Clear any existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Set new timeout
+      scrollTimeoutRef.current = setTimeout(() => {
+        const element = document.getElementById(lastMergedId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const top = rect.top + scrollTop;
+          
+          window.scrollTo({
+            top: top - 16, // 16px offset from top
+            behavior: 'smooth'
+          });
+          
+          setLastMergedId(null);
+        }
+      }, 100);
+    }
+  }, [lastMergedId]);
+
   return (
-    <div className="h-full overflow-y-auto space-y-8">
+    <div className="h-full overflow-y-auto space-y-8 relative scroll-container">
+      {selectedEvidanceFeedback.length >= 2 && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <Button 
+            onClick={handleMerge}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            Merge Selected ({selectedEvidanceFeedback.length})
+          </Button>
+        </div>
+      )}
+
+      <Dialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Merge Cards</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="Enter new heading for merged card"
+              value={newHeading}
+              onChange={(e) => setNewHeading(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMergeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleMergeConfirm}>
+              Merge
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Leadership Qualities Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-6">Leadership Qualities</h2>
+        <h2 className="text-2xl font-bold mb-6">Strengths</h2>
         <div className="space-y-6">
           {analysisAiCompetencies.strengths.order.map((id) => {
             const item = analysisAiCompetencies.strengths.items[id];
             return (
-              <Card
-                key={id}
-                className={cn(
-                  "p-4 cursor-pointer",
-                  isCardSelected(id) && "border-black"
-                )}
-                onClick={() => handleCardSelect(id)}
-              >
+              <div id={id} key={id}>
+                <Card
+                  className={cn(
+                    "p-4 cursor-pointer",
+                    isCardSelected(id) && "border-black"
+                  )}
+                  onClick={() => handleCardSelect(id)}
+                >
                 <h3 className="text-lg font-semibold mb-4">{item.heading}</h3>
                 <div className="space-y-4">
                   {item.evidence.map((item) => renderEvidence(item))}
                 </div>
-              </Card>
+                </Card>
+              </div>
             );
           })}
         </div>
@@ -86,7 +230,7 @@ export function EvidanceDisplay() {
 
       {/* Development Areas Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-6">Areas of Development</h2>
+        <h2 className="text-2xl font-bold mb-6">Areas To Target</h2>
         <div className="space-y-6">
           {analysisAiCompetencies.areas_to_target.order.map((id) => {
             const item = analysisAiCompetencies.areas_to_target.items[id];
