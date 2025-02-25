@@ -2,6 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FeedbackDisplay } from "../FeedbackDisplay";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidenceOfFeedback } from "@/lib/types/types.interview-data";
 import { cn } from "@/lib/utils";
@@ -9,6 +12,7 @@ import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useCallback, useEffect, useState, useRef } from "react";
 
 export function EvidanceDisplay() {
+  const feedbackData = useInterviewDataStore((state) => state.feedbackData);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [newHeading, setNewHeading] = useState("");
   const [lastMergedId, setLastMergedId] = useState<string | null>(null);
@@ -167,7 +171,28 @@ export function EvidanceDisplay() {
   }, [lastMergedId]);
 
   return (
-    <div className="h-full overflow-y-auto space-y-8 relative scroll-container">
+    <Tabs defaultValue="sorted-evidence" className="h-full">
+      <div className="sticky top-0 bg-background z-10 pb-4">
+        <TabsList className="w-full">
+          <TabsTrigger value="interview-feedback" className="flex-1">Interview Feedback</TabsTrigger>
+          <TabsTrigger value="sorted-evidence" className="flex-1">Sorted Evidence</TabsTrigger>
+        </TabsList>
+      </div>
+
+      <TabsContent value="interview-feedback" className="mt-0">
+        <div className="h-full overflow-y-auto space-y-8">
+          {feedbackData ? (
+            <FeedbackDisplay data={feedbackData} />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No feedback data available</p>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="sorted-evidence" className="mt-0">
+        <div className="h-full overflow-y-auto space-y-8 relative scroll-container">
       {selectedEvidanceFeedback.length >= 2 && (
         <div className="fixed bottom-4 left-4 z-50">
           <Button 
@@ -263,6 +288,8 @@ export function EvidanceDisplay() {
           </Card>
         </div>
       </div>
-    </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }

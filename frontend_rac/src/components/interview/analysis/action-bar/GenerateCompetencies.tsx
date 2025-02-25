@@ -109,7 +109,13 @@ export function GenerateCompetencies() {
         date: new Date().toISOString(),
         strengths,
         areas_to_target: areasToTarget,
-        next_steps: [{ main: "", sub_points: [] }],
+        next_steps: [
+          { main: "", sub_points: ["", "", ""] },  // First point with 3 sub-points
+          "",                                      // Text box
+          { main: "", sub_points: ["", "", ""] },  // Second point with 3 sub-points
+          { main: "", sub_points: ["", "", ""] },  // Third point with 3 sub-points
+          { main: "", sub_points: ["", "", ""] },  // Fourth point with 3 sub-points
+        ],
         advices: orderedAdviceData,
       };
 
