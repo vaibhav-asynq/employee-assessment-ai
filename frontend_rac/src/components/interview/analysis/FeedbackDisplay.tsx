@@ -37,7 +37,7 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
       )
     : null;
   return (
-    <div className="pr-4">
+    <div>
       <div className="space-y-8">
         {/* Strengths */}
         <div>

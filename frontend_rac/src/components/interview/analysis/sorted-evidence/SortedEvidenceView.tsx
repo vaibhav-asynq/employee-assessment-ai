@@ -22,7 +22,7 @@ export function SortedEvidenceView({
   areasEvidence,
 }: SortedEvidenceViewProps) {
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8">
       {strengthsEvidence && (
         <div>
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
