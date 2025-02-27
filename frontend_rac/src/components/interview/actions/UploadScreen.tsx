@@ -3,6 +3,7 @@ import { Upload, Loader2 } from "lucide-react";
 import { ActionWrapper } from "./ActionWrapper";
 import { useStepper } from "@/components/ui/stepper";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { useState } from "react";
 
 export function UploadScreen() {
   const handleSelectPdf = useInterviewDataStore(
@@ -12,6 +13,7 @@ export function UploadScreen() {
   const loading = useInterviewDataStore((state) => state.loading);
   const file = useInterviewDataStore((state) => state.file);
   const uploadProgress = useInterviewDataStore((state) => state.uploadProgress);
+  const [useCache, setUseCache] = useState(true);
 
   const { nextStep } = useStepper();
 
@@ -34,7 +36,7 @@ export function UploadScreen() {
             type="file"
             accept=".pdf"
             onChange={async (e) => {
-              handleSelectPdf(e, nextStep);
+              handleSelectPdf(e, nextStep, useCache);
             }}
             className="hidden"
           />
@@ -52,6 +54,19 @@ export function UploadScreen() {
         {file && (
           <p className="text-sm text-gray-500">Selected file: {file.name}</p>
         )}
+        
+        <div className="flex items-center mt-4">
+          <input
+            type="checkbox"
+            id="use-cache"
+            checked={useCache}
+            onChange={(e) => setUseCache(e.target.checked)}
+            className="mr-2 h-4 w-4"
+          />
+          <label htmlFor="use-cache" className="text-sm text-gray-700">
+            Use cached results if available
+          </label>
+        </div>
       </div>
     </ActionWrapper>
   );

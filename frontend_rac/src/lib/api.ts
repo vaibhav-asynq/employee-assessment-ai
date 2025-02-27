@@ -79,51 +79,53 @@ export const getCurrentUser = async () => {
 };
 
 // API functions using the authenticated axios instance
-export const uploadFile = async (file: File) => {
+export const uploadFile = async (file: File, useCache: boolean = true) => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await api.post(`/api/upload_file`, formData);
+  const response = await api.post(`/api/upload_file?use_cache=${useCache}`, formData);
   return response.data.file_id;
 };
 
-export const generateReport = async (fileId: string) => {
-  const response = await api.get(`/api/generate_report/${fileId}`);
+export const generateReport = async (fileId: string, useCache: boolean = true) => {
+  const response = await api.get(`/api/generate_report/${fileId}?use_cache=${useCache}`);
   return response.data;
 };
 
-export const getFeedback = async (fileId: string) => {
-  const response = await api.get(`/api/get_feedback/${fileId}`);
+export const getFeedback = async (fileId: string, useCache: boolean = true) => {
+  const response = await api.get(`/api/get_feedback/${fileId}?use_cache=${useCache}`);
   return response.data;
 };
 
-export const getAdvice = async (fileId: string) => {
-  const response = await api.get(`/api/get_advice/${fileId}`);
+export const getAdvice = async (fileId: string, useCache: boolean = true) => {
+  const response = await api.get(`/api/get_advice/${fileId}?use_cache=${useCache}`);
   return response.data;
 };
 
-export const getRawData = async (fileId: string) => {
-  const response = await api.get(`/api/get_raw_data/${fileId}`);
+export const getRawData = async (fileId: string, useCache: boolean = true) => {
+  const response = await api.get(`/api/get_raw_data/${fileId}?use_cache=${useCache}`);
   return response.data;
 };
 
 export const getStrengthEvidences = async (
   fileId: string,
-  numCompetencies: number
+  numCompetencies: number,
+  useCache: boolean = true
 ): Promise<StrengthEvidences> => {
   const response = await api.get(
     `/api/get_strength_evidences/${fileId}`,
-    { params: { numCompetencies } }
+    { params: { numCompetencies, use_cache: useCache } }
   );
   return response.data;
 };
 
 export const getDevelopmentAreas = async (
   fileId: string,
-  numCompetencies: number
+  numCompetencies: number,
+  useCache: boolean = true
 ): Promise<DevelopmentAreas> => {
   const response = await api.get(
     `/api/get_development_areas/${fileId}`,
-    { params: { numCompetencies } }
+    { params: { numCompetencies, use_cache: useCache } }
   );
   return response.data;
 };

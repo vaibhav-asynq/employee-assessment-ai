@@ -1,12 +1,12 @@
 # main.py
 import traceback
-from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response
+from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response, Query
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict, Optional, Any
 import anthropic
 import uuid
 import os
@@ -28,6 +28,12 @@ from prompt_loader import (
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from cache_manager import (
+    get_cached_file_id,
+    add_to_filename_map,
+    get_cached_data,
+    save_cached_data
+)
 
 # Initialize license object
 license = aw.License()
@@ -206,46 +212,80 @@ def get_name_from_report(file_id: str) -> str:
 files_store = {}
 
 @app.post("/api/upload_file")
-async def upload_file(file: UploadFile, current_user: User = Depends(get_current_user)):
+async def upload_file(
+    file: UploadFile, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
-        # Generate unique file ID
+        # Check if we have this file cached
+        if use_cache:
+            cached_file_id = get_cached_file_id(file.filename, use_cache=True)
+            if cached_file_id:
+                print(f"Using cached file ID {cached_file_id} for {file.filename}")
+                # Check if the file still exists
+                file_path = os.path.join(UPLOAD_DIR, f"{cached_file_id}.pdf")
+                if os.path.exists(file_path):
+                    # Update files_store if needed
+                    if cached_file_id not in files_store:
+                        files_store[cached_file_id] = {
+                            "file_path": file_path,
+                            "original_name": file.filename
+                        }
+                    return {"file_id": cached_file_id}
+        
+        # If not cached or cache disabled, process normally
         file_id = str(uuid.uuid4())
-        # Function call to save procseed files ands pdf
-        # Save file to disk
         file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
+        
+        # Save file to disk
         with open(file_path, "wb") as f:
             content = await file.read()
             f.write(content)
         
-        # *****Uncomment below line******
+        # Process the file
         stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+        
         # Store file info
         files_store[file_id] = {
             "file_path": file_path,
             "original_name": file.filename
         }
         
+        # Add to cache mapping
+        add_to_filename_map(file.filename, file_id)
+        
         return {"file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/generate_report/{file_id}")
-async def generate_report(file_id: str, current_user: User = Depends(get_current_user)):
+async def generate_report(
+    file_id: str, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     if file_id not in files_store:
         raise HTTPException(status_code=404, detail="File not found")
-    # actuall call to llm after reading the pdf and txt
+    
     try:
+        # Check cache first
+        if use_cache:
+            cached_data = get_cached_data("reports", file_id)
+            if cached_data:
+                print(f"Using cached report for file ID {file_id}")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
         others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
 
-
-        # *****Uncomment******
         feedback_content = read_file_content(others_transcript)
         executive_interview = read_file_content(self_transcript)
 
         system_prompt = ""
 
-        results = await process_prompts(feedback_content,executive_interview, api_key, system_prompt)
+        results = await process_prompts(feedback_content, executive_interview, api_key, system_prompt)
         name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
 
         employee_name = name_data.get('employee_name',"")
@@ -253,11 +293,13 @@ async def generate_report(file_id: str, current_user: User = Depends(get_current
         
         formatted_data = transform_content_to_report_format(results, employee_name, report_date)
 
-    
-    # Save the formatted data to a file
+        # Save the formatted data to a file
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
         with open(report_file_path, 'w') as f:
             json.dump(formatted_data, f)
+        
+        # Save to cache
+        save_cached_data("reports", file_id, formatted_data)
         
         return formatted_data
     except Exception as e:
@@ -266,8 +308,20 @@ async def generate_report(file_id: str, current_user: User = Depends(get_current
 
 
 @app.get("/api/get_raw_data/{file_id}")
-async def get_raw_data_endpoint(file_id: str, current_user: User = Depends(get_current_user)):
+async def get_raw_data_endpoint(
+    file_id: str, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
+        # Check cache first
+        if use_cache:
+            cached_data = get_cached_data("raw_data", file_id)
+            if cached_data:
+                print(f"Using cached raw data for file ID {file_id}")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         # Load the generated report
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
         if not os.path.exists(report_file_path):
@@ -294,12 +348,14 @@ async def get_raw_data_endpoint(file_id: str, current_user: User = Depends(get_c
 
         # For areas to target analysis
         areas_data = get_areas_to_target_data(transcript, areas_to_target, api_key)
-        # strengths_data= ""
-        # areas_data = "" 
+        
         raw_data = {}
         raw_data.update(strengths_data)
         raw_data.update(areas_data)
-        # print(raw_data)
+        
+        # Save to cache
+        save_cached_data("raw_data", file_id, raw_data)
+        
         return raw_data
         
     except Exception as e:
@@ -708,8 +764,21 @@ async def sort_strengths_evidence(request: SortEvidenceRequest, current_user: Us
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_strength_evidences/{file_id}")
-async def get_strength_evidences(file_id: str, numCompetencies: int, current_user: User = Depends(get_current_user)):
+async def get_strength_evidences(
+    file_id: str, 
+    numCompetencies: int, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
+        # Check cache first with parameters
+        if use_cache:
+            cached_data = get_cached_data("strength_evidences", file_id, {"num_competencies": numCompetencies})
+            if cached_data:
+                print(f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
@@ -756,6 +825,9 @@ async def get_strength_evidences(file_id: str, numCompetencies: int, current_use
                     detail="Failed to parse AI response into valid JSON"
                 )
         
+        # Save to cache with parameters
+        save_cached_data("strength_evidences", file_id, result, {"num_competencies": numCompetencies})
+        
         return result
     except Exception as e:
         print(f"Error in get_strength_evidences: {str(e)}")
@@ -763,8 +835,20 @@ async def get_strength_evidences(file_id: str, numCompetencies: int, current_use
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_advice/{file_id}")
-async def get_advice(file_id: str, current_user: User = Depends(get_current_user)):
+async def get_advice(
+    file_id: str, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
+        # Check cache first
+        if use_cache:
+            cached_data = get_cached_data("advice", file_id)
+            if cached_data:
+                print(f"Using cached advice for file ID {file_id}")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
@@ -808,6 +892,9 @@ async def get_advice(file_id: str, current_user: User = Depends(get_current_user
                     detail="Failed to parse AI response into valid JSON"
                 )
         
+        # Save to cache
+        save_cached_data("advice", file_id, result)
+        
         return result
     except Exception as e:
         print(f"Error in get_advice: {str(e)}")
@@ -815,8 +902,20 @@ async def get_advice(file_id: str, current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_feedback/{file_id}")
-async def get_feedback(file_id: str, current_user: User = Depends(get_current_user)):
+async def get_feedback(
+    file_id: str, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
+        # Check cache first
+        if use_cache:
+            cached_data = get_cached_data("feedback", file_id)
+            if cached_data:
+                print(f"Using cached feedback for file ID {file_id}")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
@@ -882,6 +981,9 @@ async def get_feedback(file_id: str, current_user: User = Depends(get_current_us
                 "areas_to_target": areas_data.get("areas_to_target", {})
             }
             
+            # Save to cache
+            save_cached_data("feedback", file_id, result)
+            
             return result
             
         except Exception as e:
@@ -899,8 +1001,21 @@ async def get_feedback(file_id: str, current_user: User = Depends(get_current_us
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_development_areas/{file_id}")
-async def get_development_areas(file_id: str, numCompetencies: int, current_user: User = Depends(get_current_user)):
+async def get_development_areas(
+    file_id: str, 
+    numCompetencies: int, 
+    use_cache: bool = Query(True, description="Whether to use cached results if available"),
+    current_user: User = Depends(get_current_user)
+):
     try:
+        # Check cache first with parameters
+        if use_cache:
+            cached_data = get_cached_data("development_areas", file_id, {"num_competencies": numCompetencies})
+            if cached_data:
+                print(f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies")
+                return cached_data
+        
+        # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
@@ -946,6 +1061,9 @@ async def get_development_areas(file_id: str, numCompetencies: int, current_user
                     status_code=500,
                     detail="Failed to parse AI response into valid JSON"
                 )
+        
+        # Save to cache with parameters
+        save_cached_data("development_areas", file_id, result, {"num_competencies": numCompetencies})
         
         return result
     except Exception as e:

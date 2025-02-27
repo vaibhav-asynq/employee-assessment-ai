@@ -15,10 +15,11 @@ type InterviewDataState = {
   adviceData: any | null;
   feedbackData: FeedbackData | null;
 
-  fetchFeedbackData: () => Promise<void>;
+  fetchFeedbackData: (useCache?: boolean) => Promise<void>;
   handleSelectPdf: (
     event: React.ChangeEvent<HTMLInputElement>,
     callback?: () => void,
+    useCache?: boolean,
   ) => Promise<void>;
 };
 
@@ -37,6 +38,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   handleSelectPdf: async (
     event: React.ChangeEvent<HTMLInputElement>,
     callback?: () => void,
+    useCache: boolean = true,
   ) => {
     const uploadedFile = event.target.files?.[0];
     if (!uploadedFile) return;
@@ -50,7 +52,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
       uploadProgress: "uploading",
     });
     try {
-      const id = await uploadFile(uploadedFile);
+      const id = await uploadFile(uploadedFile, useCache);
       console.log("File uploaded, ID:", id);
       set({
         fileId: id,
@@ -69,15 +71,15 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
     }
   },
 
-  fetchFeedbackData: async () => {
+  fetchFeedbackData: async (useCache: boolean = true) => {
     const { fileId } = get();
     if (!fileId) return;
     set({ loading: true, error: "" });
     try {
       console.log("Fetching feedback data...");
       const [feedbackData, adviceData] = await Promise.all([
-        getFeedback(fileId),
-        getAdvice(fileId),
+        getFeedback(fileId, useCache),
+        getAdvice(fileId, useCache),
       ]);
       //TODO: i think not doing anything from using feedback data.
       console.log("Feedback data received:", feedbackData);

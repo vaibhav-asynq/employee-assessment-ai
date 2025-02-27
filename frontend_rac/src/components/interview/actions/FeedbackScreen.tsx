@@ -1,6 +1,6 @@
 "use client";
 import { Loader2 } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 interface AdviceInfo {
   role: string;
@@ -23,12 +23,13 @@ export function FeedbackScreen() {
   const fetchFeedbackData = useInterviewDataStore(
     (state) => state.fetchFeedbackData,
   );
+  const [useCache, setUseCache] = useState(true);
 
   useEffect(() => {
     if (fileId && !feedbackData) {
-      fetchFeedbackData();
+      fetchFeedbackData(useCache);
     }
-  }, [feedbackData, fetchFeedbackData, fileId]);
+  }, [feedbackData, fetchFeedbackData, fileId, useCache]);
 
   if (loading && !feedbackData) {
     return (
@@ -60,11 +61,23 @@ export function FeedbackScreen() {
   if (!feedbackData) {
     return (
       <ActionWrapper>
-        <div className="grid place-items-center">
+        <div className="grid place-items-center space-y-4">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="use-cache-feedback"
+              checked={useCache}
+              onChange={(e) => setUseCache(e.target.checked)}
+              className="mr-2 h-4 w-4"
+            />
+            <label htmlFor="use-cache-feedback" className="text-sm text-gray-700">
+              Use cached results if available
+            </label>
+          </div>
           <Button
             onClick={async (e) => {
               e.preventDefault();
-              await fetchFeedbackData();
+              await fetchFeedbackData(useCache);
             }}
           >
             Get Feedback Data
