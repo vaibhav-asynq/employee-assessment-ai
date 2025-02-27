@@ -77,7 +77,7 @@ export function FullReport() {
     <div className="flex">
       <div className="pb3 flex-1">
         <Tabs value={currentTab}>
-          <div className="sticky top-[110px] bg-background shadow pt-2 flex items-center justify-between z-10">
+          <div className="bg-background shadow pt-2 flex items-center justify-between">
             <SubTabs parentTabId={parentTabId} />
             <div>
               <Sortings

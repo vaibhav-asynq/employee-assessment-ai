@@ -78,7 +78,6 @@ export function AnalysisDisplay() {
         <Tabs value={currentTab}>
           <div
             className={cn(
-              "sticky top-0 z-10",
               "pt-3 ",
               "bg-background",
               !haveSubTab && "pb-3 shadow",

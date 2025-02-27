@@ -35,7 +35,7 @@ export function AiCompetencies() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-8 h-[calc(100vh-200px)]">
+    <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
       {/* Left side - Evidence Display */}
       <div className="overflow-y-auto pr-4">
         <EvidanceDisplay />
