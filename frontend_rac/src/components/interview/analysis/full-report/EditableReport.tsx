@@ -34,7 +34,7 @@ export function EditableReport() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <h2 className="text-2xl font-bold tracking-tight mb-8">AI Suggestions</h2>
 
       {/* Strengths Section */}

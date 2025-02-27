@@ -180,7 +180,7 @@ export function EvidanceDisplay() {
       </div>
 
       <TabsContent value="interview-feedback" className="mt-0">
-        <div className="h-full overflow-y-auto space-y-8">
+        <div className="h-full space-y-8">
           {feedbackData ? (
             <FeedbackDisplay data={feedbackData} />
           ) : (
@@ -192,7 +192,7 @@ export function EvidanceDisplay() {
       </TabsContent>
 
       <TabsContent value="sorted-evidence" className="mt-0">
-        <div className="h-full overflow-y-auto space-y-8 relative scroll-container">
+        <div className="h-full space-y-8 relative">
       {selectedEvidanceFeedback.length >= 2 && (
         <div className="fixed bottom-4 left-4 z-50">
           <Button 

@@ -33,7 +33,7 @@ export function EditableCopetencies() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Strengths Section */}
       <EditStrengths
         strengths={analysisAiCompetencies.strengths}

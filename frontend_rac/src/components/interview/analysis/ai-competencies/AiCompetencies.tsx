@@ -35,12 +35,14 @@ export function AiCompetencies() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-8 h-full">
+    <div className="grid grid-cols-2 gap-8 h-[calc(100vh-200px)]">
       {/* Left side - Evidence Display */}
-      <EvidanceDisplay />
+      <div className="overflow-y-auto pr-4">
+        <EvidanceDisplay />
+      </div>
 
       {/* Right side - Editable Content */}
-      <div className="border-l pl-4">
+      <div className="border-l pl-4 overflow-y-auto p-6">
         <EditableCopetencies />
       </div>
     </div>
