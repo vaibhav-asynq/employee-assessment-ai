@@ -46,7 +46,7 @@ app = FastAPI()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -452,7 +452,7 @@ async def generate_reflection_points(feedback_transcript: str, executive_transcr
 @app.options("/api/generate_next_steps")
 async def generate_next_steps_options():
     headers = {
-        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Origin": ":3000",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Credentials": "true"

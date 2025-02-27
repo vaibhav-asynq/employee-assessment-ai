@@ -2,6 +2,11 @@
 import { Providers } from "../components/providers";
 import "./globals.css";
 
+export const metadata = {
+  title: 'Employee Assessment AI',
+  description: 'Interview analysis and assessment tool',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -15,4 +20,3 @@ export default function RootLayout({
     </html>
   );
 }
-

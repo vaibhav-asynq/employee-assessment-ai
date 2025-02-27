@@ -1,9 +1,10 @@
 # main.py
 import traceback
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Union, List, Dict, Optional
 import anthropic
@@ -24,6 +25,9 @@ from prompt_loader import (
     format_strength_content_prompt,
     load_prompt
 )
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 # Initialize license object
 license = aw.License()
@@ -43,6 +47,85 @@ assessment_processor = AssessmentProcessor(api_key)
 
 
 
+# Authentication settings
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"  # In production, use a secure random key
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
+
+# User model
+class User(BaseModel):
+    username: str
+    hashed_password: str
+
+# Token model
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Token data model
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+# User database (in-memory for simplicity)
+# In a production environment, this would be a database
+users_db = {
+    "admin": {
+        "username": "admin",
+        "hashed_password": pwd_context.hash("admin")
+    }
+}
+
+# Authentication functions
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_user(username: str):
+    if username in users_db:
+        user_dict = users_db[username]
+        return User(**user_dict)
+    return None
+
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
 app = FastAPI()
 
 # Configure CORS
@@ -53,6 +136,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Authentication endpoints
+@app.post("/api/login", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/users/me")
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return {"username": current_user.username}
 
 # Create uploads directory if it doesn't exist
 UPLOAD_DIR = "../data/uploads"
@@ -103,7 +206,7 @@ def get_name_from_report(file_id: str) -> str:
 files_store = {}
 
 @app.post("/api/upload_file")
-async def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile, current_user: User = Depends(get_current_user)):
     try:
         # Generate unique file ID
         file_id = str(uuid.uuid4())
@@ -127,7 +230,7 @@ async def upload_file(file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/generate_report/{file_id}")
-async def generate_report(file_id: str):
+async def generate_report(file_id: str, current_user: User = Depends(get_current_user)):
     if file_id not in files_store:
         raise HTTPException(status_code=404, detail="File not found")
     # actuall call to llm after reading the pdf and txt
@@ -163,7 +266,7 @@ async def generate_report(file_id: str):
 
 
 @app.get("/api/get_raw_data/{file_id}")
-async def get_raw_data_endpoint(file_id: str):
+async def get_raw_data_endpoint(file_id: str, current_user: User = Depends(get_current_user)):
     try:
         # Load the generated report
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
@@ -258,7 +361,7 @@ async def get_raw_data_endpoint(file_id: str):
 
 
 @app.post("/api/dump_word")
-async def generate_word_document(analysis: InterviewAnalysis):
+async def generate_word_document(analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)):
     try:
         # First generate PDF
         output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
@@ -281,7 +384,7 @@ async def generate_word_document(analysis: InterviewAnalysis):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/api/dump_pdf")
-async def generate_pdf_docuement(analysis: InterviewAnalysis):
+async def generate_pdf_docuement(analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)):
     output_path = OUTPUT_DIR+"/temp.pdf" 
     header_txt = analysis.name + ' - Qualitative 360 Feedback'
     create_360_feedback_report(output_path, analysis, header_txt)
@@ -292,7 +395,7 @@ async def generate_pdf_docuement(analysis: InterviewAnalysis):
         )
 
 @app.post("/api/upload_updated_report")
-async def upload_updated_report(file: UploadFile):
+async def upload_updated_report(file: UploadFile, current_user: User = Depends(get_current_user)):
     try:
         # Validate file type
         if not file.filename.endswith('.docx'):
@@ -352,7 +455,7 @@ async def upload_updated_report(file: UploadFile):
 
 
 @app.delete("/api/cleanup/{file_id}")
-async def cleanup_file(file_id: str):
+async def cleanup_file(file_id: str, current_user: User = Depends(get_current_user)):
     if file_id in files_store:
         try:
             os.remove(files_store[file_id]["file_path"])
@@ -414,7 +517,7 @@ async def generate_next_steps_options():
     return Response(content="", headers=headers)
 
 @app.post("/api/generate_next_steps")
-async def generate_next_steps(request: dict):
+async def generate_next_steps(request: dict, current_user: User = Depends(get_current_user)):
     try:
         print("\n=== Generate Next Steps Request ===")
         file_id = request.get("file_id")
@@ -517,7 +620,7 @@ async def generate_next_steps(request: dict):
     
 
 @app.post("/api/generate_area_content")
-async def generate_area_content(request: GenerateContentRequest):
+async def generate_area_content(request: GenerateContentRequest, current_user: User = Depends(get_current_user)):
     try:
         print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content}")
         # print("Existing content: ",request.existing_content)
@@ -549,7 +652,7 @@ async def generate_area_content(request: GenerateContentRequest):
 
 
 @app.post("/api/sort-strengths-evidence")
-async def sort_strengths_evidence(request: SortEvidenceRequest):
+async def sort_strengths_evidence(request: SortEvidenceRequest, current_user: User = Depends(get_current_user)):
     try:
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
@@ -605,7 +708,7 @@ async def sort_strengths_evidence(request: SortEvidenceRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_strength_evidences/{file_id}")
-async def get_strength_evidences(file_id: str, numCompetencies: int):
+async def get_strength_evidences(file_id: str, numCompetencies: int, current_user: User = Depends(get_current_user)):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -660,7 +763,7 @@ async def get_strength_evidences(file_id: str, numCompetencies: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_advice/{file_id}")
-async def get_advice(file_id: str):
+async def get_advice(file_id: str, current_user: User = Depends(get_current_user)):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -712,7 +815,7 @@ async def get_advice(file_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_feedback/{file_id}")
-async def get_feedback(file_id: str):
+async def get_feedback(file_id: str, current_user: User = Depends(get_current_user)):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -796,7 +899,7 @@ async def get_feedback(file_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_development_areas/{file_id}")
-async def get_development_areas(file_id: str, numCompetencies: int):
+async def get_development_areas(file_id: str, numCompetencies: int, current_user: User = Depends(get_current_user)):
     try:
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
@@ -851,7 +954,7 @@ async def get_development_areas(file_id: str, numCompetencies: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sort-areas-evidence")
-async def sort_areas_evidence(request: SortEvidenceRequest):
+async def sort_areas_evidence(request: SortEvidenceRequest, current_user: User = Depends(get_current_user)):
     try:
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
@@ -917,7 +1020,7 @@ async def excel_options():
     return Response(content="", headers=headers)
 
 @app.get("/api/excel")
-async def get_excel_file():
+async def get_excel_file(current_user: User = Depends(get_current_user)):
     file_path = "../Developmental Suggestions & Resources.xlsx"
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Excel file not found")
@@ -937,7 +1040,7 @@ async def get_excel_file():
     return Response(content=content, headers=headers)
 
 @app.post("/api/generate_strength_content")
-async def generate_strength_content(request: GenerateContentRequest):
+async def generate_strength_content(request: GenerateContentRequest, current_user: User = Depends(get_current_user)):
     try:
         print(f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
         
