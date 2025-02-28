@@ -15,7 +15,7 @@ Required Output Format:
 
 Guidelines:
 1. Include full, verbatim sentences/quotes, not paraphrased versions
-2. Capture feedback from all sections, not just those explicitly labeled as "weaknesses" or "opportunities"
+2. Capture feedback from all sections, not just those explicitly labeled as "weaknesses" or "opportunities", classify them by speaker name which is mentioned as Person_Name in required Output Format.
 3. Include:
    - Direct criticism
    - Areas for improvement

@@ -15,7 +15,7 @@ Required Output Format:
 
 Guidelines:
 1. Include full, verbatim sentences/quotes, not paraphrased versions
-2. Capture feedback from all sections, not just those explicitly labeled as "strengths" or "positive"
+2. Capture feedback from all sections, not just those explicitly labeled as "strengths" or "positive" , classify them by speaker name which is mentioned as Person_Name in required Output Format.
 3. Include positive feedback even if embedded within constructive criticism
 4. Maintain person's exact role/title as mentioned in the document
 5. Create a "General_Updates" category for positive feedback not attributed to specific individuals

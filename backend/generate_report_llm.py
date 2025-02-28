@@ -74,7 +74,7 @@ Format the output as a SINGLE CONTINUOUS paragraph with proper spacing in:
         "bullet_points": [
             "What did I hear from the feedback that was new or different than I expected?",
             "What resonated most for me? How does it connect to what I heard from other historical feedback I've received?",
-            "What am I focused on in the immediate short term and for the rest of [year]?",
+            "What am I focused on in the immediate short term and for the rest of 2025?",
             "What kind of support do I need from [names], or others?"
         ],
         "context_summary": "A SINGLE PROPERLY FORMATTED PARAGRAPH: [Name], after [time] in the [role], you find yourself in [situation] while [challenge]. This appeals to your need for [drivers]. Keep those needs in mind as you think through these suggestions for development. "
@@ -135,11 +135,11 @@ Given the transcript:"""
 2. Follow with "[Name/Subject] [specific examples with action verbs]"
 3. End with a single impact statement using varied transition phrases"""
 
-    str4 = """Now combine these into 3 non-overlapping subheadings in 1 paragraph each with no more than 100 words. For each:
+    str4 = """Now combine these into 4 non-overlapping subheadings in 1 paragraph each with no more than 100 words. For each:
 1. Start with character quality adjectives ("[Name/Subject] is [character quality adjective]")
 2. Use anonymous attribution phrases ("colleagues describe," "team members note," "peers recognize")
 3. Include relevant quotes without identifying sources
-4. Structure each paragraph as:
+5. Structure each paragraph as:
    - Opening with character quality adjectives
    - "[Subject] [specific examples with action verbs]"
    - Single impact statement at the end with transition phrase"""
@@ -565,14 +565,21 @@ def transform_content_to_report_format(content_list, employee_name, report_date)
             strengths_list = section['Strengths']
             for strength in strengths_list:
                 for title, content_list in strength.items():
-                    report_data['strengths'][title] = content_list[0]
+                    title2 = title[0].upper()+title[1:].lower()
+                    title2 = title2.replace(".","")
+                    title2 = title2 +"."
+                    report_data['strengths'][title2] = content_list[0]
+
         
         # Handle Areas to Target section
         elif 'Areas to Target' in section:
             areas_list = section['Areas to Target']
             for area in areas_list:
                 for title, content_list in area.items():
-                    report_data['areas_to_target'][title] = content_list[0]
+                    title2 = title[0].upper()+title[1:].lower()
+                    title2 = title2.replace(".","")
+                    title2 = title2 +"."
+                    report_data['areas_to_target'][title2] = content_list[0]
         
         # Handle reflection prompts
         elif 'reflection_prompts' in section:
@@ -590,8 +597,11 @@ def transform_content_to_report_format(content_list, employee_name, report_date)
             next_steps = section['Next Steps and Potential Actions']
             for step in next_steps:
                 for title, content in step.items():
+                    title2 = title[0].upper()+title[1:].lower()
+                    title2 = title2.replace(".","")
+                    title2 = title2 +"."
                     report_data['next_steps'].append({
-                        'main': title,
+                        'main': title2,
                         'sub_points': content['bullet_points']
                     })
     
