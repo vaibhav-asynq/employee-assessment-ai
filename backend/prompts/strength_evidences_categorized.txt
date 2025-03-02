@@ -26,7 +26,7 @@ Group evidence under categories such as (but not limited to):
 2. Structure the output in JSON format:
 {{
   "leadershipQualities": {{
-    "[Leadership Quality Category]": {{
+    "[Leadership quality category.]": {{
       "evidence": [
         {{
           "feedback": "[Full verbatim feedback sentence]",
@@ -63,6 +63,7 @@ Quality Standards:
 - Eliminate exact duplicates but keep meaningful variations
 - Preserve nuanced differences in similar feedback
 - Cross-reference evidence that could fit multiple categories
+- Add the full stop at the end of the headings. Examples: Selfless style.  Business leadership.
 
 Organization Principles:
 1. First identify core strength themes in the feedback
@@ -71,6 +72,7 @@ Organization Principles:
 4. Include source attribution and role context
 5. Note patterns of consistent feedback
 6. Highlight unique or distinctive qualities
+7.⁠ ⁠Do not use underscore in headings
 
 When categorizing evidence:
 - Look for patterns across multiple sources
