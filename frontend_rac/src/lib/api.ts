@@ -11,12 +11,12 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// Add request interceptor to add auth token to requests
+// Add request interceptor to add username to requests
 api.interceptors.request.use(
   (config) => {
     const { user } = useAuthStore.getState();
-    if (user && user.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    if (user && user.username) {
+      config.headers.username = user.username;
     }
     return config;
   },
@@ -70,12 +70,19 @@ export const login = async (username: string, password: string) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
+  
   return response.data;
 };
 
 export const getCurrentUser = async () => {
-  const response = await api.get(`/api/users/me`);
-  return response.data;
+  const { user } = useAuthStore.getState();
+  if (user) {
+    const response = await api.get(`/api/users/me`, {
+      headers: { username: user.username }
+    });
+    return response.data;
+  }
+  throw new Error("Not authenticated");
 };
 
 // API functions using the authenticated axios instance

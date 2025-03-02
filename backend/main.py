@@ -1,6 +1,6 @@
 # main.py
 import traceback
-from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response, Query
+from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response, Query, Header
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -53,28 +53,18 @@ assessment_processor = AssessmentProcessor(api_key)
 
 
 
-# Authentication settings
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"  # In production, use a secure random key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
-
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 # User model
 class User(BaseModel):
     username: str
     hashed_password: str
 
-# Token model
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-# Token data model
-class TokenData(BaseModel):
-    username: Optional[str] = None
+# Simple authentication response
+class AuthResponse(BaseModel):
+    success: bool
+    username: str
 
 # User database (in-memory for simplicity)
 # In a production environment, this would be a database
@@ -84,6 +74,9 @@ users_db = {
         "hashed_password": pwd_context.hash("admin")
     }
 }
+
+# Track authenticated users (in-memory for simplicity)
+authenticated_users = set()
 
 # Authentication functions
 def verify_password(plain_password, hashed_password):
@@ -103,34 +96,14 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    user = get_user(username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    return user
+# Simple authentication check
+async def get_current_user(username: str = Header(None)):
+    if not username or username not in authenticated_users:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    return get_user(username)
 
 app = FastAPI()
 
@@ -144,24 +117,28 @@ app.add_middleware(
 )
 
 # Authentication endpoints
-@app.post("/api/login", response_model=Token)
+@app.post("/api/login", response_model=AuthResponse)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Add user to authenticated users
+    authenticated_users.add(user.username)
+    
+    return {"success": True, "username": user.username}
 
 @app.get("/api/users/me")
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    return {"username": current_user.username}
+async def read_users_me(username: str = Header(None)):
+    if not username or username not in authenticated_users:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    return {"username": username}
 
 # Create uploads directory if it doesn't exist
 UPLOAD_DIR = "../data/uploads"

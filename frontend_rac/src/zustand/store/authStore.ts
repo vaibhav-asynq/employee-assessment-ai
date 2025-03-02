@@ -3,7 +3,6 @@ import { persist } from "zustand/middleware";
 
 interface User {
   username: string;
-  token: string;
 }
 
 interface AuthState {
@@ -47,15 +46,18 @@ export const useAuthStore = create<AuthState>()(
 
           const data = await response.json();
           
-          // Set the authenticated user
-          set({
-            user: {
-              username,
-              token: data.access_token,
-            },
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          // Set the authenticated user if login was successful
+          if (data.success) {
+            set({
+              user: {
+                username,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            throw new Error("Login failed");
+          }
         } catch (error) {
           set({
             isLoading: false,
