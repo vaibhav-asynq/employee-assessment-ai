@@ -110,7 +110,7 @@ app = FastAPI()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000","https://ff2c-34-202-149-23.ngrok-free.app/","http://34.202.149.23:3000/"],
+    allow_origins=["http://localhost:3000","https://ff2c-34-202-149-23.ngrok-free.app","http://34.202.149.23:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -740,6 +740,40 @@ async def sort_strengths_evidence(request: SortEvidenceRequest, current_user: Us
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+def transform_headings(data):
+    """
+    Transform headings in a nested dictionary by:
+    1. Making the first letter uppercase
+    2. Making all other letters lowercase
+    3. Adding a period at the end of each heading
+    
+    Args:
+        data (dict): The input dictionary with nested headings
+        
+    Returns:
+        dict: The transformed dictionary with modified headings
+    """
+    if not isinstance(data, dict):
+        return data
+    
+    result = {}
+    
+    for key, value in data.items():
+        if key == 'evidence':
+            # This is the evidence list, keep it as is
+            result[key] = value
+        elif isinstance(value, dict) and 'evidence' in value:
+            # This is a heading with evidence, transform the key
+            transformed_key = key[0].upper() + key[1:].lower()
+            transformed_key = transformed_key.replace(".","")
+            transformed_key  = transformed_key + "."
+            result[transformed_key] = value
+        else:
+            # This is another nested dictionary, recursively process it
+            result[key] = transform_headings(value)
+    
+    return result
+
 @app.get("/api/get_strength_evidences/{file_id}")
 async def get_strength_evidences(
     file_id: str, 
@@ -801,7 +835,7 @@ async def get_strength_evidences(
                     status_code=500,
                     detail="Failed to parse AI response into valid JSON"
                 )
-        
+        result = transform_headings(result)
         # Save to cache with parameters
         save_cached_data("strength_evidences", file_id, result, {"num_competencies": numCompetencies})
         
@@ -1038,6 +1072,7 @@ async def get_development_areas(
                     status_code=500,
                     detail="Failed to parse AI response into valid JSON"
                 )
+        result = transform_headings(result)
         
         # Save to cache with parameters
         save_cached_data("development_areas", file_id, result, {"num_competencies": numCompetencies})

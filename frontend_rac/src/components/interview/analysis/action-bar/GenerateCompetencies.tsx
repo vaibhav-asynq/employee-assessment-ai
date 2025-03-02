@@ -9,6 +9,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { v4 } from "uuid";
 import {
   Select,
   SelectContent,
@@ -78,7 +79,7 @@ export function GenerateCompetencies() {
         items: Object.entries(developmentData.developmentAreas).reduce(
           (acc, [heading, { evidence, competencyAlignment }]) => {
             acc[heading] = {
-              id: crypto.randomUUID(), // Generate unique ID for each item
+              id: v4(), // Generate unique ID for each item
               heading,
               content: "", // Initialize with empty content
               evidence,
@@ -94,7 +95,7 @@ export function GenerateCompetencies() {
         items: Object.entries(strengthData.leadershipQualities).reduce(
           (acc, [heading, { evidence }]) => {
             acc[heading] = {
-              id: crypto.randomUUID(), // Generate unique ID for each item
+              id: v4(), // Generate unique ID for each item
               heading,
               content: "", // Initialize with empty content
               evidence,

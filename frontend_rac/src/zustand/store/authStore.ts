@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
           formData.append("password", password);
 
           // Make the API request
-          const response = await fetch("http://localhost:8000/api/login", {
+          const response = await fetch("http://34.202.149.23:8000/api/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
