@@ -107,6 +107,9 @@ def get_strengths_prompts():
             - Big picture clarity and decisiveness
             - Continuing to evolve
             - Technical and business acumen
+            - Exemplary work ethic
+            - Technical excellence
+            - Humanistic leadership
             
 Each strength should be structured as:
 1. Opening statement demonstrating the strength (use adjectives for character qualities) in format ""[Name/Subject] is [character quality adjective]"
@@ -253,6 +256,9 @@ Select and justify the top 3 most critical development areas. For each area:
      * Market positioning
      * Talent development
      * Resource utilization
+     * More strategic energy management
+     * Scaling capability
+     * Creating synergistic relationships
 
 Example format:
 "[Title]. [Name/Subject] is [positive strength adjectives], [transition word] stakeholders observe that [Name/Subject] [specific action/behavior]. [Name/Subject] [specific situation/example without attribution]. [Root cause only if explicitly stated in feedback]. [Impact statement using simple transition]."
