@@ -30,14 +30,14 @@ Create professional 2-3 word titles that:
 - Capture specific development focus
 
 Examples of professional titles:
-- Instead of "Execution" → "Providing Direction"
-- Instead of "Communication" → "Directive Leadership"
-- Instead of "Develops the team" → "Team Advancement"
+- Instead of "Execution" → "Providing direction."
+- Instead of "Communication" → "Directive leadership."
+- Instead of "Develops the team" → "Team advancement."
 
 2. Structure the output in JSON format:
 {{
   "developmentAreas": {{
-    "[Professional Title]": {{
+    "[Professional title.]": {{
       "competencyAlignment": ["[Relevant Competencies]"],
       "evidence": [
         {{
@@ -59,6 +59,7 @@ Guidelines for analysis:
 - Connect feedback to relevant competencies
 - Ensure titles are forward-looking and development-oriented
 
+
 When organizing feedback:
 1. First identify core themes in the developmental feedback
 2. Match themes to relevant competencies
@@ -66,6 +67,7 @@ When organizing feedback:
 4. Group specific evidence under each area
 5. Include source attribution and context
 6. Cross-reference competencies for alignment
+7. Always make sure to Add the full stop at the end of the headings. Examples: Problem solving.  Business leadership.
 
 Here is the feedback to analyze:
 
