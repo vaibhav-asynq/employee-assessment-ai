@@ -3,7 +3,7 @@ import { Providers } from "../components/providers";
 import "./globals.css";
 
 export const metadata = {
-  title: 'Employee Assessment AI',
+  title: 'RAC AI 360',
   description: 'Interview analysis and assessment tool',
 };
 

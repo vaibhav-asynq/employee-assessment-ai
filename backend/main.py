@@ -69,9 +69,9 @@ class AuthResponse(BaseModel):
 # User database (in-memory for simplicity)
 # In a production environment, this would be a database
 users_db = {
-    "admin": {
-        "username": "admin",
-        "hashed_password": pwd_context.hash("admin")
+    "Tom": {
+        "username": "Tom",
+        "hashed_password": pwd_context.hash("Tom@1234")
     }
 }
 
@@ -513,7 +513,8 @@ async def generate_reflection_points(feedback_transcript: str, executive_transcr
         )
 
         # Extract JSON from response
-        response_text = response.content[0].text
+        # print(response.content[0].text)
+        response_text = response.content[0].text.replace("\n","").replace("\\","")
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
@@ -602,7 +603,7 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
         )
         
         # Extract JSON from response
-        response_text = response.content[0].text
+        response_text = response.content[0].text.replace("\n","").replace("\\","")
         print("\n=== Claude Response ===")
         print(response_text)
         try:

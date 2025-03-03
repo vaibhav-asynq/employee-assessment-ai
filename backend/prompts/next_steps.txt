@@ -79,3 +79,5 @@ Example (with escaped quotes):
         }}
     ]
 }}
+
+PS: Your response should be strictly JSON with no permeable at the start or end of JSON

@@ -21,7 +21,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-3xl font-extrabold text-gray-900">
-            Employee Assessment AI
+          RAC AI 360
           </h1>
           <h2 className="mt-6 text-center text-xl font-bold text-gray-900">
             Sign in to your account

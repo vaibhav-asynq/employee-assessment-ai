@@ -26,3 +26,5 @@ Return the response in this exact JSON structure (note the escaped quotes):
         \"context_summary\": \"[Name], after [time] in the [role], you find yourself in [situation] while [challenge]. This appeals to your need for [drivers]. Keep those needs in mind as you think through these suggestions for development.\"
     }}
 }}
+
+PS: Your response should be strictly JSON with no permeable at the start or end of JSON

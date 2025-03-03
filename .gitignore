@@ -3,3 +3,6 @@ __pycache__/
 *.lic
 
 backend/venv/
+backend/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+backend/libicu70_70.1-2_amd64.deb
+
