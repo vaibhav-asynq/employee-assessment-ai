@@ -13,8 +13,10 @@ type AnalysisState = {
   originalTemplates: Record<TemplateId, TemplatedData>;
   pendingChanges: Partial<TemplatedData>;
   isEditing: boolean;
+  autoSortInProgress: boolean;
 
   setActiveTemplate: (id: TemplateId) => void;
+  setAutoSortInProgress: (inProgress: boolean) => void;
   addTemplate: (
     id: TemplateId,
     template: TemplatedData,
@@ -42,6 +44,9 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   },
   pendingChanges: {},
   isEditing: false,
+  autoSortInProgress: false,
+
+  setAutoSortInProgress: (inProgress) => set({ autoSortInProgress: inProgress }),
 
   setActiveTemplate: (id) => {
     const { templates } = get();

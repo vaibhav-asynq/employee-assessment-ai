@@ -41,13 +41,22 @@ export function GenerateFullReport() {
         addTemplate(templateId, templatedData, false);
       }
 
-      addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
-      addChildTab(
-        "ai-agent-full-report",
-        "interview-feedback",
-        ANALYSIS_TAB_NAMES.interviewFeedback,
-      );
-      selectTab("ai-agent-full-report", "interview-feedback");
+    addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
+    addChildTab(
+      "ai-agent-full-report",
+      "interview-feedback",
+      ANALYSIS_TAB_NAMES.interviewFeedback,
+    );
+    addChildTab(
+      "ai-agent-full-report",
+      "sorted-evidence",
+      ANALYSIS_TAB_NAMES.sortedEvidences,
+    );
+    
+    // Set a flag in localStorage to indicate auto-sorting should happen
+    localStorage.setItem('autoSortFullReport', 'true');
+    
+    selectTab("ai-agent-full-report", "interview-feedback");
     } catch (error) {
       console.error("Upload failed:", error);
       // setError(error instanceof Error ? error.message : "Failed to generate report.");

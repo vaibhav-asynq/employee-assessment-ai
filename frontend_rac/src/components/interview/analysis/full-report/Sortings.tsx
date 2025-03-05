@@ -34,6 +34,7 @@ export function Sortings(props: Props) {
   const parentTabId = props.parentTabId;
 
   const fileId = useInterviewDataStore((state) => state.fileId);
+  const autoSortInProgress = useAnalysisStore((state) => state.autoSortInProgress);
   const setSelectedPath = useUserPreferencesStore(
     (state) => state.setSelectedPath,
   );
@@ -218,14 +219,14 @@ export function Sortings(props: Props) {
             strengthsSorted && areasSorted && "text-blue-600",
           )}
           onClick={() => handleSortAll()}
-          disabled={!!sortLoading || !validAreas || !validStrengths}
+          disabled={!!sortLoading || !validAreas || !validStrengths || autoSortInProgress}
         >
-          {sortLoading === "all"
+          {sortLoading === "all" || autoSortInProgress
             ? sortIndicatorIcons.loading
             : allSorted
               ? sortIndicatorIcons.sorted
               : sortIndicatorIcons.default}
-          Sort by Competency
+          {autoSortInProgress ? "Auto-Sorting..." : "Sort by Competency"}
         </Button>
       </div>
     </div>
