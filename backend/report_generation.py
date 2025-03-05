@@ -261,9 +261,9 @@ def create_360_feedback_report_for_word(output_file, data, header_txt):
     for i, item in enumerate(data.next_steps):
         if hasattr(item, 'main'):
             # Main bullet with sub-points - using Symbol font with bullet character
-            pdf.set_font('Symbol', '', 22)
+            pdf.set_font('Symbol', '', 16)
             pdf.set_x(20)
-            pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
+            pdf.cell(5, 5, chr(183), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
             
             pdf.set_font('Helvetica', '', 11)
             lines = pdf.wrap_text(item.main, available_width - 15)
@@ -281,9 +281,9 @@ def create_360_feedback_report_for_word(output_file, data, header_txt):
             
             for sub_point in item.sub_points:
                 pdf.set_x(30)
-                # Use Symbol font with smaller bullet for sub-points
-                pdf.set_font('Symbol', '', 9)
-                pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Same bullet character but smaller font
+                
+                pdf.set_font('Symbol', '', 16)
+                pdf.cell(5, 5, chr(183), new_x=XPos.RIGHT) # Same bullet character but smaller font
                 
                 pdf.set_font('Helvetica', '', 11)
                 lines = pdf.wrap_text(sub_point, available_width - 35)
@@ -299,8 +299,8 @@ def create_360_feedback_report_for_word(output_file, data, header_txt):
         else:
             # Regular bullet point (string) - using Symbol font with bullet character
             pdf.set_x(20)
-            pdf.set_font('Symbol', '', 11)
-            pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
+            pdf.set_font('Symbol', '', 16)
+            pdf.cell(5, 5, chr(183), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
             
             pdf.set_font('Helvetica', '', 11)
             lines = pdf.wrap_text(str(item), available_width - 15)
