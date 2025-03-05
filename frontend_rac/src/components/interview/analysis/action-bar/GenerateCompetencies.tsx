@@ -1,13 +1,10 @@
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { v4 } from "uuid";
 import {
@@ -22,24 +19,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Loader2, Sparkle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   getAdvice,
   getDevelopmentAreas,
   getStrengthEvidences,
 } from "@/lib/api";
-import { InterviewAnalysis } from "@/lib/types";
-import { convertToOrderedAnalysis } from "@/components/providers/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { TemplatedData, templatesIds } from "@/lib/types/types.analysis";
+import { TemplatedData, templatesIds, AreasToTarget, Strengths } from "@/lib/types/types.analysis";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
 import {
   convertAdviceToOrderedAdvice,
-  convertInterviewAnalysisDataToTemplatedData,
 } from "@/lib/utils/analysisUtils";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { EvidenceOfFeedback, CompetenciesAlignment } from "@/lib/types/types.interview-data";
 
 const formSchema = z.object({
   noOfGenerate: z.string({
@@ -58,7 +51,7 @@ export function GenerateCompetencies() {
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
-    defaultValues: { noOfGenerate: "4" },
+    defaultValues: { noOfGenerate: "3" },
   });
 
   async function onSubmit(data: FormSchema) {
@@ -74,7 +67,9 @@ export function GenerateCompetencies() {
       ]);
 
       const orderedAdviceData = convertAdviceToOrderedAdvice(adviceData);
-      const areasToTarget = {
+      
+      // Create areas to target with proper typing
+      const areasToTarget: AreasToTarget = {
         order: Object.keys(developmentData.developmentAreas),
         items: Object.entries(developmentData.developmentAreas).reduce(
           (acc, [heading, { evidence, competencyAlignment }]) => {
@@ -82,15 +77,23 @@ export function GenerateCompetencies() {
               id: v4(), // Generate unique ID for each item
               heading,
               content: "", // Initialize with empty content
-              evidence,
-              competencyAlignment,
+              evidence, // This is already EvidenceOfFeedback[]
+              competencyAlignment, // This is already CompetenciesAlignment
             };
             return acc;
           },
-          {} as Record<string, any>,
+          {} as Record<string, {
+            id: string;
+            heading: string;
+            content: string;
+            evidence: EvidenceOfFeedback[];
+            competencyAlignment: CompetenciesAlignment;
+          }>,
         ),
       };
-      const strengths = {
+      
+      // Create strengths with proper typing
+      const strengths: Strengths = {
         order: Object.keys(strengthData.leadershipQualities),
         items: Object.entries(strengthData.leadershipQualities).reduce(
           (acc, [heading, { evidence }]) => {
@@ -98,13 +101,19 @@ export function GenerateCompetencies() {
               id: v4(), // Generate unique ID for each item
               heading,
               content: "", // Initialize with empty content
-              evidence,
+              evidence, // This is already EvidenceOfFeedback[]
             };
             return acc;
           },
-          {} as Record<string, any>,
+          {} as Record<string, {
+            id: string;
+            heading: string;
+            content: string;
+            evidence: EvidenceOfFeedback[];
+          }>,
         ),
       };
+      
       const templatedData: TemplatedData = {
         name: "",
         date: new Date().toISOString(),
@@ -161,14 +170,13 @@ export function GenerateCompetencies() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {[4, 5, 6, 7, 8, 9, 10].map((item) => (
+                        {[3,4, 5, 6, 7, 8, 9, 10].map((item) => (
                           <SelectItem key={item} value={`${item}`}>
                             {item}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {/* <FormMessage /> */}
                   </div>
                 </FormItem>
               )}

@@ -9,10 +9,11 @@ import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import DocPreview from "../download-data/DocPreview";
 import { convertFromOrderedAnalysis, convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";
+import { useCallback } from 'react';
 export function DownloadDataScreen() {
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [wordUrl, setWordUrl] = useState<string | null>(null);
+  const [wordUrl, setWordUrl] = useState<string | null>(null); // Used in handleDownload
   const [isPdfLoading, setPdfLoading] = useState(false);
   const [isWordLoading, setWordLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -22,15 +23,14 @@ export function DownloadDataScreen() {
   const templates = useAnalysisStore((state) => state.templates);
   const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
   const handleAnalysisUpdate = useAnalysisStore((state) => state.handleAnalysisUpdate);
-
   const finalTemplateId = activeTemplateId || templatesIds.base;
   const templateFinalData = templates[finalTemplateId];
 
-  const generatePdf = async () => {
+  const generatePdf = useCallback(async () => {
     if (!templateFinalData) return null;
     setPdfLoading(true);
     setError(null);
-
+  
     try {
       const analysisData = convertFromOrderedAnalysis(templateFinalData);
       const data: InterviewAnalysis = {
@@ -41,8 +41,7 @@ export function DownloadDataScreen() {
         next_steps: analysisData.next_steps,
       };
       setReportData(data);
-
-      // Generate PDF document
+  
       const pdfBlob = await generatePdfDocument(data);
       if (!pdfBlob) {
         throw new Error("Failed to generate document");
@@ -50,13 +49,13 @@ export function DownloadDataScreen() {
       const url = window.URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
       return url;
-    } catch (err) {
+    } catch (error) {
       setError("Failed to generate document. Please try again.");
       return null;
     } finally {
       setPdfLoading(false);
     }
-  };
+  }, [templateFinalData]);
 
   const generateWord = async () => {
     if (!templateFinalData) return null;
@@ -80,7 +79,7 @@ export function DownloadDataScreen() {
       const url = window.URL.createObjectURL(wordBlob);
       setWordUrl(url);
       return url;
-    } catch (err) {
+    } catch (error) {
       setError("Failed to generate document. Please try again.");
       return null;
     } finally {
@@ -93,7 +92,7 @@ export function DownloadDataScreen() {
     if (templateFinalData) {
       generatePdf();
     }
-  }, [templateFinalData]);
+  }, [templateFinalData, generatePdf]);
 
   const handleDownload = async (type: 'pdf' | 'word') => {
     try {
@@ -123,7 +122,7 @@ export function DownloadDataScreen() {
           setWordUrl(null); // Clear Word URL after download
         }
       }
-    } catch (err) {
+    } catch (error) {
       setError("Failed to download document. Please try again.");
     }
   };
@@ -148,13 +147,12 @@ export function DownloadDataScreen() {
       // Convert to TemplatedData format
       const templatedData = convertInterviewAnalysisDataToTemplatedData(data);
       
-
       // Update current template
       handleAnalysisUpdate(() => templatedData);
       
       setUploadSuccess(true);
       event.target.value = ''; // Reset file input
-    } catch (err) {
+    } catch (error) {
       setError('Failed to upload document. Please try again.');
     } finally {
       setIsUploading(false);

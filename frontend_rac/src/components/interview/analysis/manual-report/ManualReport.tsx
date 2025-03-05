@@ -8,7 +8,6 @@ import {
   SelectPathIds,
 } from "@/lib/types/types.user-preferences";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
-import { cn } from "@/lib/utils";
 import { SubTabs } from "../SubTabs";
 import { ManualReportView } from "./ManualReportView";
 import { SortedReport } from "./SortedReport";
@@ -77,14 +76,16 @@ export function ManualReport() {
     <div className="flex">
       <div className="pb3 flex-1">
         <Tabs value={currentTab}>
-          <div className="bg-background shadow pt-2 flex items-center justify-between">
-            <SubTabs parentTabId={parentTabId} />
-            <div>
+          <div>
+            <div className="mb-2">
               <Sortings
                 parentTabId="manual-report"
                 setSortedAreas={setSortedAreas}
                 setSortedStrengths={setSortedStrengths}
               />
+            </div>
+            <div className="bg-background shadow pt-2">
+              <SubTabs parentTabId={parentTabId} />
             </div>
           </div>
           {availableTabs.map((path) => {

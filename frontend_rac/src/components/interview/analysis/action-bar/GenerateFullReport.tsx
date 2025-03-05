@@ -1,11 +1,9 @@
-import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2, WandSparkles } from "lucide-react";
 import { generateReport } from "@/lib/api";
 import { useState } from "react";
 import { templatesIds } from "@/lib/types";
-import { convertToOrderedAnalysis } from "@/components/providers/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";

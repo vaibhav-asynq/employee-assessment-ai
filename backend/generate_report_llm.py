@@ -141,7 +141,7 @@ Given the transcript:"""
 2. Follow with "[Name/Subject] [specific examples with action verbs]"
 3. End with a single impact statement using varied transition phrases"""
 
-    str4 = """Now combine these into 4 non-overlapping subheadings in 1 paragraph each with no more than 100 words. For each:
+    str4 = """Now combine these into 3 non-overlapping subheadings in 1 paragraph each with no more than 100 words. For each:
 1. Start with character quality adjectives ("[Name/Subject] is [character quality adjective]")
 2. Use anonymous attribution phrases ("colleagues describe," "team members note," "peers recognize")
 3. Include relevant quotes without identifying sources
@@ -205,7 +205,7 @@ Select and justify the top 3 most critical development areas. For each area:
 2. List key supporting evidence
 3. Explain why this should be prioritized over others"""
 
-    str_3_2 = """Based on the patterns identified, create 4 development areas. For each area:
+    str_3_2 = """Based on the patterns identified, create 3 development areas. For each area:
 
 1. Title Construction:
    Reference competencies:

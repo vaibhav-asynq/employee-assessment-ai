@@ -1,18 +1,22 @@
 import React from "react";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 
+interface AdviceInfo {
+  role: string;
+  advice: string[];
+}
+
+interface FeedbackInfo {
+  role: string;
+  feedback: string[];
+}
+
 interface FeedbackData {
   strengths: {
-    [key: string]: {
-      role: string;
-      feedback: string[];
-    };
+    [key: string]: FeedbackInfo;
   };
   areas_to_target: {
-    [key: string]: {
-      role: string;
-      feedback: string[];
-    };
+    [key: string]: FeedbackInfo;
   };
 }
 
@@ -24,18 +28,19 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
   const adviceData = useInterviewDataStore((state) => state.adviceData);
 
   // Transform advice data to match feedback format
-  const transformedAdvice = adviceData
-    ? Object.entries(adviceData).reduce(
-        (acc, [name, info]: [string, any]) => {
+  const transformedAdvice: Record<string, FeedbackInfo> | null = adviceData
+    ? Object.entries(adviceData as Record<string, AdviceInfo>).reduce(
+        (acc: Record<string, FeedbackInfo>, [name, info]: [string, AdviceInfo]) => {
           acc[name] = {
             role: info.role,
             feedback: info.advice, // advice array becomes feedback array
           };
           return acc;
         },
-        {} as { [key: string]: { role: string; feedback: string[] } },
+        {}
       )
     : null;
+
   return (
     <div>
       <div className="space-y-8">
@@ -53,7 +58,7 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
+                    {info.feedback.map((point: string, index: number) => (
                       <li key={index} className="text-gray-800">
                         {point}
                       </li>
@@ -78,7 +83,7 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
+                    {info.feedback.map((point: string, index: number) => (
                       <li key={index} className="text-gray-800">
                         {point}
                       </li>
@@ -103,7 +108,7 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
+                    {info.feedback.map((point: string, index: number) => (
                       <li key={index} className="text-gray-800">
                         {point}
                       </li>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
-import { NextSteps, TemplateId } from "@/lib/types/types.analysis";
+import { TemplateId } from "@/lib/types/types.analysis";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { generateNextSteps } from "@/lib/api";
@@ -24,8 +24,8 @@ export function GenerateNextStepsAi({
   const { handleUpdateNextStep } = useEditAnalysis(handleAnalysisUpdate);
 
   const [generating, setGenerating] = useState<boolean>(false);
-  //TODO: notify/display error
-  const [error, setError] = useState<string>("");
+  // Error state for future error handling
+  const [, setError] = useState<string>("");
 
   const content = templates[templateId];
   if (!content) {

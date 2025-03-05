@@ -1,6 +1,4 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 
 interface EditableSubheadingProps {
   value: string;

@@ -2,10 +2,8 @@
 import { JSX, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Sortings } from "./Sortings";
 import { cn } from "@/lib/utils";
 import { AiCompetencies } from "./ai-competencies/AiCompetencies";
-import { BaseEdit } from "./base-edit/BaseEdit";
 import ActionsBar from "./action-bar/ActionsBar";
 import { SortedEvidence } from "@/lib/api";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
@@ -26,8 +24,6 @@ export function AnalysisDisplay() {
     (state) => state.availablePaths,
   );
 
-  const [sortedStrengths, setSortedStrengths] = useState<SortedEvidence[]>([]);
-  const [sortedAreas, setSortedAreas] = useState<SortedEvidence[]>([]);
   const [currentTab, setCurrentTab] = useState<SelectPathIds>();
   const [haveSubTab, setHaveSubTab] = useState(false);
 

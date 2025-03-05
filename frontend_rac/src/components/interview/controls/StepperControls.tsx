@@ -4,7 +4,7 @@ import { useStepper } from "@/components/ui/stepper";
 import React from "react";
 import { Download } from "lucide-react";
 
-export function StepperControls(props: {}) {
+export function StepperControls() {
   const handleDownload = () => {
     // Create a link to download the file
     const link = document.createElement('a');

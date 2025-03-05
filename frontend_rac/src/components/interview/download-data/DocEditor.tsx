@@ -2,18 +2,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
 import DOMPurify from "dompurify";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
-import { parse, HTMLElement } from "node-html-parser";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
 import OrderedList from "@tiptap/extension-ordered-list";
 import ListItem from "@tiptap/extension-list-item";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
 
@@ -46,10 +40,12 @@ const customCSS = `
   }
 `;
 
+import { Editor } from '@tiptap/react';
+
 /**
  * Toolbar Component for Tiptap Editor
  */
-const Toolbar = ({ editor }) => {
+const Toolbar = ({ editor }: { editor: Editor }) => {
   if (!editor) return null;
 
   return (
@@ -140,8 +136,6 @@ function cleanAndPrepareHTML(htmlContent: string): string {
 
 /**
  * Tiptap Editor Component
- */
-const DocEditor = ({ initialContent, onContentChange }) => {
   const preparedContent = useMemo(
     () => cleanAndPrepareHTML(initialContent),
     [initialContent],
@@ -226,30 +220,6 @@ export function ModifyContent({ htmlContentRes }: { htmlContentRes: string }) {
     URL.revokeObjectURL(url);
   };
 
-  const downloadAsPDF = async () => {
-    try {
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: htmlContent }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "document.pdf";
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Error generating PDF:", err);
-      alert("Failed to generate PDF. Please try again.");
-    }
-  };
 
   if (error) {
     return <div className="text-red-500 p-4 border rounded">{error}</div>;

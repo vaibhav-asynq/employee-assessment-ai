@@ -1,3 +1,7 @@
+/**
+ * @deprecated This file is kept for reference only and contains TypeScript errors.
+ * Do not use directly. Use DocEditor.tsx instead.
+ */
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -6,7 +10,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import DOMPurify from "dompurify";
-import { parse, HTMLElement } from "node-html-parser";
+import { parse } from "node-html-parser";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -69,7 +73,8 @@ function DocEditor({
   );
 }
 
-function DocEditorOld({
+// This component is deprecated and kept for reference only
+export function DocEditorOld({
   initialContent,
   onContentChange,
 }: {

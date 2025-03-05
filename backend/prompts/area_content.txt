@@ -26,10 +26,11 @@ Structure and Content Requirements:
 
 Overall Requirements:
 - Keep to exactly one paragraph
-- Maintain 125-150 word count
+- Maintain atmax 60 word count
 - Use professional but accessible tone
 - If existing_content_context is provided, enhance while maintaining key insights
 - Return ONLY the paragraph, with no introductory statements or additional text
+- Dont use executive full name only use First name of executive
 
 {existing_content_context} 
 
