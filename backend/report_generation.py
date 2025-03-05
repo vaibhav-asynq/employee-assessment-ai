@@ -236,6 +236,86 @@ def create_360_feedback_report(output_file, data, header_txt):
 
     pdf.output(output_file)
 
+def create_360_feedback_report_for_word(output_file, data, header_txt):
+    """
+    Create a 360 feedback report optimized for Word conversion with standard bullet points
+    that convert properly when using Aspose to convert to DOCX format.
+    """
+    pdf = UTF8Report(header_txt)
+    available_width = pdf.w - 40
+    
+    pdf.ln(5)
+    
+    pdf.underlined_title('Strengths')
+    for i, (title, content) in enumerate(data.strengths.items(), 1):
+        pdf.add_numbered_section(i, title, content, available_width)
+    
+    pdf.ln(4)
+    pdf.underlined_title('Areas to Target')
+    for i, (title, content) in enumerate(data.areas_to_target.items(), 1):
+        pdf.add_numbered_section(i, title, content, available_width)
+    
+    pdf.ln(4)
+    pdf.underlined_title('Next Steps and Potential Actions')
+    
+    for i, item in enumerate(data.next_steps):
+        if hasattr(item, 'main'):
+            # Main bullet with sub-points - using Symbol font with bullet character
+            pdf.set_font('Symbol', '', 22)
+            pdf.set_x(20)
+            pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
+            
+            pdf.set_font('Helvetica', '', 11)
+            lines = pdf.wrap_text(item.main, available_width - 15)
+            first = True
+            for line in lines:
+                if first:
+                    if i != 0:
+                        pdf.set_font('Helvetica', 'B', 11)
+                    pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                    first = False
+                else:
+                    pdf.set_font('Helvetica', '', 11)
+                    pdf.set_x(25)
+                    pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            
+            for sub_point in item.sub_points:
+                pdf.set_x(30)
+                # Use Symbol font with smaller bullet for sub-points
+                pdf.set_font('Symbol', '', 9)
+                pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Same bullet character but smaller font
+                
+                pdf.set_font('Helvetica', '', 11)
+                lines = pdf.wrap_text(sub_point, available_width - 35)
+                first = True
+                for line in lines:
+                    if first:
+                        pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                        first = False
+                    else:
+                        pdf.set_x(35)
+                        pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                pdf.ln(1)
+        else:
+            # Regular bullet point (string) - using Symbol font with bullet character
+            pdf.set_x(20)
+            pdf.set_font('Symbol', '', 11)
+            pdf.cell(5, 5, chr(149), new_x=XPos.RIGHT)  # Character code 149 is a bullet point in Symbol font
+            
+            pdf.set_font('Helvetica', '', 11)
+            lines = pdf.wrap_text(str(item), available_width - 15)
+            first = True
+            for line in lines:
+                if first:
+                    pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                    first = False
+                else:
+                    pdf.set_x(25)
+                    pdf.cell(0, 5, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.ln(1)
+
+    pdf.output(output_file)
+
 # Sample data remains the same
 if __name__ == "__main__":
     # Original report data

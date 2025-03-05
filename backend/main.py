@@ -15,7 +15,7 @@ from docx.shared import Inches
 import json
 from process_pdf import AssessmentProcessor
 from generate_report_llm import read_file_content, transform_content_to_report_format, process_prompts, extract_employee_info
-from report_generation import create_360_feedback_report
+from report_generation import create_360_feedback_report, create_360_feedback_report_for_word
 from generate_raw_data import get_raw_data,get_strengths_data,get_areas_to_target_data
 import aspose.words as aw
 from prompt_loader import (
@@ -396,10 +396,10 @@ async def get_raw_data_endpoint(
 @app.post("/api/dump_word")
 async def generate_word_document(analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)):
     try:
-        # First generate PDF
+        # First generate PDF with Word-optimized bullet points
         output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
         header_txt = analysis.name + ' - Qualitative 360 Feedback'
-        create_360_feedback_report(output_path, analysis, header_txt)
+        create_360_feedback_report_for_word(output_path, analysis, header_txt)
 
         # Convert PDF to DOCX
         docx_path = os.path.join(OUTPUT_DIR, "Output1.docx")
