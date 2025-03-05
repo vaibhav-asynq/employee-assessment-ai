@@ -1,6 +1,8 @@
 import { SortedEvidenceView } from "../sorted-evidence/SortedEvidenceView";
 import { SortedEvidence } from "@/lib/api";
 import { EditableReport } from "./EditableReport";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { AdviceData } from "@/lib/types/types.interview-data";
 
 interface Props {
   sortedStrengths: SortedEvidence[] | undefined;
@@ -9,6 +11,21 @@ interface Props {
 
 export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
   //TODO: find better sorting implementation
+  
+  // Get advice data from store
+  const adviceData = useInterviewDataStore((state) => state.adviceData) as AdviceData | null;
+
+  // Transform advice data
+  const transformedAdvice = adviceData
+    ? Object.entries(adviceData).map(([name, info]) => ({
+        heading: name.replace(/_/g, " "),
+        evidence: info.advice.map((point: string) => ({
+          quote: point,
+          name: info.role,
+          position: "",
+        })),
+      }))
+    : [];
 
   return (
     <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
@@ -19,6 +36,7 @@ export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
         <SortedEvidenceView
           strengthsEvidence={sortedStrengths}
           areasEvidence={sortedAreas}
+          adviceEvidence={transformedAdvice}
         />
       </div>
       <div className="border-l pl-8 overflow-y-auto p-6">

@@ -29,7 +29,7 @@ Structure and Content Requirements:
    - Suggest concrete actions with specific scenarios
    - Maintain senior executive perspective
    - Focus on opportunities rather than corrections
-   - Include 4 bullet points per area
+   - Include 3 bullet points per area
    - Keep each bullet point between 20-25 words
    - Connect suggestions to:
      * Business outcomes
@@ -283,8 +283,7 @@ Return the response in this exact JSON structure (note the escaped quotes):
             \"main\": \"To [Clear Objective as highlighted in areas to target]\",
             \"sub_points\": [
                 \"Consider [specific action] by [detailed approach], focusing on [specific outcome]\",
-                \"Explore [specific action] through [detailed method]\",
-                \"Look into [specific action] where [context and purpose]\",
+                \"Explore [specific action] through [detailed method] where [context and purpose]\",
                 \"Try [specific action] to [desired outcome]\"
             ]
         }}
@@ -299,7 +298,6 @@ Example (with escaped quotes):
             \"sub_points\": [
                 \"Consider developing a quarterly thought leadership series focused on aerospace trends, sharing insights through industry publications and targeted forums\",
                 \"Explore opportunities to mentor rising leaders in monthly roundtables, sharing investment perspectives while developing next-generation talent\",
-                \"Look into creating strategic partnerships with industry associations, positioning the firm as a leading voice in aerospace investment\",
                 \"Try establishing regular briefing sessions with key stakeholders, providing unique market insights while building stronger relationships\"
             ]
         }}

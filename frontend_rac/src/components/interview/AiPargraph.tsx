@@ -66,7 +66,7 @@ export function AiPargraph() {
                       setSelectedPath("base-edit");
                     }}
                   >
-                    Interview Feedback
+                    Sorted by stakeholder
                   </TabsTrigger>
                   <TabsTrigger
                     value="sorted-evidence"
@@ -99,7 +99,7 @@ export function AiPargraph() {
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <div className="mt-4 mb-6">
-                  <h2 className="text-2xl font-bold">Interview Feedback</h2>
+                  <h2 className="text-2xl font-bold">Sorted by stakeholder</h2>
                 </div>
                 {loading ? (
                   <div className="text-center py-8">

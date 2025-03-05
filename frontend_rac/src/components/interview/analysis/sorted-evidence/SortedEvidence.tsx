@@ -1,7 +1,8 @@
 import React from "react";
 import { type SortedEvidence } from "@/lib/api";
 import { SortedEvidenceView } from "./SortedEvidenceView";
-import { EditableTemplateAnalysis } from "../base-edit/EditableTemplateAnalysis";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { AdviceData } from "@/lib/types/types.interview-data";
 
 interface Props {
   sortedStrengthEvidences: SortedEvidence[];
@@ -12,6 +13,19 @@ export function SortedEvidences({
   sortedStrengthEvidences,
   sortedAreasEvidences,
 }: Props) {
+  const adviceData = useInterviewDataStore((state) => state.adviceData) as AdviceData | null;
+
+  // Transform advice data to match the format expected by SortedEvidenceView
+  const transformedAdvice = adviceData
+    ? Object.entries(adviceData).map(([name, info]) => ({
+        heading: name.replace(/_/g, " "),
+        evidence: info.advice.map((point: string) => ({
+          quote: point,
+          name: info.role,
+          position: "",
+        })),
+      }))
+    : [];
   if (!sortedAreasEvidences.length && !sortedStrengthEvidences.length) {
     return (
       <div className="grid place-items-center min-h-40">
@@ -29,10 +43,15 @@ export function SortedEvidences({
         <SortedEvidenceView
           strengthsEvidence={sortedStrengthEvidences}
           areasEvidence={sortedAreasEvidences}
+          adviceEvidence={transformedAdvice}
         />
       </div>
       <div className="border-l pl-8">
-        <EditableTemplateAnalysis />
+        {/* EditableTemplateAnalysis component is missing, replaced with placeholder */}
+        <div className="p-4 border rounded">
+          <h3 className="text-xl font-semibold mb-2">Template Analysis</h3>
+          <p className="text-gray-600">Analysis content would go here.</p>
+        </div>
       </div>
     </div>
   );

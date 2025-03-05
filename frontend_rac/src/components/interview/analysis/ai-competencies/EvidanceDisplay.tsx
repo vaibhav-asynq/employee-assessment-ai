@@ -174,7 +174,7 @@ export function EvidanceDisplay() {
     <Tabs defaultValue="sorted-evidence" className="h-full">
       <div className="sticky top-0 bg-background z-10 pb-4">
         <TabsList className="w-full">
-          <TabsTrigger value="interview-feedback" className="flex-1">Interview Feedback</TabsTrigger>
+          <TabsTrigger value="interview-feedback" className="flex-1">Sorted by stakeholder</TabsTrigger>
           <TabsTrigger value="sorted-evidence" className="flex-1">Sorted Evidence</TabsTrigger>
         </TabsList>
       </div>

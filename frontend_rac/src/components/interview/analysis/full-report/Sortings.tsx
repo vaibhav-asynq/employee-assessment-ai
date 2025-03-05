@@ -180,7 +180,7 @@ export function Sortings(props: Props) {
       </span>
 
       <div className="flex border divide-x ">
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           className={cn("rounded-none", strengthsSorted && "text-green-600")}
@@ -193,9 +193,9 @@ export function Sortings(props: Props) {
               ? sortIndicatorIcons.sorted
               : sortIndicatorIcons.default}
           Sort Strengths
-        </Button>
+        </Button> */}
 
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           className={cn("rounded-none", areasSorted && "text-green-600")}
@@ -208,7 +208,7 @@ export function Sortings(props: Props) {
               ? sortIndicatorIcons.sorted
               : sortIndicatorIcons.default}
           Sort Areas
-        </Button>
+        </Button> */}
 
         <Button
           variant="ghost"
@@ -225,7 +225,7 @@ export function Sortings(props: Props) {
             : allSorted
               ? sortIndicatorIcons.sorted
               : sortIndicatorIcons.default}
-          Sort Both
+          Sort by Competency
         </Button>
       </div>
     </div>

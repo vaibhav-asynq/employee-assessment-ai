@@ -14,7 +14,7 @@ export function InterviewAnalysis() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                RAC Copilet
+                RAC Copilot
               </h1>
               {user && (
                 <p className="text-sm text-gray-600 mt-1">
