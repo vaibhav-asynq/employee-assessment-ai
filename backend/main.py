@@ -35,6 +35,10 @@ from cache_manager import (
     save_cached_data
 )
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Initialize license object
 license = aw.License()
 
