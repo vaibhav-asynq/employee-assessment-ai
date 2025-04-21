@@ -1,15 +1,28 @@
 import axios from "axios";
 import { NextStep } from "./types";
-import { AdviceData } from "./types/types.interview-data";
 import { useAuthStore } from "@/zustand/store/authStore";
 
 //TODO: use other specified types in the types folder
-const API_URL = "http://34.202.149.23:8000";
+// const API_URL = "http://34.202.149.23:8000";
+const API_URL = "http://localhost:8000";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 // Add request interceptor to add username to requests
 api.interceptors.request.use(
@@ -20,7 +33,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 export interface FeedbackEvidence {
@@ -70,7 +83,7 @@ export const login = async (username: string, password: string) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
-  
+
   return response.data;
 };
 
@@ -78,7 +91,7 @@ export const getCurrentUser = async () => {
   const { user } = useAuthStore.getState();
   if (user) {
     const response = await api.get(`/api/users/me`, {
-      headers: { username: user.username }
+      headers: { username: user.username },
     });
     return response.data;
   }
@@ -89,51 +102,63 @@ export const getCurrentUser = async () => {
 export const uploadFile = async (file: File, useCache: boolean = true) => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await api.post(`/api/upload_file?use_cache=${useCache}`, formData);
+  const response = await api.post(
+    `/api/upload_file?use_cache=${useCache}`,
+    formData,
+  );
   return response.data.file_id;
 };
 
-export const generateReport = async (fileId: string, useCache: boolean = true) => {
-  const response = await api.get(`/api/generate_report/${fileId}?use_cache=${useCache}`);
+export const generateReport = async (
+  fileId: string,
+  useCache: boolean = true,
+) => {
+  const response = await api.get(
+    `/api/generate_report/${fileId}?use_cache=${useCache}`,
+  );
   return response.data;
 };
 
 export const getFeedback = async (fileId: string, useCache: boolean = true) => {
-  const response = await api.get(`/api/get_feedback/${fileId}?use_cache=${useCache}`);
+  const response = await api.get(
+    `/api/get_feedback/${fileId}?use_cache=${useCache}`,
+  );
   return response.data;
 };
 
 export const getAdvice = async (fileId: string, useCache: boolean = true) => {
-  const response = await api.get(`/api/get_advice/${fileId}?use_cache=${useCache}`);
+  const response = await api.get(
+    `/api/get_advice/${fileId}?use_cache=${useCache}`,
+  );
   return response.data;
 };
 
 export const getRawData = async (fileId: string, useCache: boolean = true) => {
-  const response = await api.get(`/api/get_raw_data/${fileId}?use_cache=${useCache}`);
+  const response = await api.get(
+    `/api/get_raw_data/${fileId}?use_cache=${useCache}`,
+  );
   return response.data;
 };
 
 export const getStrengthEvidences = async (
   fileId: string,
   numCompetencies: number,
-  useCache: boolean = true
+  useCache: boolean = true,
 ): Promise<StrengthEvidences> => {
-  const response = await api.get(
-    `/api/get_strength_evidences/${fileId}`,
-    { params: { numCompetencies, use_cache: useCache } }
-  );
+  const response = await api.get(`/api/get_strength_evidences/${fileId}`, {
+    params: { numCompetencies, use_cache: useCache },
+  });
   return response.data;
 };
 
 export const getDevelopmentAreas = async (
   fileId: string,
   numCompetencies: number,
-  useCache: boolean = true
+  useCache: boolean = true,
 ): Promise<DevelopmentAreas> => {
-  const response = await api.get(
-    `/api/get_development_areas/${fileId}`,
-    { params: { numCompetencies, use_cache: useCache } }
-  );
+  const response = await api.get(`/api/get_development_areas/${fileId}`, {
+    params: { numCompetencies, use_cache: useCache },
+  });
   return response.data;
 };
 
@@ -156,7 +181,7 @@ export const uploadUpdatedReport = async (file: File) => {
   formData.append("file", file);
   const response = await api.post(`/api/upload_updated_report`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
   return response.data;
@@ -167,14 +192,11 @@ export const generateStrengthContent = async (
   fileId: string,
   existingContent: string,
 ): Promise<string> => {
-  const response = await api.post(
-    `/api/generate_strength_content`,
-    {
-      heading,
-      file_id: fileId,
-      existing_content: existingContent,
-    },
-  );
+  const response = await api.post(`/api/generate_strength_content`, {
+    heading,
+    file_id: fileId,
+    existing_content: existingContent,
+  });
   return response.data.content;
 };
 

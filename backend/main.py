@@ -1,41 +1,40 @@
 # main.py
+import json
+import os
 import traceback
-from fastapi import FastAPI, UploadFile, HTTPException, Depends, status, Response, Query, Header
+import uuid
+from datetime import datetime, timedelta
 from io import BytesIO
+from typing import Any, Dict, List, Optional, Union
+
+import anthropic
+import aspose.words as aw
+from cache_manager import (add_to_filename_map, get_cached_data,
+                           get_cached_file_id, save_cached_data)
+from docx import Document
+from docx.shared import Inches
+from dotenv import load_dotenv
+from fastapi import (Depends, FastAPI, Header, HTTPException, Query, Response,
+                     UploadFile, status)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from typing import Union, List, Dict, Optional, Any
-import anthropic
-import uuid
-import os
-from docx import Document
-from docx.shared import Inches
-import json
-from process_pdf import AssessmentProcessor
-from generate_report_llm import read_file_content, transform_content_to_report_format, process_prompts, extract_employee_info
-from report_generation import create_360_feedback_report, create_360_feedback_report_for_word
-from generate_raw_data import get_raw_data,get_strengths_data,get_areas_to_target_data
-import aspose.words as aw
-from prompt_loader import (
-    format_reflection_points_prompt,
-    format_next_steps_prompt,
-    format_area_content_prompt,
-    format_strength_content_prompt,
-    load_prompt
-)
-from datetime import datetime, timedelta
+from generate_raw_data import (get_areas_to_target_data, get_raw_data,
+                               get_strengths_data)
+from generate_report_llm import (extract_employee_info, process_prompts,
+                                 read_file_content,
+                                 transform_content_to_report_format)
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from cache_manager import (
-    get_cached_file_id,
-    add_to_filename_map,
-    get_cached_data,
-    save_cached_data
-)
-
-from dotenv import load_dotenv
+from process_pdf import AssessmentProcessor
+from prompt_loader import (format_area_content_prompt,
+                           format_next_steps_prompt,
+                           format_reflection_points_prompt,
+                           format_strength_content_prompt, load_prompt)
+from pydantic import BaseModel
+from report_generation import (create_360_feedback_report,
+                               create_360_feedback_report_for_word)
+from utils.jwt_utils import verify_clerk_token
 
 load_dotenv()
 
@@ -56,7 +55,6 @@ if not api_key:
 assessment_processor = AssessmentProcessor(api_key)
 
 
-
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -65,19 +63,16 @@ class User(BaseModel):
     username: str
     hashed_password: str
 
+
 # Simple authentication response
 class AuthResponse(BaseModel):
     success: bool
     username: str
 
+
 # User database (in-memory for simplicity)
 # In a production environment, this would be a database
-users_db = {
-    "Tom": {
-        "username": "Tom",
-        "hashed_password": pwd_context.hash("Tom@1234")
-    }
-}
+users_db = {"Tom": {"username": "Tom", "hashed_password": pwd_context.hash("Tom@1234")}}
 
 # Track authenticated users (in-memory for simplicity)
 authenticated_users = set()
@@ -86,11 +81,13 @@ authenticated_users = set()
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_user(username: str):
     if username in users_db:
         user_dict = users_db[username]
         return User(**user_dict)
     return None
+
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
@@ -100,21 +97,39 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
+
 # Simple authentication check
-async def get_current_user(username: str = Header(None)):
-    if not username or username not in authenticated_users:
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            status_code=401, detail="Missing or invalid Authorization header"
         )
-    return get_user(username)
+
+    token = authorization.split("Bearer ")[1]
+    user_claims = verify_clerk_token(token)
+    user_id = user_claims.get("sub")
+    if not user_id:
+        user_id = (
+            user_claims.get("id")
+            or user_claims.get("user_id")
+            or user_claims.get("userId")
+        )
+    if user_id:
+        user_claims["user_id"] = user_id
+        return user_claims
+    return user_claims
+
 
 app = FastAPI()
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000","https://ff2c-34-202-149-23.ngrok-free.app","http://34.202.149.23:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://ff2c-34-202-149-23.ngrok-free.app",
+        "http://34.202.149.23:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -129,11 +144,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    
+
     # Add user to authenticated users
     authenticated_users.add(user.username)
-    
+
     return {"success": True, "username": user.username}
+
 
 @app.get("/api/users/me")
 async def read_users_me(username: str = Header(None)):
@@ -143,6 +159,7 @@ async def read_users_me(username: str = Header(None)):
             detail="Not authenticated",
         )
     return {"username": username}
+
 
 # Create uploads directory if it doesn't exist
 UPLOAD_DIR = "../data/uploads"
@@ -159,6 +176,7 @@ class NextStepPoint(BaseModel):
     main: str
     sub_points: List[str]
 
+
 class InterviewAnalysis(BaseModel):
     name: str
     date: str
@@ -166,37 +184,48 @@ class InterviewAnalysis(BaseModel):
     areas_to_target: Dict[str, str]
     next_steps: List[Union[str, NextStepPoint]]
 
+
 class GenerateContentRequest(BaseModel):
     heading: str
     file_id: str
     existing_content: Optional[str] = None
+
 
 class GenerateNextStepsRequest(BaseModel):
     areas_to_target: Dict[str, str]
     file_id: str
     executive_transcript: Optional[str] = None
 
+
 class SortEvidenceRequest(BaseModel):
     file_id: str
     headings: List[str]
 
+
 def get_name_from_report(file_id: str) -> str:
     report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
     if not os.path.exists(report_file_path):
-        raise HTTPException(status_code=404, detail="Report not found. Please generate the report first.")
-    
-    with open(report_file_path, 'r') as f:
+        raise HTTPException(
+            status_code=404,
+            detail="Report not found. Please generate the report first.",
+        )
+
+    with open(report_file_path, "r") as f:
         report_data = json.load(f)
-    return report_data.get('name', '')
+    return report_data.get("name", "")
+
 
 # Store uploaded files and their analysis
 files_store = {}
 
+
 @app.post("/api/upload_file")
 async def upload_file(
-    file: UploadFile, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file: UploadFile,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check if we have this file cached
@@ -211,44 +240,47 @@ async def upload_file(
                     if cached_file_id not in files_store:
                         files_store[cached_file_id] = {
                             "file_path": file_path,
-                            "original_name": file.filename
+                            "original_name": file.filename,
                         }
                     return {"file_id": cached_file_id}
-        
+
         # If not cached or cache disabled, process normally
         file_id = str(uuid.uuid4())
         file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
-        
+
         # Save file to disk
         with open(file_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        
+
         # Process the file
-        stakeholder_feedback, executive_interview = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
-        
+        (
+            stakeholder_feedback,
+            executive_interview,
+        ) = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+
         # Store file info
-        files_store[file_id] = {
-            "file_path": file_path,
-            "original_name": file.filename
-        }
-        
+        files_store[file_id] = {"file_path": file_path, "original_name": file.filename}
+
         # Add to cache mapping
         add_to_filename_map(file.filename, file_id)
-        
+
         return {"file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/generate_report/{file_id}")
 async def generate_report(
-    file_id: str, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     if file_id not in files_store:
         raise HTTPException(status_code=404, detail="File not found")
-    
+
     try:
         # Check cache first
         if use_cache:
@@ -256,43 +288,48 @@ async def generate_report(
             if cached_data:
                 print(f"Using cached report for file ID {file_id}")
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
-        self_transcript = SAVE_DIR+"/executive_"+file_id+".txt"
-        others_transcript = SAVE_DIR+"/filtered_"+file_id+".txt"
+        self_transcript = SAVE_DIR + "/executive_" + file_id + ".txt"
+        others_transcript = SAVE_DIR + "/filtered_" + file_id + ".txt"
 
         feedback_content = read_file_content(others_transcript)
         executive_interview = read_file_content(self_transcript)
 
         system_prompt = ""
 
-        results = await process_prompts(feedback_content, executive_interview, api_key, system_prompt)
-        name_data = extract_employee_info(UPLOAD_DIR+"/"+file_id+".pdf", api_key)
+        results = await process_prompts(
+            feedback_content, executive_interview, api_key, system_prompt
+        )
+        name_data = extract_employee_info(UPLOAD_DIR + "/" + file_id + ".pdf", api_key)
 
-        employee_name = name_data.get('employee_name',"")
-        report_date = name_data.get('report_date',"")
-        
-        formatted_data = transform_content_to_report_format(results, employee_name, report_date)
+        employee_name = name_data.get("employee_name", "")
+        report_date = name_data.get("report_date", "")
+
+        formatted_data = transform_content_to_report_format(
+            results, employee_name, report_date
+        )
 
         # Save the formatted data to a file
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
-        with open(report_file_path, 'w') as f:
+        with open(report_file_path, "w") as f:
             json.dump(formatted_data, f)
-        
+
         # Save to cache
         save_cached_data("reports", file_id, formatted_data)
-        
+
         return formatted_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 @app.get("/api/get_raw_data/{file_id}")
 async def get_raw_data_endpoint(
-    file_id: str, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -301,47 +338,51 @@ async def get_raw_data_endpoint(
             if cached_data:
                 print(f"Using cached raw data for file ID {file_id}")
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
         # Load the generated report
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")
         if not os.path.exists(report_file_path):
-            raise HTTPException(status_code=404, detail="Report not found. Please generate the report first.")
-        
-        with open(report_file_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail="Report not found. Please generate the report first.",
+            )
+
+        with open(report_file_path, "r") as f:
             report_data = json.load(f)
-        
+
         # Get the transcript
         transcript_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(transcript_path):
             raise HTTPException(status_code=404, detail="Transcript not found.")
-        
-        with open(transcript_path, 'r') as f:
+
+        with open(transcript_path, "r") as f:
             transcript = f.read()
-        
+
         # Extract strengths and areas_to_target from the report data
-        strengths = report_data.get('strengths', {})
-        areas_to_target = report_data.get('areas_to_target', {})
-        
+        strengths = report_data.get("strengths", {})
+        areas_to_target = report_data.get("areas_to_target", {})
+
         # Get raw data
         # For strengths analysis
         strengths_data = get_strengths_data(transcript, strengths, api_key)
 
         # For areas to target analysis
         areas_data = get_areas_to_target_data(transcript, areas_to_target, api_key)
-        
+
         raw_data = {}
         raw_data.update(strengths_data)
         raw_data.update(areas_data)
-        
+
         # Save to cache
         save_cached_data("raw_data", file_id, raw_data)
-        
+
         return raw_data
-        
+
     except Exception as e:
         print(f"Error in get_raw_data_endpoint: {str(e)}")
         import traceback
+
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -351,27 +392,27 @@ async def get_raw_data_endpoint(
 #     try:
 #         # Create a new Word document
 #         doc = Document()
-        
+
 #         # Add title
 #         doc.add_heading('Interview Analysis Report', 0)
-        
+
 #         # Add basic info
 #         doc.add_heading('Basic Information', level=1)
 #         doc.add_paragraph(f'Name: {analysis.name}')
 #         doc.add_paragraph(f'Date: {analysis.date}')
-        
+
 #         # Add strengths
 #         doc.add_heading('Strengths', level=1)
 #         for title, content in analysis.strengths.items():
 #             doc.add_heading(title, level=2)
 #             doc.add_paragraph(content)
-        
+
 #         # Add areas to target
 #         doc.add_heading('Areas to Target', level=1)
 #         for title, content in analysis.areas_to_target.items():
 #             doc.add_heading(title, level=2)
 #             doc.add_paragraph(content)
-        
+
 #         # Add next steps
 #         doc.add_heading('Next Steps', level=1)
 #         for step in analysis.next_steps:
@@ -382,11 +423,11 @@ async def get_raw_data_endpoint(
 #                 for sub_point in step.sub_points:
 #                     p = doc.add_paragraph(style='List Bullet 2')
 #                     p.add_run(sub_point)
-        
+
 #         # Save the document
 #         output_path = os.path.join(UPLOAD_DIR, "interview_analysis.docx")
 #         doc.save(output_path)
-        
+
 #         # Return the document as a response
 #         return FileResponse(
 #             output_path,
@@ -398,11 +439,13 @@ async def get_raw_data_endpoint(
 
 
 @app.post("/api/dump_word")
-async def generate_word_document(analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)):
+async def generate_word_document(
+    analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)
+):
     try:
         # First generate PDF with Word-optimized bullet points
         output_path = os.path.join(OUTPUT_DIR, "temp.pdf")
-        header_txt = analysis.name + ' - Qualitative 360 Feedback'
+        header_txt = analysis.name + " - Qualitative 360 Feedback"
         create_360_feedback_report_for_word(output_path, analysis, header_txt)
 
         # Convert PDF to DOCX
@@ -414,38 +457,41 @@ async def generate_word_document(analysis: InterviewAnalysis, current_user: User
         return FileResponse(
             docx_path,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            filename="interview_analysis.docx"
+            filename="interview_analysis.docx",
         )
     except Exception as e:
         print(f"Error in generate_word_document: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @app.post("/api/dump_pdf")
-async def generate_pdf_docuement(analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)):
-    output_path = OUTPUT_DIR+"/temp.pdf" 
-    header_txt = analysis.name + ' - Qualitative 360 Feedback'
+async def generate_pdf_docuement(
+    analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)
+):
+    output_path = OUTPUT_DIR + "/temp.pdf"
+    header_txt = analysis.name + " - Qualitative 360 Feedback"
     create_360_feedback_report(output_path, analysis, header_txt)
     return FileResponse(
-            output_path,
-            media_type="application/pdf",
-            filename="interview_analysis.pdf"
-        )
+        output_path, media_type="application/pdf", filename="interview_analysis.pdf"
+    )
+
 
 @app.post("/api/upload_updated_report")
-async def upload_updated_report(file: UploadFile, current_user: User = Depends(get_current_user)):
+async def upload_updated_report(
+    file: UploadFile, current_user: User = Depends(get_current_user)
+):
     try:
         # Validate file type
-        if not file.filename.endswith('.docx'):
+        if not file.filename.endswith(".docx"):
             raise HTTPException(
-                status_code=400,
-                detail="Only Word documents (.docx) are allowed"
+                status_code=400, detail="Only Word documents (.docx) are allowed"
             )
-            
+
         # Read docx content
         content = await file.read()
         doc = Document(BytesIO(content))
         text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
-        
+
         # Use Claude to parse the content
         client = anthropic.Anthropic(api_key=api_key)
         # Load and format prompt
@@ -455,9 +501,9 @@ async def upload_updated_report(file: UploadFile, current_user: User = Depends(g
             model="claude-3-5-sonnet-latest",
             max_tokens=4000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse response with better error handling
         response_text = response.content[0].text
         try:
@@ -466,8 +512,8 @@ async def upload_updated_report(file: UploadFile, current_user: User = Depends(g
         except json.JSONDecodeError:
             # Try to extract JSON if surrounded by other text
             try:
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     parsed_data = json.loads(json_str)
@@ -478,17 +524,15 @@ async def upload_updated_report(file: UploadFile, current_user: User = Depends(g
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
-        
+
         return parsed_data
-        
+
     except Exception as e:
         print(f"Error in upload_updated_report: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
-
-
 
 
 @app.delete("/api/cleanup/{file_id}")
@@ -503,28 +547,32 @@ async def cleanup_file(file_id: str, current_user: User = Depends(get_current_us
     raise HTTPException(status_code=404, detail="File not found")
 
 
-async def generate_reflection_points(feedback_transcript: str, executive_transcript: str) -> dict:
+async def generate_reflection_points(
+    feedback_transcript: str, executive_transcript: str
+) -> dict:
     """Generate reflection points and context summary using both transcripts."""
     try:
         client = anthropic.Anthropic(api_key=api_key)
-        prompt = format_reflection_points_prompt(feedback_transcript, executive_transcript)
-        
+        prompt = format_reflection_points_prompt(
+            feedback_transcript, executive_transcript
+        )
+
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         # Extract JSON from response
         # print(response.content[0].text)
-        response_text = response.content[0].text.replace("\n","").replace("\\","")
+        response_text = response.content[0].text.replace("\n", "").replace("\\", "")
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
             try:
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -534,15 +582,15 @@ async def generate_reflection_points(feedback_transcript: str, executive_transcr
                 print(f"Error parsing reflection points response: {str(e)}")
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
-                    status_code=500,
-                    detail="Failed to parse reflection points response"
+                    status_code=500, detail="Failed to parse reflection points response"
                 )
-        
+
         return result
     except Exception as e:
         print(f"Error generating reflection points: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.options("/api/generate_next_steps")
 async def generate_next_steps_options():
@@ -550,12 +598,15 @@ async def generate_next_steps_options():
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "*",
-        "Access-Control-Allow-Credentials": "true"
+        "Access-Control-Allow-Credentials": "true",
     }
     return Response(content="", headers=headers)
 
+
 @app.post("/api/generate_next_steps")
-async def generate_next_steps(request: dict, current_user: User = Depends(get_current_user)):
+async def generate_next_steps(
+    request: dict, current_user: User = Depends(get_current_user)
+):
     try:
         print("\n=== Generate Next Steps Request ===")
         file_id = request.get("file_id")
@@ -564,33 +615,40 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
             raise HTTPException(status_code=400, detail="file_id is required")
         if not areas_to_target:
             raise HTTPException(status_code=400, detail="areas_to_target is required")
-            
+
         print(f"File ID: {file_id}")
         print(f"Areas to Target: {json.dumps(areas_to_target, indent=2)}")
         print(f"Number of areas: {len(areas_to_target)}")
-        
+
         # Load both transcripts using file ID
         feedback_path = f"../data/processed_assessments/filtered_{file_id}.txt"
         executive_path = f"../data/processed_assessments/executive_{file_id}.txt"
-        
+
         if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
-        
-        with open(feedback_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback transcript not found at {feedback_path}",
+            )
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
-            
+
         executive_transcript = ""
         if os.path.exists(executive_path):
-            with open(executive_path, 'r') as f:
+            with open(executive_path, "r") as f:
                 executive_transcript = f.read()
 
         # Get reflection points first
-        reflection_points = await generate_reflection_points(feedback_transcript, executive_transcript)
+        reflection_points = await generate_reflection_points(
+            feedback_transcript, executive_transcript
+        )
         print("\n=== Reflection Points ===")
         print(json.dumps(reflection_points, indent=2))
-        
+
         # Format areas to target for action steps prompt
-        areas_text = "\n".join([f"{title}: {content}" for title, content in areas_to_target.items()])
+        areas_text = "\n".join(
+            [f"{title}: {content}" for title, content in areas_to_target.items()]
+        )
         print("\n=== Formatted Areas Text ===")
         print(areas_text)
 
@@ -598,16 +656,16 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
         client = anthropic.Anthropic(api_key=api_key)
         name = get_name_from_report(file_id)
         prompt = format_next_steps_prompt(name, areas_text, feedback_transcript)
-        
+
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Extract JSON from response
-        response_text = response.content[0].text.replace("\n","").replace("\\","")
+        response_text = response.content[0].text.replace("\n", "").replace("\\", "")
         print("\n=== Claude Response ===")
         print(response_text)
         try:
@@ -617,8 +675,8 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
             # If that fails, try to extract JSON from the text
             try:
                 # Find JSON-like content between curly braces
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -629,25 +687,25 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
-        
+
         # Ensure the response has the expected structure
-        if 'next_steps' not in result:
-            result = {'next_steps': result}
-            
+        if "next_steps" not in result:
+            result = {"next_steps": result}
+
         # Combine reflection points and action steps
-        if 'reflection_prompts' in reflection_points:
-            prompts = reflection_points['reflection_prompts']
-            result['next_steps'] = [
+        if "reflection_prompts" in reflection_points:
+            prompts = reflection_points["reflection_prompts"]
+            result["next_steps"] = [
                 {
-                    'main': prompts['discussion_prompt'],
-                    'sub_points': prompts['bullet_points']
+                    "main": prompts["discussion_prompt"],
+                    "sub_points": prompts["bullet_points"],
                 },
-                prompts['context_summary'],
-                *result['next_steps']
+                prompts["context_summary"],
+                *result["next_steps"],
             ]
-        
+
         print("\n=== Final Result ===")
         print(json.dumps(result, indent=2))
         return result
@@ -655,33 +713,42 @@ async def generate_next_steps(request: dict, current_user: User = Depends(get_cu
         print(f"Error in generate_next_steps: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 
 @app.post("/api/generate_area_content")
-async def generate_area_content(request: GenerateContentRequest, current_user: User = Depends(get_current_user)):
+async def generate_area_content(
+    request: GenerateContentRequest, current_user: User = Depends(get_current_user)
+):
     try:
-        print(f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content}")
+        print(
+            f"[Area Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content}"
+        )
         # print("Existing content: ",request.existing_content)
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
         if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
-        
-        with open(feedback_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback transcript not found at {feedback_path}",
+            )
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
         name = get_name_from_report(request.file_id)
-        prompt = format_area_content_prompt(name, request.heading, feedback_transcript, request.existing_content)
+        prompt = format_area_content_prompt(
+            name, request.heading, feedback_transcript, request.existing_content
+        )
         print(prompt)
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         return {"content": response.content[0].text}
     except Exception as e:
         print(f"Error in generate_area_content: {str(e)}")
@@ -690,42 +757,46 @@ async def generate_area_content(request: GenerateContentRequest, current_user: U
 
 
 @app.post("/api/sort-strengths-evidence")
-async def sort_strengths_evidence(request: SortEvidenceRequest, current_user: User = Depends(get_current_user)):
+async def sort_strengths_evidence(
+    request: SortEvidenceRequest, current_user: User = Depends(get_current_user)
+):
     try:
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
         if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
-        
-        with open(feedback_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback transcript not found at {feedback_path}",
+            )
+
+        with open(feedback_path, "r") as f:
             transcript = f.read()
 
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
-        
+
         # Load and format prompt
         sort_prompt = load_prompt("sort_evidence_strenght.txt")
         prompt = sort_prompt.format(
-            transcript=transcript,
-            headings="\n".join(request.headings)
+            transcript=transcript, headings="\n".join(request.headings)
         )
-        
+
         # Get sorted evidence from Claude
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse JSON response
         response_text = response.content[0].text
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
             try:
-                start = response_text.find('[')
-                end = response_text.rfind(']') + 1
+                start = response_text.find("[")
+                end = response_text.rfind("]") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -736,14 +807,15 @@ async def sort_strengths_evidence(request: SortEvidenceRequest, current_user: Us
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
-        
+
         return result
     except Exception as e:
         print(f"Error in sort_strengths_evidence: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 def transform_headings(data):
     """
@@ -751,74 +823,80 @@ def transform_headings(data):
     1. Making the first letter uppercase
     2. Making all other letters lowercase
     3. Adding a period at the end of each heading
-    
+
     Args:
         data (dict): The input dictionary with nested headings
-        
+
     Returns:
         dict: The transformed dictionary with modified headings
     """
     if not isinstance(data, dict):
         return data
-    
+
     result = {}
-    
+
     for key, value in data.items():
-        if key == 'evidence':
+        if key == "evidence":
             # This is the evidence list, keep it as is
             result[key] = value
-        elif isinstance(value, dict) and 'evidence' in value:
+        elif isinstance(value, dict) and "evidence" in value:
             # This is a heading with evidence, transform the key
             transformed_key = key[0].upper() + key[1:].lower()
-            transformed_key = transformed_key.replace(".","")
-            transformed_key  = transformed_key + "."
+            transformed_key = transformed_key.replace(".", "")
+            transformed_key = transformed_key + "."
             result[transformed_key] = value
         else:
             # This is another nested dictionary, recursively process it
             result[key] = transform_headings(value)
-    
+
     return result
+
 
 @app.get("/api/get_strength_evidences/{file_id}")
 async def get_strength_evidences(
-    file_id: str, 
-    numCompetencies: int, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    numCompetencies: int,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first with parameters
         if use_cache:
-            cached_data = get_cached_data("strength_evidences", file_id, {"num_competencies": numCompetencies})
+            cached_data = get_cached_data(
+                "strength_evidences", file_id, {"num_competencies": numCompetencies}
+            )
             if cached_data:
-                print(f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies")
+                print(
+                    f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
+                )
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
             raise HTTPException(status_code=404, detail="Feedback transcript not found")
-        
-        with open(feedback_path, 'r') as f:
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Load and format prompt
         strength_prompt = load_prompt("strength_evidences_categorized.txt")
         prompt = strength_prompt.format(
-            feedback=feedback_transcript,
-            num_competencies=numCompetencies
+            feedback=feedback_transcript, num_competencies=numCompetencies
         )
-        
+
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=3000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse JSON response
         response_text = response.content[0].text
         try:
@@ -826,8 +904,8 @@ async def get_strength_evidences(
         except json.JSONDecodeError:
             try:
                 # Find JSON-like content between curly braces
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -838,23 +916,28 @@ async def get_strength_evidences(
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
         result = transform_headings(result)
         # Save to cache with parameters
-        save_cached_data("strength_evidences", file_id, result, {"num_competencies": numCompetencies})
-        
+        save_cached_data(
+            "strength_evidences", file_id, result, {"num_competencies": numCompetencies}
+        )
+
         return result
     except Exception as e:
         print(f"Error in get_strength_evidences: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/get_advice/{file_id}")
 async def get_advice(
-    file_id: str, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -863,29 +946,29 @@ async def get_advice(
             if cached_data:
                 print(f"Using cached advice for file ID {file_id}")
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
             raise HTTPException(status_code=404, detail="Feedback transcript not found")
-        
-        with open(feedback_path, 'r') as f:
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Load and format prompt
         advice_prompt = load_prompt("advice.txt")
         prompt = advice_prompt.format(feedback=feedback_transcript)
-        
+
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=3000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse JSON response
         response_text = response.content[0].text
         try:
@@ -893,8 +976,8 @@ async def get_advice(
         except json.JSONDecodeError:
             try:
                 # Find JSON-like content between curly braces
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -905,23 +988,26 @@ async def get_advice(
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
-        
+
         # Save to cache
         save_cached_data("advice", file_id, result)
-        
+
         return result
     except Exception as e:
         print(f"Error in get_advice: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/get_feedback/{file_id}")
 async def get_feedback(
-    file_id: str, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -930,132 +1016,147 @@ async def get_feedback(
             if cached_data:
                 print(f"Using cached feedback for file ID {file_id}")
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
             print(feedback_path)
             raise HTTPException(status_code=404, detail="Feedback transcript not found")
-        
-        with open(feedback_path, 'r') as f:
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Load and format prompts
         strengths_prompt = load_prompt("feedback_strengths.txt")
         areas_prompt = load_prompt("feedback_areas.txt")
-        
+
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
-        
+
         # Get strengths analysis
         strengths_response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=3000,
             temperature=0,
-            messages=[{"role": "user", "content": strengths_prompt.format(feedback=feedback_transcript)}]
+            messages=[
+                {
+                    "role": "user",
+                    "content": strengths_prompt.format(feedback=feedback_transcript),
+                }
+            ],
         )
-        
+
         # Get areas analysis
         areas_response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=3000,
             temperature=0,
-            messages=[{"role": "user", "content": areas_prompt.format(feedback=feedback_transcript)}]
+            messages=[
+                {
+                    "role": "user",
+                    "content": areas_prompt.format(feedback=feedback_transcript),
+                }
+            ],
         )
-        
+
         # Parse JSON responses
         try:
             strengths_text = strengths_response.content[0].text
             areas_text = areas_response.content[0].text
-            
+
             # Extract JSON from strengths response
             try:
                 strengths_data = json.loads(strengths_text)
             except json.JSONDecodeError:
-                start = strengths_text.find('{')
-                end = strengths_text.rfind('}') + 1
+                start = strengths_text.find("{")
+                end = strengths_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     strengths_data = json.loads(strengths_text[start:end])
                 else:
                     raise ValueError("No JSON content found in strengths response")
-            
+
             # Extract JSON from areas response
             try:
                 areas_data = json.loads(areas_text)
             except json.JSONDecodeError:
-                start = areas_text.find('{')
-                end = areas_text.rfind('}') + 1
+                start = areas_text.find("{")
+                end = areas_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     areas_data = json.loads(areas_text[start:end])
                 else:
                     raise ValueError("No JSON content found in areas response")
-            
+
             # Combine results
             result = {
                 "strengths": strengths_data.get("strengths", {}),
-                "areas_to_target": areas_data.get("areas_to_target", {})
+                "areas_to_target": areas_data.get("areas_to_target", {}),
             }
-            
+
             # Save to cache
             save_cached_data("feedback", file_id, result)
-            
+
             return result
-            
+
         except Exception as e:
             print(f"Error parsing responses: {str(e)}")
             print(f"Strengths response: {strengths_text}")
             print(f"Areas response: {areas_text}")
             raise HTTPException(
-                status_code=500,
-                detail="Failed to parse AI responses into valid JSON"
+                status_code=500, detail="Failed to parse AI responses into valid JSON"
             )
-        
+
     except Exception as e:
         print(f"Error in get_feedback: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/get_development_areas/{file_id}")
 async def get_development_areas(
-    file_id: str, 
-    numCompetencies: int, 
-    use_cache: bool = Query(True, description="Whether to use cached results if available"),
-    current_user: User = Depends(get_current_user)
+    file_id: str,
+    numCompetencies: int,
+    use_cache: bool = Query(
+        True, description="Whether to use cached results if available"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first with parameters
         if use_cache:
-            cached_data = get_cached_data("development_areas", file_id, {"num_competencies": numCompetencies})
+            cached_data = get_cached_data(
+                "development_areas", file_id, {"num_competencies": numCompetencies}
+            )
             if cached_data:
-                print(f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies")
+                print(
+                    f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies"
+                )
                 return cached_data
-        
+
         # If not cached or cache disabled, process normally
         # Get the feedback transcript
         feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
         if not os.path.exists(feedback_path):
             raise HTTPException(status_code=404, detail="Feedback transcript not found")
-        
-        with open(feedback_path, 'r') as f:
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Load and format prompt
         development_prompt = load_prompt("development_areas_categorized.txt")
         prompt = development_prompt.format(
-            feedback=feedback_transcript,
-            num_competencies=numCompetencies
+            feedback=feedback_transcript, num_competencies=numCompetencies
         )
-        
+
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=3000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse JSON response
         response_text = response.content[0].text
         try:
@@ -1063,8 +1164,8 @@ async def get_development_areas(
         except json.JSONDecodeError:
             try:
                 # Find JSON-like content between curly braces
-                start = response_text.find('{')
-                end = response_text.rfind('}') + 1
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -1075,56 +1176,63 @@ async def get_development_areas(
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
         result = transform_headings(result)
-        
+
         # Save to cache with parameters
-        save_cached_data("development_areas", file_id, result, {"num_competencies": numCompetencies})
-        
+        save_cached_data(
+            "development_areas", file_id, result, {"num_competencies": numCompetencies}
+        )
+
         return result
     except Exception as e:
         print(f"Error in get_development_areas: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/sort-areas-evidence")
-async def sort_areas_evidence(request: SortEvidenceRequest, current_user: User = Depends(get_current_user)):
+async def sort_areas_evidence(
+    request: SortEvidenceRequest, current_user: User = Depends(get_current_user)
+):
     try:
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
         if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
-        
-        with open(feedback_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback transcript not found at {feedback_path}",
+            )
+
+        with open(feedback_path, "r") as f:
             transcript = f.read()
 
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
-        
+
         # Load and format prompt
         sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
         prompt = sort_prompt.format(
-            transcript=transcript,
-            headings="\n".join(request.headings)
+            transcript=transcript, headings="\n".join(request.headings)
         )
-        
+
         # Get sorted evidence from Claude
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=2000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Parse JSON response
         response_text = response.content[0].text
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
             try:
-                start = response_text.find('[')
-                end = response_text.rfind(']') + 1
+                start = response_text.find("[")
+                end = response_text.rfind("]") + 1
                 if start >= 0 and end > 0:
                     json_str = response_text[start:end]
                     result = json.loads(json_str)
@@ -1135,14 +1243,15 @@ async def sort_areas_evidence(request: SortEvidenceRequest, current_user: User =
                 print(f"Raw response: {response_text}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to parse AI response into valid JSON"
+                    detail="Failed to parse AI response into valid JSON",
                 )
-        
+
         return result
     except Exception as e:
         print(f"Error in sort_areas_evidence: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.options("/api/excel")
 async def excel_options():
@@ -1150,55 +1259,66 @@ async def excel_options():
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "*",
-        "Access-Control-Allow-Credentials": "true"
+        "Access-Control-Allow-Credentials": "true",
     }
     return Response(content="", headers=headers)
+
 
 @app.get("/api/excel")
 async def get_excel_file(current_user: User = Depends(get_current_user)):
     file_path = "../Developmental Suggestions & Resources.xlsx"
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Excel file not found")
-    
+
     with open(file_path, "rb") as f:
         content = f.read()
-    
+
     headers = {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": "attachment; filename=Developmental Suggestions & Resources.xlsx",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "*",
-        "Access-Control-Allow-Credentials": "true"
+        "Access-Control-Allow-Credentials": "true",
     }
-    
+
     return Response(content=content, headers=headers)
 
+
 @app.post("/api/generate_strength_content")
-async def generate_strength_content(request: GenerateContentRequest, current_user: User = Depends(get_current_user)):
+async def generate_strength_content(
+    request: GenerateContentRequest, current_user: User = Depends(get_current_user)
+):
     try:
-        print(f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}")
-        
+        print(
+            f"[Strength Content] Received request - heading: '{request.heading}', file_id: {request.file_id}, has_existing_content: {request.existing_content is not None}"
+        )
+
         # Load transcript using file ID
         feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
         if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail=f"Feedback transcript not found at {feedback_path}")
-        
-        with open(feedback_path, 'r') as f:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feedback transcript not found at {feedback_path}",
+            )
+
+        with open(feedback_path, "r") as f:
             feedback_transcript = f.read()
 
         # Generate content using Claude
         client = anthropic.Anthropic(api_key=api_key)
         name = get_name_from_report(request.file_id)
-        prompt = format_strength_content_prompt(name, request.heading, feedback_transcript, request.existing_content)
-        
+        prompt = format_strength_content_prompt(
+            name, request.heading, feedback_transcript, request.existing_content
+        )
+
         response = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=1000,
             temperature=0,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         return {"content": response.content[0].text}
     except Exception as e:
         print(f"Error in generate_strength_content: {str(e)}")

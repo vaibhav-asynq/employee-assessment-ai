@@ -2041,3 +2041,75 @@
 2025-03-05 18:35:36,761 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-03-05 18:37:05,357 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-03-05 18:37:22,287 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 17:23:13,890 - INFO - Starting assessment processing for: 2123fd96-a64d-4ec5-b3cd-b4edeb0a191e
+2025-04-21 17:23:13,893 - INFO - Processing PDF with 16 pages
+2025-04-21 17:23:13,945 - INFO - Processed 10 of 16 pages
+2025-04-21 17:23:13,971 - INFO - Total chunks to process: 2
+2025-04-21 17:23:13,971 - INFO - Processing chunk 1/2
+2025-04-21 17:23:14,686 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:23:14,687 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:23:14,688 - ERROR - Error processing assessment ../data/uploads/2123fd96-a64d-4ec5-b3cd-b4edeb0a191e.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:01,199 - INFO - Starting assessment processing for: c5ba92f3-214a-407b-9da3-8eb37fd05486
+2025-04-21 17:53:01,201 - INFO - Processing PDF with 16 pages
+2025-04-21 17:53:01,251 - INFO - Processed 10 of 16 pages
+2025-04-21 17:53:01,276 - INFO - Total chunks to process: 2
+2025-04-21 17:53:01,276 - INFO - Processing chunk 1/2
+2025-04-21 17:53:02,077 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:53:02,078 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:02,078 - ERROR - Error processing assessment ../data/uploads/c5ba92f3-214a-407b-9da3-8eb37fd05486.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:55,655 - INFO - Starting assessment processing for: 076f3af8-8bfe-479f-bec4-ea38f73172a3
+2025-04-21 17:53:55,657 - INFO - Processing PDF with 16 pages
+2025-04-21 17:53:55,710 - INFO - Processed 10 of 16 pages
+2025-04-21 17:53:55,737 - INFO - Total chunks to process: 2
+2025-04-21 17:53:55,737 - INFO - Processing chunk 1/2
+2025-04-21 17:53:56,328 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:53:56,328 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:56,329 - ERROR - Error processing assessment ../data/uploads/076f3af8-8bfe-479f-bec4-ea38f73172a3.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:07:21,035 - INFO - Starting assessment processing for: 46722e53-6d75-4cc8-ae76-0edf113ee47a
+2025-04-21 18:07:21,040 - INFO - Processing PDF with 16 pages
+2025-04-21 18:07:21,089 - INFO - Processed 10 of 16 pages
+2025-04-21 18:07:21,116 - INFO - Total chunks to process: 2
+2025-04-21 18:07:21,116 - INFO - Processing chunk 1/2
+2025-04-21 18:07:21,829 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:07:21,830 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:07:21,830 - ERROR - Error processing assessment ../data/uploads/46722e53-6d75-4cc8-ae76-0edf113ee47a.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:12,546 - INFO - Starting assessment processing for: cc167938-595a-485f-910a-56b86489c780
+2025-04-21 18:09:12,549 - INFO - Processing PDF with 16 pages
+2025-04-21 18:09:12,609 - INFO - Processed 10 of 16 pages
+2025-04-21 18:09:12,636 - INFO - Total chunks to process: 2
+2025-04-21 18:09:12,636 - INFO - Processing chunk 1/2
+2025-04-21 18:09:13,273 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:09:13,275 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:13,275 - ERROR - Error processing assessment ../data/uploads/cc167938-595a-485f-910a-56b86489c780.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:15,537 - INFO - Starting assessment processing for: 9044c2ac-8f5a-4b43-a273-a652bd4d639b
+2025-04-21 18:09:15,540 - INFO - Processing PDF with 16 pages
+2025-04-21 18:09:15,592 - INFO - Processed 10 of 16 pages
+2025-04-21 18:09:15,625 - INFO - Total chunks to process: 2
+2025-04-21 18:09:15,625 - INFO - Processing chunk 1/2
+2025-04-21 18:09:16,081 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:09:16,082 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:16,083 - ERROR - Error processing assessment ../data/uploads/9044c2ac-8f5a-4b43-a273-a652bd4d639b.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:13:48,739 - INFO - Starting assessment processing for: 9b7039cb-32d4-4667-8b4f-bd1698678b25
+2025-04-21 18:13:48,745 - INFO - Processing PDF with 16 pages
+2025-04-21 18:13:48,796 - INFO - Processed 10 of 16 pages
+2025-04-21 18:13:48,825 - INFO - Total chunks to process: 2
+2025-04-21 18:13:48,825 - INFO - Processing chunk 1/2
+2025-04-21 18:13:49,428 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:13:49,429 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:13:49,429 - ERROR - Error processing assessment ../data/uploads/9b7039cb-32d4-4667-8b4f-bd1698678b25.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:13:11,534 - INFO - Starting assessment processing for: e203de1f-9cf7-4654-a961-fb6849e49349
+2025-04-21 19:13:11,536 - INFO - Processing PDF with 16 pages
+2025-04-21 19:13:11,586 - INFO - Processed 10 of 16 pages
+2025-04-21 19:13:11,614 - INFO - Total chunks to process: 2
+2025-04-21 19:13:11,614 - INFO - Processing chunk 1/2
+2025-04-21 19:13:12,457 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 19:13:12,461 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:13:12,461 - ERROR - Error processing assessment ../data/uploads/e203de1f-9cf7-4654-a961-fb6849e49349.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:28:14,092 - INFO - Starting assessment processing for: cbcdbc91-b6ab-4bcb-9dd5-7765a7f35a19
+2025-04-21 19:28:14,094 - INFO - Processing PDF with 16 pages
+2025-04-21 19:28:14,146 - INFO - Processed 10 of 16 pages
+2025-04-21 19:28:14,172 - INFO - Total chunks to process: 2
+2025-04-21 19:28:14,172 - INFO - Processing chunk 1/2
+2025-04-21 19:28:14,857 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 19:28:14,862 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:28:14,863 - ERROR - Error processing assessment ../data/uploads/cbcdbc91-b6ab-4bcb-9dd5-7765a7f35a19.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}

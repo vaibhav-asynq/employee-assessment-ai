@@ -2,12 +2,16 @@
 //INFO: in this file wrap with Providers that needs in whole app
 import { ClerkProvider } from "@clerk/nextjs";
 import { Suspense } from "react";
+import { ClerkAuthSync } from "../auth/ClerkAuthSync";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Suspense fallback={<Skeleton />}>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <ClerkAuthSync />
+          {children}
+        </ClerkProvider>
       </Suspense>
     </>
   );
