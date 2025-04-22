@@ -2113,3 +2113,70 @@
 2025-04-21 19:28:14,857 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
 2025-04-21 19:28:14,862 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
 2025-04-21 19:28:14,863 - ERROR - Error processing assessment ../data/uploads/cbcdbc91-b6ab-4bcb-9dd5-7765a7f35a19.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:10:56,967 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/zaman/Drive/Work/Asynq/employee-assessment-ai/backend/venv/lib/python3.10/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-21 21:10:58,046 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/zaman/Drive/Work/Asynq/employee-assessment-ai/backend/venv/lib/python3.10/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-21 21:34:33,474 - INFO - Starting assessment processing for: 3a889360-ef82-4c45-b222-57d64ba3cf86
+2025-04-21 21:34:33,479 - INFO - Processing PDF with 16 pages
+2025-04-21 21:34:33,536 - INFO - Processed 10 of 16 pages
+2025-04-21 21:34:33,562 - INFO - Total chunks to process: 2
+2025-04-21 21:34:33,562 - INFO - Processing chunk 1/2
+2025-04-21 21:34:34,378 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 21:34:34,381 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:34:34,382 - ERROR - Error processing assessment ../data/uploads/3a889360-ef82-4c45-b222-57d64ba3cf86.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:42:22,717 - INFO - Starting assessment processing for: 36590671-bc76-4939-a5b1-75fe32517ea3
+2025-04-21 21:42:22,720 - INFO - Processing PDF with 16 pages
+2025-04-21 21:42:22,778 - INFO - Processed 10 of 16 pages
+2025-04-21 21:42:22,808 - INFO - Total chunks to process: 2
+2025-04-21 21:42:22,808 - INFO - Processing chunk 1/2
+2025-04-21 21:42:53,746 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:01,638 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:01,639 - INFO - Processing chunk 2/2
+2025-04-21 21:43:32,086 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:41,337 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:41,364 - INFO - Executive interview saved to: ../data/processed_assessments/executive_36590671-bc76-4939-a5b1-75fe32517ea3.txt
+2025-04-21 21:43:41,364 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_36590671-bc76-4939-a5b1-75fe32517ea3.txt
+2025-04-21 21:43:51,316 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:44:06,614 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:44:16,389 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:14,367 - INFO - Starting assessment processing for: 41083cd6-11aa-4a8f-8862-4cf5314a0218
+2025-04-22 15:18:14,371 - INFO - Processing PDF with 16 pages
+2025-04-22 15:18:14,429 - INFO - Processed 10 of 16 pages
+2025-04-22 15:18:14,457 - INFO - Total chunks to process: 2
+2025-04-22 15:18:14,457 - INFO - Processing chunk 1/2
+2025-04-22 15:18:30,979 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:39,764 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:39,765 - INFO - Processing chunk 2/2
+2025-04-22 15:19:06,604 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:13,524 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:13,527 - INFO - Executive interview saved to: ../data/processed_assessments/executive_41083cd6-11aa-4a8f-8862-4cf5314a0218.txt
+2025-04-22 15:19:13,527 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_41083cd6-11aa-4a8f-8862-4cf5314a0218.txt
+2025-04-22 15:19:21,500 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:31,810 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:39,930 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 17:19:33,699 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 17:19:43,054 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:05,758 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:13,343 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:31,667 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:48,394 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:56,134 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:04,077 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:10,379 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:18,720 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:35,653 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:50,541 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:04,664 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:13,469 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:20,188 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:28,607 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:40,636 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:47,559 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:49,784 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"

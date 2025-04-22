@@ -1,4 +1,3 @@
-# main.py
 import json
 import os
 import traceback
@@ -9,6 +8,8 @@ from typing import Any, Dict, List, Optional, Union
 
 import anthropic
 import aspose.words as aw
+import env_variables
+import uvicorn
 from cache_manager import (add_to_filename_map, get_cached_data,
                            get_cached_file_id, save_cached_data)
 from docx import Document
@@ -34,9 +35,12 @@ from prompt_loader import (format_area_content_prompt,
 from pydantic import BaseModel
 from report_generation import (create_360_feedback_report,
                                create_360_feedback_report_for_word)
+from routers.file import router as file_routers
+from routers.feedback import router as feedback_routers
+from routers.advice import router as advice_routers
 from utils.jwt_utils import verify_clerk_token
-
-load_dotenv()
+from utils.postgreSql_uitls import get_db_connection
+from utils.validate_envs import validate_required_env
 
 # Initialize license object
 license = aw.License()
@@ -49,9 +53,7 @@ try:
 except Exception as e:
     print(f"Error setting license: {str(e)}")
 
-api_key = os.getenv("ANTHROPIC_API_KEY")
-if not api_key:
-    raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+api_key = env_variables.ANTHROPIC_API_KEY
 assessment_processor = AssessmentProcessor(api_key)
 
 
@@ -1324,3 +1326,17 @@ async def generate_strength_content(
         print(f"Error in generate_strength_content: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+
+app.include_router(file_routers)
+app.include_router(feedback_routers)
+app.include_router(advice_routers)
+
+if __name__ == "__main__":
+    validate_required_env()
+    conn = get_db_connection()
+
+    # Start the API server
+    uvicorn.run(
+        "main:app", host="127.0.0.1", port=8000, reload=env_variables.RELOAD_MODE
+    )

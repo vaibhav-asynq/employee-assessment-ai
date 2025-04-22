@@ -1,13 +1,9 @@
-import os
-
+import env_variables
 import jwt
-from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from jwt.jwks_client import PyJWKClient
 
-load_dotenv()
-
-CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
+CLERK_JWKS_URL = env_variables.CLERK_JWKS_URL
 
 jwks_client = PyJWKClient(CLERK_JWKS_URL)
 
