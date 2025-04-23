@@ -41,6 +41,7 @@ class SnapshotResponse(BaseModel):
 @router.post("/create", response_model=SnapshotResponse)
 async def create_snapshot_endpoint(
     request: SnapshotCreateRequest,
+    make_current: bool = False,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -64,6 +65,9 @@ async def create_snapshot_endpoint(
         trigger_type=request.trigger_type,
         parent_id=request.parent_id
     )
+
+    if make_current:
+        restore_snapshot(db, task.id, snapshot.id)
     
     # Convert datetime to string for JSON response
     return SnapshotResponse(

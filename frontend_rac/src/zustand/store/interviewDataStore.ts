@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { FeedbackData } from "@/lib/types";
+import { Snapshot, SnapshotReport } from "@/lib/types/types.snapshot";
 
-import { uploadFile, getFeedback, getAdvice } from "@/lib/api";
+import {
+  uploadFile,
+  getFeedback,
+  getAdvice,
+  saveSnapshot,
+  getSnapshotById,
+} from "@/lib/api";
 
 type InterviewDataState = {
   // States
@@ -14,6 +21,10 @@ type InterviewDataState = {
   rawData: any | null;
   adviceData: any | null;
   feedbackData: FeedbackData | null;
+  currentSnapshotId: number | null;
+  currentSnapshot: Snapshot | null;
+  isSavingSnapshot: boolean;
+  isLoadingSnapshot: boolean;
 
   setFileId: (fileId: string | null) => void;
   fetchFeedbackData: (useCache?: boolean) => Promise<void>;
@@ -22,6 +33,15 @@ type InterviewDataState = {
     callback?: () => void,
     useCache?: boolean,
   ) => Promise<void>;
+  saveSnapshot: (
+    manualReport: Record<string, any>,
+    fullReport: Record<string, any>,
+    aiCompetencies: Record<string, any>,
+    triggerType?: "manual" | "auto",
+    parentId?: number | null,
+    make_active?: boolean,
+  ) => Promise<void>;
+  loadSnapshotById: (snapshotId: number) => Promise<Snapshot | null>;
 };
 
 export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
@@ -34,6 +54,10 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   rawData: null,
   adviceData: null,
   feedbackData: null,
+  currentSnapshotId: null,
+  currentSnapshot: null,
+  isSavingSnapshot: false,
+  isLoadingSnapshot: false,
 
   // Handle PDF Upload
   handleSelectPdf: async (
@@ -101,5 +125,97 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
 
   setFileId: (fileId: string | null) => {
     set({ fileId });
+  },
+
+  saveSnapshot: async (
+    manualReport: Record<string, any>,
+    fullReport: Record<string, any>,
+    aiCompetencies: Record<string, any>,
+    triggerType: "manual" | "auto" = "manual",
+    parentId?: number | null,
+    make_active: boolean = false,
+  ) => {
+    const { fileId, adviceData, feedbackData } = get();
+    if (!fileId) {
+      set({ error: "No file selected. Cannot save snapshot." });
+      return;
+    }
+
+    set({ isSavingSnapshot: true, error: "" });
+
+    try {
+      // Create snapshot report objects
+      const snapshotData = {
+        file_id: fileId,
+        manual_report: {
+          editable: manualReport,
+          sorted_by: {
+            stakeholders: { adviceData, feedbackData },
+            competency: {},
+          },
+        },
+        full_report: {
+          editable: fullReport,
+          sorted_by: {
+            stakeholders: {},
+            competency: {},
+          },
+        },
+        ai_Competencies: {
+          editable: aiCompetencies,
+          sorted_by: {
+            stakeholders: {},
+            competency: {},
+          },
+        },
+        trigger_type: triggerType,
+        parent_id: parentId,
+      };
+
+      const response = await saveSnapshot(snapshotData, make_active);
+      set({ currentSnapshotId: response.id });
+      console.log("Snapshot saved successfully:", response);
+      return response;
+    } catch (error) {
+      console.error("Error saving snapshot:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to save snapshot",
+      });
+      throw error;
+    } finally {
+      set({ isSavingSnapshot: false });
+    }
+  },
+  loadSnapshotById: async (snapshotId: number) => {
+    set({ isLoadingSnapshot: true, error: "" });
+
+    try {
+      const snapshot = await getSnapshotById(snapshotId);
+
+      if (!snapshot) {
+        throw new Error(`Snapshot with ID ${snapshotId} not found`);
+      }
+
+      set({
+        currentSnapshotId: snapshot.id,
+        currentSnapshot: snapshot,
+        fileId: snapshot.file_id,
+      });
+
+      console.log("Snapshot loaded successfully:", snapshot);
+      return snapshot;
+    } catch (error) {
+      console.error(`Error loading snapshot with ID ${snapshotId}:`, error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : `Failed to load snapshot with ID ${snapshotId}`,
+      });
+      return null;
+    } finally {
+      set({ isLoadingSnapshot: false });
+    }
   },
 }));

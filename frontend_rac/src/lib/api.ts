@@ -261,3 +261,70 @@ export async function sortAreasEvidence(fileId: string, headings: string[]) {
 
   return response.data;
 }
+
+// Snapshot API functions
+export const saveSnapshot = async (
+  snapshotData: import("./types/types.snapshot").SnapshotCreateRequest,
+  make_current: boolean = false,
+) => {
+  try {
+    const response = await api.post("/api/snapshots/create", {
+      snapshotData,
+      make_current,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error saving snapshot:", error);
+    throw error;
+  }
+};
+
+export const getLatestSnapshot = async (fileId: string) => {
+  try {
+    const response = await api.get(`/api/snapshots/latest/${fileId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching latest snapshot:", error);
+    throw error;
+  }
+};
+
+export const getCurrentSnapshot = async (fileId: string) => {
+  try {
+    const response = await api.get(`/api/snapshots/current/${fileId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching current snapshot:", error);
+    throw error;
+  }
+};
+
+export const getSnapshotById = async (snapshotId: number) => {
+  try {
+    const response = await api.get(`/api/snapshots/${snapshotId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching snapshot with ID ${snapshotId}:`, error);
+    throw error;
+  }
+};
+
+export const getSnapshotHistory = async (
+  fileId: string,
+  limit?: number,
+  offset?: number,
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", limit.toString());
+    if (offset !== undefined) params.append("offset", offset.toString());
+
+    const response = await api.get(
+      `/api/snapshots/history/${fileId}?${params.toString()}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching snapshot history:", error);
+    throw error;
+  }
+};
