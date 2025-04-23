@@ -2,10 +2,10 @@ import { AuthStatus } from "../auth/AuthStatus";
 import { StepperProvider } from "../ui/stepper";
 import { StepperControls } from "./controls/StepperControls";
 import InterviewAnalysisContent from "./InterviewAnalysisContent";
-import { useAuthStore } from "@/zustand/store/authStore";
+import { useUser } from "@clerk/nextjs";
 
 export function InterviewAnalysis() {
-  const { user } = useAuthStore();
+  const { user } = useUser();
 
   return (
     <>
@@ -16,7 +16,7 @@ export function InterviewAnalysis() {
               <h1 className="text-3xl font-bold tracking-tight">RAC Copilot</h1>
               {user && (
                 <p className="text-sm text-gray-600 mt-1">
-                  Logged in as: {user.username}
+                  Logged in as: {user.primaryEmailAddress?.emailAddress}
                 </p>
               )}
             </div>

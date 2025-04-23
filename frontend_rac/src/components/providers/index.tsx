@@ -3,6 +3,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { Suspense } from "react";
 import { ClerkAuthSync } from "../auth/ClerkAuthSync";
+import { SidebarProvider } from "../ui/sidebar";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Suspense fallback={<Skeleton />}>
         <ClerkProvider>
           <ClerkAuthSync />
-          {children}
+          <SidebarProvider>{children}</SidebarProvider>
         </ClerkProvider>
       </Suspense>
     </>

@@ -25,5 +25,4 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         )
     if user_id:
         user_claims["user_id"] = user_id
-        return user_claims
-    return user_claims
+    return User(**user_claims)

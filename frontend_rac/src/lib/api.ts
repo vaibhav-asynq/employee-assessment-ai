@@ -1,6 +1,7 @@
 import axios from "axios";
 import { NextStep } from "./types";
 import { useAuthStore } from "@/zustand/store/authStore";
+import { Task } from "./types/types.filetask";
 
 //TODO: use other specified types in the types folder
 // const API_URL = "http://34.202.149.23:8000";
@@ -98,6 +99,7 @@ export const getCurrentUser = async () => {
   throw new Error("Not authenticated");
 };
 
+// -------------------------------------------
 // API functions using the authenticated axios instance
 export const uploadFile = async (file: File, useCache: boolean = true) => {
   const formData = new FormData();
@@ -151,6 +153,13 @@ export const getStrengthEvidences = async (
   return response.data;
 };
 
+export const getFileTaskHistory = async (userId: string): Promise<Task[]> => {
+  const response = await api.get(`/api/tasks/`, {
+    params: { user_id: userId },
+  });
+  return response.data;
+};
+
 export const getDevelopmentAreas = async (
   fileId: string,
   numCompetencies: number,
@@ -161,7 +170,7 @@ export const getDevelopmentAreas = async (
   });
   return response.data;
 };
-
+// -------------------------------------------
 export const generateWordDocument = async (data: any) => {
   const response = await api.post(`/api/dump_word`, data, {
     responseType: "blob",

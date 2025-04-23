@@ -2180,3 +2180,20 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-04-22 22:14:40,636 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-04-22 22:14:47,559 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-04-22 22:14:49,784 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 01:30:51,467 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 01:40:11,494 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:08,153 - INFO - Starting assessment processing for: 335a847d-ce79-4913-8ca7-ca8e3822c4e0
+2025-04-23 16:13:08,157 - INFO - Processing PDF with 16 pages
+2025-04-23 16:13:08,212 - INFO - Processed 10 of 16 pages
+2025-04-23 16:13:08,250 - INFO - Total chunks to process: 2
+2025-04-23 16:13:08,250 - INFO - Processing chunk 1/2
+2025-04-23 16:13:19,462 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:27,614 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:27,617 - INFO - Processing chunk 2/2
+2025-04-23 16:13:56,680 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:04,253 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:04,254 - INFO - Executive interview saved to: ../data/processed_assessments/executive_335a847d-ce79-4913-8ca7-ca8e3822c4e0.txt
+2025-04-23 16:14:04,254 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_335a847d-ce79-4913-8ca7-ca8e3822c4e0.txt
+2025-04-23 16:14:14,019 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:22,979 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:30,418 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
