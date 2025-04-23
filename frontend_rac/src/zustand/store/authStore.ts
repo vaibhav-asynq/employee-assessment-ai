@@ -6,10 +6,12 @@ interface User {
 }
 
 interface AuthState {
+  token: string | null;
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  setToken: (token: string | null) => void;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -17,10 +19,13 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      token: null,
       user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
+
+      setToken: (token) => set({ token }),
 
       login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -45,7 +50,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const data = await response.json();
-          
+
           // Set the authenticated user if login was successful
           if (data.success) {
             set({
@@ -77,7 +82,10 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage", // name of the item in localStorage
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
-    }
-  )
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    },
+  ),
 );

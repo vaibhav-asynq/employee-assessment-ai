@@ -2041,3 +2041,159 @@
 2025-03-05 18:35:36,761 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-03-05 18:37:05,357 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
 2025-03-05 18:37:22,287 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 17:23:13,890 - INFO - Starting assessment processing for: 2123fd96-a64d-4ec5-b3cd-b4edeb0a191e
+2025-04-21 17:23:13,893 - INFO - Processing PDF with 16 pages
+2025-04-21 17:23:13,945 - INFO - Processed 10 of 16 pages
+2025-04-21 17:23:13,971 - INFO - Total chunks to process: 2
+2025-04-21 17:23:13,971 - INFO - Processing chunk 1/2
+2025-04-21 17:23:14,686 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:23:14,687 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:23:14,688 - ERROR - Error processing assessment ../data/uploads/2123fd96-a64d-4ec5-b3cd-b4edeb0a191e.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:01,199 - INFO - Starting assessment processing for: c5ba92f3-214a-407b-9da3-8eb37fd05486
+2025-04-21 17:53:01,201 - INFO - Processing PDF with 16 pages
+2025-04-21 17:53:01,251 - INFO - Processed 10 of 16 pages
+2025-04-21 17:53:01,276 - INFO - Total chunks to process: 2
+2025-04-21 17:53:01,276 - INFO - Processing chunk 1/2
+2025-04-21 17:53:02,077 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:53:02,078 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:02,078 - ERROR - Error processing assessment ../data/uploads/c5ba92f3-214a-407b-9da3-8eb37fd05486.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:55,655 - INFO - Starting assessment processing for: 076f3af8-8bfe-479f-bec4-ea38f73172a3
+2025-04-21 17:53:55,657 - INFO - Processing PDF with 16 pages
+2025-04-21 17:53:55,710 - INFO - Processed 10 of 16 pages
+2025-04-21 17:53:55,737 - INFO - Total chunks to process: 2
+2025-04-21 17:53:55,737 - INFO - Processing chunk 1/2
+2025-04-21 17:53:56,328 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 17:53:56,328 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 17:53:56,329 - ERROR - Error processing assessment ../data/uploads/076f3af8-8bfe-479f-bec4-ea38f73172a3.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:07:21,035 - INFO - Starting assessment processing for: 46722e53-6d75-4cc8-ae76-0edf113ee47a
+2025-04-21 18:07:21,040 - INFO - Processing PDF with 16 pages
+2025-04-21 18:07:21,089 - INFO - Processed 10 of 16 pages
+2025-04-21 18:07:21,116 - INFO - Total chunks to process: 2
+2025-04-21 18:07:21,116 - INFO - Processing chunk 1/2
+2025-04-21 18:07:21,829 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:07:21,830 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:07:21,830 - ERROR - Error processing assessment ../data/uploads/46722e53-6d75-4cc8-ae76-0edf113ee47a.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:12,546 - INFO - Starting assessment processing for: cc167938-595a-485f-910a-56b86489c780
+2025-04-21 18:09:12,549 - INFO - Processing PDF with 16 pages
+2025-04-21 18:09:12,609 - INFO - Processed 10 of 16 pages
+2025-04-21 18:09:12,636 - INFO - Total chunks to process: 2
+2025-04-21 18:09:12,636 - INFO - Processing chunk 1/2
+2025-04-21 18:09:13,273 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:09:13,275 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:13,275 - ERROR - Error processing assessment ../data/uploads/cc167938-595a-485f-910a-56b86489c780.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:15,537 - INFO - Starting assessment processing for: 9044c2ac-8f5a-4b43-a273-a652bd4d639b
+2025-04-21 18:09:15,540 - INFO - Processing PDF with 16 pages
+2025-04-21 18:09:15,592 - INFO - Processed 10 of 16 pages
+2025-04-21 18:09:15,625 - INFO - Total chunks to process: 2
+2025-04-21 18:09:15,625 - INFO - Processing chunk 1/2
+2025-04-21 18:09:16,081 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:09:16,082 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:09:16,083 - ERROR - Error processing assessment ../data/uploads/9044c2ac-8f5a-4b43-a273-a652bd4d639b.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:13:48,739 - INFO - Starting assessment processing for: 9b7039cb-32d4-4667-8b4f-bd1698678b25
+2025-04-21 18:13:48,745 - INFO - Processing PDF with 16 pages
+2025-04-21 18:13:48,796 - INFO - Processed 10 of 16 pages
+2025-04-21 18:13:48,825 - INFO - Total chunks to process: 2
+2025-04-21 18:13:48,825 - INFO - Processing chunk 1/2
+2025-04-21 18:13:49,428 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 18:13:49,429 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 18:13:49,429 - ERROR - Error processing assessment ../data/uploads/9b7039cb-32d4-4667-8b4f-bd1698678b25.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:13:11,534 - INFO - Starting assessment processing for: e203de1f-9cf7-4654-a961-fb6849e49349
+2025-04-21 19:13:11,536 - INFO - Processing PDF with 16 pages
+2025-04-21 19:13:11,586 - INFO - Processed 10 of 16 pages
+2025-04-21 19:13:11,614 - INFO - Total chunks to process: 2
+2025-04-21 19:13:11,614 - INFO - Processing chunk 1/2
+2025-04-21 19:13:12,457 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 19:13:12,461 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:13:12,461 - ERROR - Error processing assessment ../data/uploads/e203de1f-9cf7-4654-a961-fb6849e49349.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:28:14,092 - INFO - Starting assessment processing for: cbcdbc91-b6ab-4bcb-9dd5-7765a7f35a19
+2025-04-21 19:28:14,094 - INFO - Processing PDF with 16 pages
+2025-04-21 19:28:14,146 - INFO - Processed 10 of 16 pages
+2025-04-21 19:28:14,172 - INFO - Total chunks to process: 2
+2025-04-21 19:28:14,172 - INFO - Processing chunk 1/2
+2025-04-21 19:28:14,857 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 19:28:14,862 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 19:28:14,863 - ERROR - Error processing assessment ../data/uploads/cbcdbc91-b6ab-4bcb-9dd5-7765a7f35a19.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:10:56,967 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/zaman/Drive/Work/Asynq/employee-assessment-ai/backend/venv/lib/python3.10/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-21 21:10:58,046 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/zaman/Drive/Work/Asynq/employee-assessment-ai/backend/venv/lib/python3.10/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-21 21:34:33,474 - INFO - Starting assessment processing for: 3a889360-ef82-4c45-b222-57d64ba3cf86
+2025-04-21 21:34:33,479 - INFO - Processing PDF with 16 pages
+2025-04-21 21:34:33,536 - INFO - Processed 10 of 16 pages
+2025-04-21 21:34:33,562 - INFO - Total chunks to process: 2
+2025-04-21 21:34:33,562 - INFO - Processing chunk 1/2
+2025-04-21 21:34:34,378 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 404 Not Found"
+2025-04-21 21:34:34,381 - ERROR - Error processing chunk with Claude: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:34:34,382 - ERROR - Error processing assessment ../data/uploads/3a889360-ef82-4c45-b222-57d64ba3cf86.pdf: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-sonnet-20240229'}}
+2025-04-21 21:42:22,717 - INFO - Starting assessment processing for: 36590671-bc76-4939-a5b1-75fe32517ea3
+2025-04-21 21:42:22,720 - INFO - Processing PDF with 16 pages
+2025-04-21 21:42:22,778 - INFO - Processed 10 of 16 pages
+2025-04-21 21:42:22,808 - INFO - Total chunks to process: 2
+2025-04-21 21:42:22,808 - INFO - Processing chunk 1/2
+2025-04-21 21:42:53,746 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:01,638 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:01,639 - INFO - Processing chunk 2/2
+2025-04-21 21:43:32,086 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:41,337 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:43:41,364 - INFO - Executive interview saved to: ../data/processed_assessments/executive_36590671-bc76-4939-a5b1-75fe32517ea3.txt
+2025-04-21 21:43:41,364 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_36590671-bc76-4939-a5b1-75fe32517ea3.txt
+2025-04-21 21:43:51,316 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:44:06,614 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-21 21:44:16,389 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:14,367 - INFO - Starting assessment processing for: 41083cd6-11aa-4a8f-8862-4cf5314a0218
+2025-04-22 15:18:14,371 - INFO - Processing PDF with 16 pages
+2025-04-22 15:18:14,429 - INFO - Processed 10 of 16 pages
+2025-04-22 15:18:14,457 - INFO - Total chunks to process: 2
+2025-04-22 15:18:14,457 - INFO - Processing chunk 1/2
+2025-04-22 15:18:30,979 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:39,764 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:18:39,765 - INFO - Processing chunk 2/2
+2025-04-22 15:19:06,604 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:13,524 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:13,527 - INFO - Executive interview saved to: ../data/processed_assessments/executive_41083cd6-11aa-4a8f-8862-4cf5314a0218.txt
+2025-04-22 15:19:13,527 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_41083cd6-11aa-4a8f-8862-4cf5314a0218.txt
+2025-04-22 15:19:21,500 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:31,810 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 15:19:39,930 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 17:19:33,699 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 17:19:43,054 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:05,758 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:13,343 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:31,667 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:48,394 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:12:56,134 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:04,077 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:10,379 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:18,720 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:35,653 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:13:50,541 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:04,664 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:13,469 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:20,188 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:28,607 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:40,636 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:47,559 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-22 22:14:49,784 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 01:30:51,467 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 01:40:11,494 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:08,153 - INFO - Starting assessment processing for: 335a847d-ce79-4913-8ca7-ca8e3822c4e0
+2025-04-23 16:13:08,157 - INFO - Processing PDF with 16 pages
+2025-04-23 16:13:08,212 - INFO - Processed 10 of 16 pages
+2025-04-23 16:13:08,250 - INFO - Total chunks to process: 2
+2025-04-23 16:13:08,250 - INFO - Processing chunk 1/2
+2025-04-23 16:13:19,462 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:27,614 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:13:27,617 - INFO - Processing chunk 2/2
+2025-04-23 16:13:56,680 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:04,253 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:04,254 - INFO - Executive interview saved to: ../data/processed_assessments/executive_335a847d-ce79-4913-8ca7-ca8e3822c4e0.txt
+2025-04-23 16:14:04,254 - INFO - Stakeholder feedback saved to: ../data/processed_assessments/filtered_335a847d-ce79-4913-8ca7-ca8e3822c4e0.txt
+2025-04-23 16:14:14,019 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:22,979 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-04-23 16:14:30,418 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"

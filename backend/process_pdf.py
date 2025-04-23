@@ -1,11 +1,13 @@
-import os
-from PyPDF2 import PdfReader
-from anthropic import Anthropic
-import re
-from typing import List, Dict
-import textwrap
 import logging
+import os
+import re
+import textwrap
 from datetime import datetime
+from typing import Dict, List
+
+from anthropic import Anthropic
+from PyPDF2 import PdfReader
+
 
 class AssessmentProcessor:
     def __init__(self, api_key: str):
@@ -122,7 +124,7 @@ class AssessmentProcessor:
         """Process chunk using Claude."""
         try:
             message = self.client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model="claude-3-5-sonnet-latest",
                 max_tokens=4096,
                 system="You are an expert at filtering assessment documents while maintaining their structure and format.",
                 messages=[
@@ -178,7 +180,7 @@ class AssessmentProcessor:
         """Process chunk using Claude for executive content and clean the output."""
         try:
             message = self.client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model="claude-3-5-sonnet-latest",
                 max_tokens=4096,
                 system="You are an expert at extracting executive's own words from assessment documents. Return ONLY the extracted content without any explanatory text. If no relevant content is found, return an empty string.",
                 messages=[

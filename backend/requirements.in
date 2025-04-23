@@ -1,0 +1,35 @@
+###INFO: list here top level packages that project needs
+### then run command pip-compile
+
+# PIP tool
+pip-tools
+
+# Environment Variables
+python-dotenv
+
+# API Framework
+fastapi
+uvicorn
+python-multipart
+pydantic
+
+# ai
+anthropic
+
+# Document Processing
+aspose-words
+python-docx
+fpdf2
+PyPDF2
+
+#types
+typing-extensions
+
+# db
+psycopg2-binary
+sqlalchemy
+pyjwt
+bcrypt
+passlib
+python-jose
+cryptography

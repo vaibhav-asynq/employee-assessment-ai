@@ -15,6 +15,7 @@ type InterviewDataState = {
   adviceData: any | null;
   feedbackData: FeedbackData | null;
 
+  setFileId: (fileId: string | null) => void;
   fetchFeedbackData: (useCache?: boolean) => Promise<void>;
   handleSelectPdf: (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -96,5 +97,9 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
     } finally {
       set({ loading: false });
     }
+  },
+
+  setFileId: (fileId: string | null) => {
+    set({ fileId });
   },
 }));

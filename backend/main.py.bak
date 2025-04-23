@@ -1,4 +1,5 @@
 import json
+from state import files_store
 import os
 import traceback
 import uuid
@@ -35,15 +36,13 @@ from prompt_loader import (format_area_content_prompt,
 from pydantic import BaseModel
 from report_generation import (create_360_feedback_report,
                                create_360_feedback_report_for_word)
-from state import files_store
+from routers.file import router as file_routers
+from routers.feedback import router as feedback_routers
+from routers.advice import router as advice_routers
+from routers.snapshot import router as snapshot_routers
 from utils.jwt_utils import verify_clerk_token
 from utils.postgreSql_uitls import get_db_connection
 from utils.validate_envs import validate_required_env
-
-from routers.advice import router as advice_routers
-from routers.feedback import router as feedback_routers
-from routers.file import router as file_routers
-from routers.snapshot import router as snapshot_routers
 
 # Initialize license object
 license = aw.License()
@@ -226,6 +225,7 @@ async def upload_file(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check if we have this file cached
@@ -276,6 +276,7 @@ async def generate_report(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     if file_id not in files_store:
         raise HTTPException(status_code=404, detail="File not found")
@@ -328,6 +329,7 @@ async def get_raw_data_endpoint(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -438,7 +440,7 @@ async def get_raw_data_endpoint(
 
 @app.post("/api/dump_word")
 async def generate_word_document(
-    analysis: InterviewAnalysis, 
+    analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)
 ):
     try:
         # First generate PDF with Word-optimized bullet points
@@ -464,7 +466,7 @@ async def generate_word_document(
 
 @app.post("/api/dump_pdf")
 async def generate_pdf_docuement(
-    analysis: InterviewAnalysis, 
+    analysis: InterviewAnalysis, current_user: User = Depends(get_current_user)
 ):
     output_path = OUTPUT_DIR + "/temp.pdf"
     header_txt = analysis.name + " - Qualitative 360 Feedback"
@@ -476,7 +478,7 @@ async def generate_pdf_docuement(
 
 @app.post("/api/upload_updated_report")
 async def upload_updated_report(
-    file: UploadFile, 
+    file: UploadFile, current_user: User = Depends(get_current_user)
 ):
     try:
         # Validate file type
@@ -534,7 +536,7 @@ async def upload_updated_report(
 
 
 @app.delete("/api/cleanup/{file_id}")
-async def cleanup_file(file_id: str):
+async def cleanup_file(file_id: str, current_user: User = Depends(get_current_user)):
     if file_id in files_store:
         try:
             os.remove(files_store[file_id]["file_path"])
@@ -603,7 +605,7 @@ async def generate_next_steps_options():
 
 @app.post("/api/generate_next_steps")
 async def generate_next_steps(
-    request: dict,
+    request: dict, current_user: User = Depends(get_current_user)
 ):
     try:
         print("\n=== Generate Next Steps Request ===")
@@ -715,7 +717,7 @@ async def generate_next_steps(
 
 @app.post("/api/generate_area_content")
 async def generate_area_content(
-    request: GenerateContentRequest 
+    request: GenerateContentRequest, current_user: User = Depends(get_current_user)
 ):
     try:
         print(
@@ -756,7 +758,7 @@ async def generate_area_content(
 
 @app.post("/api/sort-strengths-evidence")
 async def sort_strengths_evidence(
-    request: SortEvidenceRequest, 
+    request: SortEvidenceRequest, current_user: User = Depends(get_current_user)
 ):
     try:
         # Load transcript using file ID
@@ -857,6 +859,7 @@ async def get_strength_evidences(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first with parameters
@@ -934,6 +937,7 @@ async def get_advice(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -1003,6 +1007,7 @@ async def get_feedback(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first
@@ -1114,6 +1119,7 @@ async def get_development_areas(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         # Check cache first with parameters
@@ -1188,7 +1194,7 @@ async def get_development_areas(
 
 @app.post("/api/sort-areas-evidence")
 async def sort_areas_evidence(
-    request: SortEvidenceRequest, 
+    request: SortEvidenceRequest, current_user: User = Depends(get_current_user)
 ):
     try:
         # Load transcript using file ID
@@ -1259,7 +1265,7 @@ async def excel_options():
 
 
 @app.get("/api/excel")
-async def get_excel_file():
+async def get_excel_file(current_user: User = Depends(get_current_user)):
     file_path = "../Developmental Suggestions & Resources.xlsx"
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Excel file not found")
@@ -1281,7 +1287,7 @@ async def get_excel_file():
 
 @app.post("/api/generate_strength_content")
 async def generate_strength_content(
-    request: GenerateContentRequest, 
+    request: GenerateContentRequest, current_user: User = Depends(get_current_user)
 ):
     try:
         print(
