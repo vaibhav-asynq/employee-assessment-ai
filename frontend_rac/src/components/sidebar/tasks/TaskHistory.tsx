@@ -1,9 +1,6 @@
 "use client";
 
-import { getFileTaskHistory } from "@/lib/api";
-import { Task } from "@/lib/types/types.filetask";
 import { FileText, Plus } from "lucide-react";
-import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
   SidebarGroup,
@@ -15,33 +12,35 @@ import {
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
+import { useTaskHistory } from "@/lib/react-query";
 
 export function TaskHistory() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useUser();
   const { fileId, setFileId } = useInterviewDataStore();
+  const { loadSnapshot } = useSnapshotLoader(null, false);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      if (user?.id) {
-        try {
-          setLoading(true);
-          const tasksData = await getFileTaskHistory(user.id);
-          setTasks(tasksData);
-        } catch (error) {
-          console.error("Error fetching task history:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+  const { data: tasks = [], isLoading: isTasksLoading } = useTaskHistory(
+    user?.id,
+  );
 
-    fetchTasks();
-  }, [user?.id]);
+  const loading = isTasksLoading;
 
-  const handleTaskClick = (fileId: string | null) => {
-    setFileId(fileId);
+  const handleTaskClick = async (
+    file_id: string | null,
+    snapShotId?: number,
+  ) => {
+    if (file_id === null) {
+      setFileId(file_id);
+      return;
+    }
+    setFileId(file_id);
+
+    try {
+      await loadSnapshot(snapShotId);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (
@@ -53,6 +52,7 @@ export function TaskHistory() {
             <SidebarMenuButton
               className="flex gap-3 items-center text-center"
               onClick={() => handleTaskClick(null)}
+              isActive={!fileId}
             >
               <Plus size={14} />
               <span>New Task</span>
@@ -68,7 +68,9 @@ export function TaskHistory() {
             tasks.map((task) => (
               <SidebarMenuItem key={task.id}>
                 <SidebarMenuButton
-                  onClick={() => handleTaskClick(task.file_id)}
+                  onClick={() =>
+                    handleTaskClick(task.file_id, task.current_snapshot_id)
+                  }
                   tooltip={task.file_name}
                   isActive={task.file_id === fileId}
                 >

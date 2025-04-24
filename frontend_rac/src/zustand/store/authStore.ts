@@ -1,91 +1,27 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 interface User {
   username: string;
+  id: string;
+  // Add other user properties as needed
 }
 
 interface AuthState {
   token: string | null;
   user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  refreshToken: (() => Promise<string | null>) | null;
   setToken: (token: string | null) => void;
-  login: (username: string, password: string) => Promise<void>;
+  setUser: (user: User | null) => void;
+  setRefreshToken: (refreshFn: (() => Promise<string | null>) | null) => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-
-      setToken: (token) => set({ token }),
-
-      login: async (username: string, password: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          // Create form data for the API request
-          const formData = new URLSearchParams();
-          formData.append("username", username);
-          formData.append("password", password);
-
-          // Make the API request
-          const response = await fetch("http://34.202.149.23:8000/api/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: formData.toString(),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Login failed");
-          }
-
-          const data = await response.json();
-
-          // Set the authenticated user if login was successful
-          if (data.success) {
-            set({
-              user: {
-                username,
-              },
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } else {
-            throw new Error("Login failed");
-          }
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : "Login failed",
-          });
-          throw error;
-        }
-      },
-
-      logout: () => {
-        set({
-          user: null,
-          isAuthenticated: false,
-          error: null,
-        });
-      },
-    }),
-    {
-      name: "auth-storage", // name of the item in localStorage
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    },
-  ),
-);
+export const useAuthStore = create<AuthState>((set) => ({
+  token: null,
+  user: null,
+  refreshToken: null,
+  setToken: (token) => set({ token }),
+  setUser: (user) => set({ user }),
+  setRefreshToken: (refreshFn) => set({ refreshToken: refreshFn }),
+  logout: () => set({ token: null, user: null }),
+}));

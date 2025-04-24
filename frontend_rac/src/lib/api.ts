@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { NextStep } from "./types";
 import { useAuthStore } from "@/zustand/store/authStore";
 import { Task } from "./types/types.filetask";
@@ -12,6 +12,30 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
+// Flag to prevent infinite retry loops
+let isRefreshing = false;
+// Store for requests that should be retried after token refresh
+let failedQueue: {
+  resolve: (value: unknown) => void;
+  reject: (reason?: any) => void;
+  config: AxiosRequestConfig;
+}[] = [];
+
+// Process the queue of failed requests
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(request => {
+    if (error) {
+      request.reject(error);
+    } else if (token && request.config.headers) {
+      request.config.headers.Authorization = `Bearer ${token}`;
+      request.resolve(api(request.config));
+    }
+  });
+  
+  failedQueue = [];
+};
+
+// Add request interceptor to add token to requests
 api.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().token;
@@ -35,6 +59,60 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    
+    // If the error is 401 and we haven't retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If we're already refreshing, add this request to the queue
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, config: originalRequest });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Try to refresh the token
+        // This will trigger the Clerk token refresh
+        const { refreshToken } = useAuthStore.getState();
+        
+        if (refreshToken) {
+          await refreshToken();
+          const newToken = useAuthStore.getState().token;
+          
+          if (newToken && originalRequest.headers) {
+            // Update the Authorization header with the new token
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            
+            // Process any queued requests with the new token
+            processQueue(null, newToken);
+            
+            // Retry the original request with the new token
+            return api(originalRequest);
+          }
+        }
+        
+        // If we couldn't refresh the token, process the queue with an error
+        processQueue(new Error('Failed to refresh token'));
+        return Promise.reject(error);
+      } catch (refreshError) {
+        processQueue(refreshError as Error);
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+    
+    return Promise.reject(error);
+  }
 );
 
 export interface FeedbackEvidence {
@@ -261,3 +339,88 @@ export async function sortAreasEvidence(fileId: string, headings: string[]) {
 
   return response.data;
 }
+
+// Snapshot API functions
+export const saveSnapshot = async (
+  snapshotData: import("./types/types.snapshot").SnapshotCreateRequest,
+  user_id: string,
+  make_current: boolean = false,
+) => {
+  try {
+    const response = await api.post(
+      `/api/snapshots/create?user_id=${user_id}&make_current=${make_current}`,
+      snapshotData,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saving snapshot:", error);
+    throw error;
+  }
+};
+
+export const getLatestSnapshot = async (fileId: string, userId: string) => {
+  try {
+    const response = await api.get(
+      `/api/snapshots/latest/${fileId}?user_id=${userId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching latest snapshot:", error);
+    throw error;
+  }
+};
+
+export const getCurrentSnapshot = async (fileId: string) => {
+  try {
+    const response = await api.get(`/api/snapshots/current/${fileId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching current snapshot:", error);
+    throw error;
+  }
+};
+
+export const getSnapshotByIdOld = async (
+  snapshotId: number,
+  userId: string,
+) => {
+  try {
+    const response = await api.get(
+      `/api/snapshots/${snapshotId}?user_id=${userId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching snapshot with ID ${snapshotId}:`, error);
+    throw error;
+  }
+};
+
+export const getSnapshotById = async (snapshotId: number) => {
+  try {
+    const response = await api.get(`/api/snapshots/${snapshotId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching snapshot with ID ${snapshotId}:`, error);
+    throw error;
+  }
+};
+
+export const getSnapshotHistory = async (
+  fileId: string,
+  limit?: number,
+  offset?: number,
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", limit.toString());
+    if (offset !== undefined) params.append("offset", offset.toString());
+
+    const response = await api.get(
+      `/api/snapshots/history/${fileId}?${params.toString()}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching snapshot history:", error);
+    throw error;
+  }
+};

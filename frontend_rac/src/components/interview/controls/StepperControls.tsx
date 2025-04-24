@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { useStepper } from "@/components/ui/stepper";
 import React from "react";
 import { Download } from "lucide-react";
+import { SaveSnapshotBtn } from "../analysis/snapshots/SaveSnapshotBtn";
+import SnapshotHistory from "../analysis/snapshots/SnapshotHistory";
 
 export function StepperControls() {
   const handleDownload = () => {
     // Create a link to download the file
-    const link = document.createElement('a');
-    link.href = '/Data%20Inputs/Developmental%20Suggestions%20&%20Resources.xlsx';
-    link.download = 'Developmental Suggestions & Resources.xlsx';
+    const link = document.createElement("a");
+    link.href =
+      "/Data%20Inputs/Developmental%20Suggestions%20&%20Resources.xlsx";
+    link.download = "Developmental Suggestions & Resources.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -18,6 +21,8 @@ export function StepperControls() {
   const { nextStep, prevStep, isLastStep, isFirstStep } = useStepper();
   return (
     <div className="flex gap-2 items-center">
+      <SnapshotHistory />
+      <SaveSnapshotBtn />
       <Button
         variant="outline"
         onClick={handleDownload}

@@ -21,6 +21,7 @@ type AnalysisState = {
     id: TemplateId,
     template: TemplatedData,
     activateTemplate?: boolean,
+    replaceData?: boolean,
   ) => void;
   removeTemplate: (id: TemplateId) => void;
   handleAnalysisUpdate: (
@@ -46,7 +47,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   isEditing: false,
   autoSortInProgress: false,
 
-  setAutoSortInProgress: (inProgress) => set({ autoSortInProgress: inProgress }),
+  setAutoSortInProgress: (inProgress) =>
+    set({ autoSortInProgress: inProgress }),
 
   setActiveTemplate: (id) => {
     const { templates } = get();
@@ -57,9 +59,24 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     }
   },
 
-  addTemplate: (id, template, activateTemplate = false) => {
+  addTemplate: (
+    id,
+    template,
+    activateTemplate = false,
+    replaceData = false,
+  ) => {
     const { templates, originalTemplates, setActiveTemplate } = get();
     if (templates[id] || originalTemplates[id]) {
+      if (replaceData) {
+        set({
+          templates: {
+            ...templates,
+            [id]: template,
+          },
+        });
+        console.info(`Template with ID ${id} updated`);
+        return;
+      }
       console.warn(`Template with ID ${id} already exists. Skipping addition.`);
       return;
     }

@@ -5,10 +5,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function HomePage() {
   return (
-    <div className="relative container mx-auto px-4 py-8">
-      <AppSidebar />
+    <div className="relative container mx -auto px-4 py-8">
+      {/* <AppSidebar /> */}
       <main>
-        <SidebarTrigger />
+        {/* <SidebarTrigger /> */}
         <InterviewAnalysis />
       </main>
     </div>

@@ -23,6 +23,7 @@ export function SortedEvidenceView({
   areasEvidence,
   adviceEvidence,
 }: SortedEvidenceViewProps) {
+  console.log(areasEvidence);
   return (
     <div className="space-y-8">
       {strengthsEvidence && (
@@ -85,9 +86,7 @@ export function SortedEvidenceView({
 
       {adviceEvidence && (
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Advice
-          </h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Advice</h2>
           <div className="space-y-4">
             {adviceEvidence.map((item, index) => (
               <Card key={index}>
@@ -99,7 +98,8 @@ export function SortedEvidenceView({
                     {item.evidence.map((evidence, idx) => (
                       <li key={idx} className="text-gray-700">
                         <div className="mb-1 text-sm font-medium text-gray-500">
-                          {evidence.name} {evidence.position && `- ${evidence.position}`}
+                          {evidence.name}{" "}
+                          {evidence.position && `- ${evidence.position}`}
                         </div>
                         <div>{evidence.quote}</div>
                       </li>
