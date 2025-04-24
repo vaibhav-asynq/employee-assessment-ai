@@ -1,28 +1,15 @@
 import React from "react";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { FeedbackData, FeedbackItem } from "@/lib/types";
 
 interface AdviceInfo {
   role: string;
   advice: string[];
 }
 
-interface FeedbackItem {
-  text: string;
-  strong: "yes" | "no";
-}
-
 interface FeedbackInfo {
   role: string;
   feedback: (string | FeedbackItem)[];
-}
-
-interface FeedbackData {
-  strengths: {
-    [key: string]: FeedbackInfo;
-  };
-  areas_to_target: {
-    [key: string]: FeedbackInfo;
-  };
 }
 
 interface FeedbackDisplayProps {
@@ -71,18 +58,33 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
                     {info.feedback.map((point, index: number) => {
-                      // Check if point is a string or an object with text and strong fields
-                      const text = typeof point === 'string' ? point : point.text;
-                      const isStrong = typeof point !== 'string' && point.strong === 'yes';
-                      
-                      return (
-                        <li 
-                          key={index} 
-                          className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
-                        >
-                          {text}
-                        </li>
-                      );
+                      try {
+                        // Check if point is a string or an object with text and strong fields
+                        const text = typeof point === 'string' 
+                          ? point 
+                          : (typeof point.text === 'string' ? point.text : JSON.stringify(point.text));
+                        
+                        const isStrong = typeof point !== 'string' && 
+                                        point.strong && 
+                                        point.strong === 'yes';
+                        
+                        return (
+                          <li 
+                            key={index} 
+                            className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
+                          >
+                            {text}
+                          </li>
+                        );
+                      } catch (error) {
+                        // Fallback for any rendering errors
+                        console.error("Error rendering feedback item:", error, point);
+                        return (
+                          <li key={index} className="text-gray-800">
+                            {typeof point === 'string' ? point : JSON.stringify(point)}
+                          </li>
+                        );
+                      }
                     })}
                   </ul>
                 </div>
@@ -105,18 +107,33 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
                     {info.feedback.map((point, index: number) => {
-                      // Check if point is a string or an object with text and strong fields
-                      const text = typeof point === 'string' ? point : point.text;
-                      const isStrong = typeof point !== 'string' && point.strong === 'yes';
-                      
-                      return (
-                        <li 
-                          key={index} 
-                          className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
-                        >
-                          {text}
-                        </li>
-                      );
+                      try {
+                        // Check if point is a string or an object with text and strong fields
+                        const text = typeof point === 'string' 
+                          ? point 
+                          : (typeof point.text === 'string' ? point.text : JSON.stringify(point.text));
+                        
+                        const isStrong = typeof point !== 'string' && 
+                                        point.strong && 
+                                        point.strong === 'yes';
+                        
+                        return (
+                          <li 
+                            key={index} 
+                            className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
+                          >
+                            {text}
+                          </li>
+                        );
+                      } catch (error) {
+                        // Fallback for any rendering errors
+                        console.error("Error rendering feedback item:", error, point);
+                        return (
+                          <li key={index} className="text-gray-800">
+                            {typeof point === 'string' ? point : JSON.stringify(point)}
+                          </li>
+                        );
+                      }
                     })}
                   </ul>
                 </div>
@@ -139,13 +156,23 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
                     {info.feedback.map((point, index: number) => {
-                      // For advice, we don't have strong field yet, so just display the text
-                      const text = typeof point === 'string' ? point : JSON.stringify(point);
-                      return (
-                        <li key={index} className="text-gray-800">
-                          {text}
-                        </li>
-                      );
+                      try {
+                        // For advice, we don't have strong field yet, so just display the text
+                        const text = typeof point === 'string' ? point : JSON.stringify(point);
+                        return (
+                          <li key={index} className="text-gray-800">
+                            {text}
+                          </li>
+                        );
+                      } catch (error) {
+                        // Fallback for any rendering errors
+                        console.error("Error rendering advice item:", error, point);
+                        return (
+                          <li key={index} className="text-gray-800">
+                            {"Error rendering advice"}
+                          </li>
+                        );
+                      }
                     })}
                   </ul>
                 </div>

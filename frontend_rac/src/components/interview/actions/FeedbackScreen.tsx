@@ -104,11 +104,20 @@ export function FeedbackScreen() {
                   </h3>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index) => {
+                      // Check if point is a string or an object with text and strong fields
+                      const text = typeof point === 'string' 
+                        ? point 
+                        : (typeof point === 'object' && point !== null && 'text' in point 
+                            ? point.text 
+                            : JSON.stringify(point));
+                      
+                      return (
+                        <li key={index} className="text-gray-800">
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -129,11 +138,20 @@ export function FeedbackScreen() {
                     </h3>
                     <p className="text-gray-600 italic mb-3">{info.role}</p>
                     <ul className="list-disc pl-5 space-y-2">
-                      {info.feedback.map((point, index) => (
-                        <li key={index} className="text-gray-800">
-                          {point}
-                        </li>
-                      ))}
+                      {info.feedback.map((point, index) => {
+                        // Check if point is a string or an object with text and strong fields
+                        const text = typeof point === 'string' 
+                          ? point 
+                          : (typeof point === 'object' && point !== null && 'text' in point 
+                              ? point.text 
+                              : JSON.stringify(point));
+                        
+                        return (
+                          <li key={index} className="text-gray-800">
+                            {text}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ),

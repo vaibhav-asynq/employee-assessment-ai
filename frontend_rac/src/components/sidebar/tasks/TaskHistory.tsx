@@ -82,7 +82,7 @@ export function TaskHistory() {
                   onClick={() =>
                     handleTaskClick(task.file_id, task.current_snapshot_id)
                   }
-                  tooltip={task.file_name}
+                  tooltip={task.file_name || "Task"}
                   isActive={task.file_id === fileId}
                   className="hover:bg-gray-100 transition-colors"
                 >

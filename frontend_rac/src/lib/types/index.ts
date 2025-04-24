@@ -60,10 +60,20 @@ export interface OrderedInterviewAnalysis {
   next_steps: NextStep[];
 }
 
-type StregthsFeedback = Record<string, { role: string; feedback: string[] }>;
+// Define the FeedbackItem interface to match the actual data structure
+export interface FeedbackItem {
+  text: string;
+  strong?: "yes" | "no";
+}
+
+type StregthsFeedback = Record<string, { 
+  role: string; 
+  feedback: (string | FeedbackItem)[] 
+}>;
+
 type AreasToTargetFeedback = Record<
   string,
-  { role: string; feedback: string[] }
+  { role: string; feedback: (string | FeedbackItem)[] }
 >;
 export interface FeedbackData {
   strengths: StregthsFeedback;

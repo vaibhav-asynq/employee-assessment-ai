@@ -13,6 +13,7 @@ import { FeedbackDisplay } from "../FeedbackDisplay";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidenceOfFeedback } from "@/lib/types/types.interview-data";
+import { FeedbackData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -135,7 +136,8 @@ export function EvidanceDisplay() {
 
   const renderEvidence = useCallback(
     (evidence: EvidenceOfFeedback) => {
-      const isStrong = evidence.strong === 'yes';
+      // Check if evidence.strong exists and is a string
+      const isStrong = typeof evidence.strong === 'string' && evidence.strong === 'yes';
       
       return (
         <div
@@ -145,11 +147,11 @@ export function EvidanceDisplay() {
             isStrong ? "bg-green-100 border-l-4 border-green-500" : "bg-gray-50"
           )}
         >
-          <p className="text-gray-800 mb-2">{evidence.feedback}</p>
+          <p className="text-gray-800 mb-2">{typeof evidence.feedback === 'string' ? evidence.feedback : JSON.stringify(evidence.feedback)}</p>
           <div className="text-sm text-gray-600">
-            <span className="font-semibold">{evidence.source}</span>
+            <span className="font-semibold">{typeof evidence.source === 'string' ? evidence.source : 'Unknown source'}</span>
             <span className="mx-2">•</span>
-            <span>{evidence.role}</span>
+            <span>{typeof evidence.role === 'string' ? evidence.role : 'Unknown role'}</span>
           </div>
         </div>
       );

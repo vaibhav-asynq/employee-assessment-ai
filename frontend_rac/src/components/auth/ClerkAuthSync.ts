@@ -17,13 +17,16 @@ export function ClerkAuthSync() {
         return token;
       } catch (error) {
         console.error("Error refreshing token:", error);
-        throw error;
+        // Return null instead of throwing error
+        return null;
       }
     } else {
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current);
       }
-      throw new Error("User is not signed in");
+      console.warn("User is not signed in");
+      // Return null instead of throwing error
+      return null;
     }
   }, [isSignedIn, getToken, setToken]);
 
