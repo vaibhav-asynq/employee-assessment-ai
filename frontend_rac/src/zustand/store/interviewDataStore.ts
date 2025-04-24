@@ -34,6 +34,7 @@ type InterviewDataState = {
     useCache?: boolean,
   ) => Promise<void>;
   saveSnapshot: (
+    userId: string,
     manualReport: Record<string, any>,
     fullReport: Record<string, any>,
     aiCompetencies: Record<string, any>,
@@ -128,6 +129,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   },
 
   saveSnapshot: async (
+    userId: string,
     manualReport: Record<string, any>,
     fullReport: Record<string, any>,
     aiCompetencies: Record<string, any>,
@@ -172,7 +174,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
         parent_id: parentId,
       };
 
-      const response = await saveSnapshot(snapshotData, make_active);
+      const response = await saveSnapshot(snapshotData, userId, make_active);
       set({ currentSnapshotId: response.id });
       console.log("Snapshot saved successfully:", response);
       return response;

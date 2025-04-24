@@ -4,16 +4,29 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Suspense } from "react";
 import { ClerkAuthSync } from "../auth/ClerkAuthSync";
 import { SidebarProvider } from "../ui/sidebar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Suspense fallback={<Skeleton />}>
-        <ClerkProvider>
-          <ClerkAuthSync />
-          <SidebarProvider>{children}</SidebarProvider>
-        </ClerkProvider>
-      </Suspense>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<Skeleton />}>
+          <ClerkProvider>
+            <ClerkAuthSync />
+            <SidebarProvider>{children}</SidebarProvider>
+          </ClerkProvider>
+        </Suspense>
+      </QueryClientProvider>
     </>
   );
 }

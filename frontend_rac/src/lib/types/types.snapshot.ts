@@ -1,5 +1,7 @@
+import { TemplatedData } from "./types.analysis";
+
 export interface SnapshotReport {
-  editable: Record<string, any>;
+  editable: TemplatedData;
   sorted_by?: {
     stakeholders?: Record<string, any>;
     competency?: Record<string, any>;

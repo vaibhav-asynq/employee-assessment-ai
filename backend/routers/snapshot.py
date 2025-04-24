@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from auth.user import User, get_current_user
 from db.core import get_db
-from db.file import get_task_by_user_and_fileId
+from db.file import get_db_task, get_task_by_user_and_fileId
 from db.snapshot import (SnapshotCreate, SnapshotReport, SortedBy,
                          count_snapshots, create_snapshot, delete_snapshot,
                          get_current_snapshot, get_latest_snapshot,
@@ -42,11 +42,10 @@ class SnapshotResponse(BaseModel):
 async def create_snapshot_endpoint(
     request: SnapshotCreateRequest,
     make_current: bool = False,
-    current_user: User = Depends(get_current_user),
+    user:User = Depends(get_current_user),  
     db: Session = Depends(get_db)
 ):
-    user_id = current_user.user_id
-    
+    user_id = user.user_id
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, request.file_id, db)
     
@@ -84,10 +83,10 @@ async def create_snapshot_endpoint(
 @router.get("/latest/{file_id}", response_model=Optional[SnapshotResponse])
 async def get_latest_snapshot_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    
+    user_id = user.user_id
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
     
@@ -112,9 +111,10 @@ async def get_latest_snapshot_endpoint(
 @router.get("/current/{file_id}", response_model=Optional[SnapshotResponse])
 async def get_current_snapshot_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -140,11 +140,12 @@ async def get_current_snapshot_endpoint(
 @router.get("/history/{file_id}", response_model=List[SnapshotResponse])
 async def get_snapshot_history_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -170,11 +171,12 @@ async def get_snapshot_history_endpoint(
 @router.get("/manual/{file_id}", response_model=List[SnapshotResponse])
 async def get_manual_snapshots_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -200,12 +202,13 @@ async def get_manual_snapshots_endpoint(
 @router.get("/by-type/{file_id}/{trigger_type}", response_model=List[SnapshotResponse])
 async def get_snapshots_by_type_endpoint(
     file_id: str,
-    user_id: str,
     trigger_type: str,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -231,10 +234,11 @@ async def get_snapshots_by_type_endpoint(
 @router.get("/count/{file_id}")
 async def count_snapshots_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     trigger_type: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -248,9 +252,10 @@ async def count_snapshots_endpoint(
 async def restore_snapshot_endpoint(
     file_id: str,
     snapshot_id: int,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -273,9 +278,10 @@ async def restore_snapshot_endpoint(
 @router.post("/undo/{file_id}", response_model=Optional[SnapshotResponse])
 async def undo_snapshot_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -301,9 +307,10 @@ async def undo_snapshot_endpoint(
 @router.post("/redo/{file_id}", response_model=Optional[SnapshotResponse])
 async def redo_snapshot_endpoint(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -329,9 +336,10 @@ async def redo_snapshot_endpoint(
 @router.delete("/{snapshot_id}")
 async def delete_snapshot_endpoint(
     snapshot_id: int,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     # Get snapshot to verify ownership
     snapshot = get_snapshot_by_id(db, snapshot_id)
     if not snapshot:
@@ -357,9 +365,10 @@ async def delete_snapshot_endpoint(
 @router.get("/{snapshot_id}", response_model=SnapshotResponse)
 async def get_snapshot_by_id_endpoint(
     snapshot_id: int,
-    user_id: str,
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id= user.user_id
     # Get snapshot
     snapshot = get_snapshot_by_id(db, snapshot_id)
     
@@ -367,7 +376,7 @@ async def get_snapshot_by_id_endpoint(
         raise HTTPException(status_code=404, detail="Snapshot not found")
     
     # Get task to verify ownership
-    task = db.get(task_id=snapshot.task_id)
+    task = get_db_task(snapshot.task_id, user_id, db)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
@@ -390,9 +399,10 @@ async def get_snapshot_by_id_endpoint(
 @router.get("/{snapshot_id}/children", response_model=List[SnapshotResponse])
 async def get_snapshot_children_endpoint(
     snapshot_id: int,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id = user.user_id
     # Get snapshot with children
     snapshot, children = get_snapshot_with_children(db, snapshot_id)
     
