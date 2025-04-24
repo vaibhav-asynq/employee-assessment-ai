@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Clock, Calendar } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import {
   SidebarGroup,
@@ -14,6 +14,7 @@ import {
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useTaskHistory } from "@/lib/react-query";
+import { format } from "date-fns";
 
 export function TaskHistory() {
   const { user } = useUser();
@@ -26,7 +27,16 @@ export function TaskHistory() {
 
   const loading = isTasksLoading;
 
-  const handleTaskClick = async (
+  // Function to format date - using current date as fallback
+  const formatDate = () => {
+    try {
+      return format(new Date(), "MMM d, yyyy h:mm a");
+    } catch (error) {
+      return "Unknown date";
+    }
+  };
+
+  const handleTaskClick = (
     file_id: string | null,
     snapShotId?: number,
   ) => {
@@ -36,26 +46,27 @@ export function TaskHistory() {
     }
     setFileId(file_id);
 
-    try {
-      await loadSnapshot(snapShotId);
-    } catch (e) {
-      console.log(e);
+    // Use Promise-based approach instead of await
+    if (snapShotId) {
+      loadSnapshot(snapShotId).catch(e => {
+        console.log(e);
+      });
     }
   };
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Task History</SidebarGroupLabel>
+      <SidebarGroupLabel className="font-semibold">Task History</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="flex gap-3 items-center text-center"
+              className="flex gap-3 items-center text-center bg-blue-50 hover:bg-blue-100"
               onClick={() => handleTaskClick(null)}
               isActive={!fileId}
             >
-              <Plus size={14} />
-              <span>New Task</span>
+              <Plus size={14} className="text-blue-600" />
+              <span className="font-medium">New Task</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {loading ? (
@@ -73,14 +84,16 @@ export function TaskHistory() {
                   }
                   tooltip={task.file_name}
                   isActive={task.file_id === fileId}
+                  className="hover:bg-gray-100 transition-colors"
                 >
-                  <FileText />
-                  <span className="flex flex-col">
-                    <span className="truncate">{task.file_name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {task.name}
+                  <FileText className="text-gray-600" />
+                    <span className="flex flex-col w-full overflow-hidden max-w-[200px]">
+                      <span className="truncate font-medium">{task.file_name}</span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                        <Calendar size={10} />
+                        <span className="truncate">{formatDate()}</span>
+                      </span>
                     </span>
-                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))

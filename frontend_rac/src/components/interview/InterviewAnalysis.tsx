@@ -12,25 +12,26 @@ export function InterviewAnalysis() {
   return (
     <>
       <StepperProvider>
-        <div className="container mx-auto p-4">
+        <div className="flex">
           <AppSidebar />
-          {/* <SidebarTrigger /> */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex-1 ml-[70px] p-4">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">RAC Copilot</h1>
+                {user && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Logged in as: {user.primaryEmailAddress?.emailAddress}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-4">
+                <AuthStatus />
+                <StepperControls />
+              </div>
+            </div>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">RAC Copilot</h1>
-              {user && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Logged in as: {user.primaryEmailAddress?.emailAddress}
-                </p>
-              )}
+              <InterviewAnalysisContent />
             </div>
-            <div className="flex items-center space-x-4">
-              <AuthStatus />
-              <StepperControls />
-            </div>
-          </div>
-          <div>
-            <InterviewAnalysisContent />
           </div>
         </div>
       </StepperProvider>
