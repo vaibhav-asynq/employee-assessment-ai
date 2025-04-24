@@ -118,19 +118,26 @@ export function EvidanceDisplay() {
   };
 
   const renderEvidence = useCallback(
-    (evidence: EvidenceOfFeedback) => (
-      <div
-        key={`${evidence.source}-${evidence.feedback}`}
-        className="mb-4 p-4 bg-gray-50 rounded-lg"
-      >
-        <p className="text-gray-800 mb-2">{evidence.feedback}</p>
-        <div className="text-sm text-gray-600">
-          <span className="font-semibold">{evidence.source}</span>
-          <span className="mx-2">•</span>
-          <span>{evidence.role}</span>
+    (evidence: EvidenceOfFeedback) => {
+      const isStrong = evidence.strong === 'yes';
+      
+      return (
+        <div
+          key={`${evidence.source}-${evidence.feedback}`}
+          className={cn(
+            "mb-4 p-4 rounded-lg",
+            isStrong ? "bg-green-100 border-l-4 border-green-500" : "bg-gray-50"
+          )}
+        >
+          <p className="text-gray-800 mb-2">{evidence.feedback}</p>
+          <div className="text-sm text-gray-600">
+            <span className="font-semibold">{evidence.source}</span>
+            <span className="mx-2">•</span>
+            <span>{evidence.role}</span>
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
     [],
   );
 
@@ -193,6 +200,13 @@ export function EvidanceDisplay() {
 
       <TabsContent value="sorted-evidence" className="mt-0">
         <div className="h-full space-y-8 relative">
+          {/* Legend for color meaning */}
+          <div className="flex items-center gap-4 mb-4 text-sm bg-gray-50 p-3 rounded-md">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              <span>Particularly strong evidence</span>
+            </div>
+          </div>
       {selectedEvidanceFeedback.length >= 2 && (
         <div className="fixed bottom-4 left-4 z-50">
           <Button 

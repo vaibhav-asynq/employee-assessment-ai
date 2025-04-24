@@ -108,11 +108,53 @@ async def get_feedback(
                     areas_data = json.loads(areas_text[start:end])
                 else:
                     raise ValueError("No JSON content found in areas response")
+                    
+            # Process strengths data to convert new format to old format if needed
+            processed_strengths = {}
+            for person, data in strengths_data.get("strengths", {}).items():
+                role = data.get("role", "")
+                feedback_list = data.get("feedback", [])
+                
+                # Check if feedback is in the new format (with text and strong fields)
+                processed_feedback = []
+                for item in feedback_list:
+                    if isinstance(item, dict) and "text" in item:
+                        # New format
+                        processed_feedback.append(item)
+                    else:
+                        # Old format - convert to new format
+                        processed_feedback.append({"text": item, "strong": "no"})
+                
+                processed_strengths[person] = {
+                    "role": role,
+                    "feedback": processed_feedback
+                }
+                
+            # Process areas data to convert new format to old format if needed
+            processed_areas = {}
+            for person, data in areas_data.get("areas_to_target", {}).items():
+                role = data.get("role", "")
+                feedback_list = data.get("feedback", [])
+                
+                # Check if feedback is in the new format (with text and strong fields)
+                processed_feedback = []
+                for item in feedback_list:
+                    if isinstance(item, dict) and "text" in item:
+                        # New format
+                        processed_feedback.append(item)
+                    else:
+                        # Old format - convert to new format
+                        processed_feedback.append({"text": item, "strong": "no"})
+                
+                processed_areas[person] = {
+                    "role": role,
+                    "feedback": processed_feedback
+                }
 
             # Combine results
             result = {
-                "strengths": strengths_data.get("strengths", {}),
-                "areas_to_target": areas_data.get("areas_to_target", {}),
+                "strengths": processed_strengths,
+                "areas_to_target": processed_areas,
             }
 
 

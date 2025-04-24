@@ -6,9 +6,14 @@ interface AdviceInfo {
   advice: string[];
 }
 
+interface FeedbackItem {
+  text: string;
+  strong: "yes" | "no";
+}
+
 interface FeedbackInfo {
   role: string;
-  feedback: string[];
+  feedback: (string | FeedbackItem)[];
 }
 
 interface FeedbackData {
@@ -43,6 +48,13 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
 
   return (
     <div>
+      {/* Legend for color meaning */}
+      <div className="flex items-center gap-4 mb-4 text-sm bg-gray-50 p-3 rounded-md">
+        <div className="flex items-center">
+          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+          <span>Particularly strong evidence</span>
+        </div>
+      </div>
       <div className="space-y-8">
         {/* Strengths */}
         <div>
@@ -58,11 +70,20 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      // Check if point is a string or an object with text and strong fields
+                      const text = typeof point === 'string' ? point : point.text;
+                      const isStrong = typeof point !== 'string' && point.strong === 'yes';
+                      
+                      return (
+                        <li 
+                          key={index} 
+                          className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
+                        >
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -83,11 +104,20 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      // Check if point is a string or an object with text and strong fields
+                      const text = typeof point === 'string' ? point : point.text;
+                      const isStrong = typeof point !== 'string' && point.strong === 'yes';
+                      
+                      return (
+                        <li 
+                          key={index} 
+                          className={`${isStrong ? 'bg-green-100 border-l-4 border-green-500 pl-2 -ml-2 py-1 rounded' : 'text-gray-800'}`}
+                        >
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -108,11 +138,15 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      // For advice, we don't have strong field yet, so just display the text
+                      const text = typeof point === 'string' ? point : JSON.stringify(point);
+                      return (
+                        <li key={index} className="text-gray-800">
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}

@@ -6,8 +6,14 @@ Required Output Format:
     "[Person_Name]": {{
       "role": "[Their Role/Relationship]",
       "feedback": [
-        "Complete verbatim quote of constructive feedback 1",
-        "Complete verbatim quote of constructive feedback 2"
+        {{
+          "text": "Complete verbatim quote of constructive feedback 1",
+          "strong": "yes" | "no"
+        }},
+        {{
+          "text": "Complete verbatim quote of constructive feedback 2",
+          "strong": "yes" | "no"
+        }}
       ]
     }}
   }}
@@ -32,6 +38,9 @@ Guidelines:
 4. Maintain person's exact role/title as mentioned in the document
 5. Create a "General_Updates" category for negative feedback not attributed to specific individuals
 6. Preserve the original language and context of the feedback
+7. Mark feedback as "strong": "yes" when it represents particularly significant areas for improvement, critical development needs, or especially impactful constructive feedback
+8. Only the most important and impactful constructive feedback should be marked as "strong": "yes" (approximately 20-30% of all feedback)
+9. All other feedback should be marked as "strong": "no"
 
 Important:
 - Review document page by page systematically

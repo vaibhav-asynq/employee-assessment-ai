@@ -10,6 +10,7 @@ export interface EvidenceOfFeedback {
   feedback: Feedback;
   source: Source;
   role: Role;
+  strong?: "yes" | "no";
 }
 
 interface DevelopmentAreas {
