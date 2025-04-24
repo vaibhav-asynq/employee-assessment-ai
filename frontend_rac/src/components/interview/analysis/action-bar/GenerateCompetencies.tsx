@@ -94,7 +94,23 @@ export function GenerateCompetencies() {
       
       // Create strengths with proper typing
       const strengths: Strengths = {
-        order: Object.keys(strengthData.leadershipQualities),
+        order: (() => {
+          // Get all category keys
+          const allKeys = Object.keys(strengthData.leadershipQualities);
+          
+          // Check if "Additional strengths" is present
+          const additionalStrengthsKey = allKeys.find(key => 
+            key.toLowerCase().includes('additional strength'));
+          
+          if (additionalStrengthsKey) {
+            // If present, remove it from the array and add it at the end
+            const otherKeys = allKeys.filter(key => key !== additionalStrengthsKey);
+            return [...otherKeys, additionalStrengthsKey];
+          }
+          
+          // If not present, return all keys as is
+          return allKeys;
+        })(),
         items: Object.entries(strengthData.leadershipQualities).reduce(
           (acc, [heading, { evidence }]) => {
             acc[heading] = {

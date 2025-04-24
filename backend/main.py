@@ -39,11 +39,15 @@ from state import files_store
 from utils.jwt_utils import verify_clerk_token
 from utils.postgreSql_uitls import get_db_connection
 from utils.validate_envs import validate_required_env
+from sqlalchemy.orm import Session
+from db.core import get_db
+from db.feedback import get_cached_feedback
 
 from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
+from auth.user import get_current_user
 
 # Initialize license object
 license = aw.License()
@@ -103,26 +107,7 @@ def authenticate_user(username: str, password: str):
     return user
 
 
-# Simple authentication check
-async def get_current_user(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401, detail="Missing or invalid Authorization header"
-        )
 
-    token = authorization.split("Bearer ")[1]
-    user_claims = verify_clerk_token(token)
-    user_id = user_claims.get("sub")
-    if not user_id:
-        user_id = (
-            user_claims.get("id")
-            or user_claims.get("user_id")
-            or user_claims.get("userId")
-        )
-    if user_id:
-        user_claims["user_id"] = user_id
-        return user_claims
-    return user_claims
 
 
 app = FastAPI()
@@ -857,32 +842,44 @@ async def get_strength_evidences(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     try:
-        # Check cache first with parameters
-        if use_cache:
-            cached_data = get_cached_data(
-                "strength_evidences", file_id, {"num_competencies": numCompetencies}
+    #     # Check cache first with parameters
+    #     if use_cache:
+    #         cached_data = get_cached_data(
+    #             "strength_evidences", file_id, {"num_competencies": numCompetencies}
+    #         )
+    #         if cached_data:
+    #             print(
+    #                 f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
+    #             )
+    #             return cached_data
+
+        # Get previously generated strengths from the database
+        user_id = current_user.user_id
+        feedback_data = get_cached_feedback(user_id, file_id, db)
+        print(user_id)
+        print(feedback_data)
+        
+        if not feedback_data:
+            # If not in database, we need to generate it first
+            raise HTTPException(
+                status_code=400,
+                detail="Feedback data not found. Please generate feedback data first."
             )
-            if cached_data:
-                print(
-                    f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
-                )
-                return cached_data
-
-        # If not cached or cache disabled, process normally
-        # Get the feedback transcript
-        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-        if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail="Feedback transcript not found")
-
-        with open(feedback_path, "r") as f:
-            feedback_transcript = f.read()
+            
+        # Use the previously generated strengths from the database
+        strengths_data = feedback_data.get("strengths", {})
+        
+        # Convert strengths data to JSON string for the prompt
+        strengths_json = json.dumps(strengths_data, indent=2)
 
         # Load and format prompt
         strength_prompt = load_prompt("strength_evidences_categorized.txt")
         prompt = strength_prompt.format(
-            feedback=feedback_transcript, num_competencies=numCompetencies
+            strengths=strengths_json, num_competencies=numCompetencies
         )
 
         # Generate analysis using Claude
@@ -997,7 +994,7 @@ async def get_advice(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/get_feedback/{file_id}")
+@app.get("/api/get_feedback_old/{file_id}")
 async def get_feedback(
     file_id: str,
     use_cache: bool = Query(
@@ -1331,5 +1328,5 @@ if __name__ == "__main__":
 
     # Start the API server
     uvicorn.run(
-        "main:app", host="127.0.0.1", port=8000, reload=env_variables.RELOAD_MODE
+        "main:app", host="0.0.0.0", port=8000, reload=env_variables.RELOAD_MODE
     )

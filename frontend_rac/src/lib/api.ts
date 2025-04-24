@@ -4,8 +4,8 @@ import { useAuthStore } from "@/zustand/store/authStore";
 import { Task } from "./types/types.filetask";
 
 //TODO: use other specified types in the types folder
-// const API_URL = "http://34.202.149.23:8000";
-const API_URL = "http://localhost:8000";
+const API_URL = "http://34.202.149.23:8000";
+//const API_URL = "http://localhost:8000";
 
 // Create axios instance
 const api = axios.create({

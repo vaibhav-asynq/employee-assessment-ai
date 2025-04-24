@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 # here tasks will be created
-@router.post("/api/db/get_advice/{file_id}")
+@router.get("/api/db/get_advice/{file_id}")
 async def get_advice(
     request: Request, 
     file_id: str,
