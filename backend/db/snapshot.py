@@ -61,7 +61,7 @@ def get_snapshot_history(
     query = (
         session.query(DBSnapshot)
         .filter(DBSnapshot.task_id == task_id)
-        .order_by(DBSnapshot.created_at)
+        .order_by(desc(DBSnapshot.created_at))
     )
     
     if limit is not None:

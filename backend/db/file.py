@@ -17,6 +17,7 @@ class Task(BaseModel):
     name: str
     file_id: str
     file_name: str
+    current_snapshot_id: Optional[int]
 
 class TaskCreate(BaseModel):
     user_id: str

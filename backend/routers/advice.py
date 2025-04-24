@@ -2,9 +2,9 @@ import json
 import os
 
 import anthropic
-from db.advice import AdviceCreate, create_advice, get_cached_advice
 import env_variables
 from auth.user import User, get_current_user
+from db.advice import AdviceCreate, create_advice, get_cached_advice
 from db.core import get_db
 from db.file import get_task_by_user_and_fileId
 from dir_config import SAVE_DIR
@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 # here tasks will be created
-@router.post("/api/db/get_advice/{file_id}")
+@router.get("/api/db/get_advice/{file_id}")
 async def get_advice(
     request: Request, 
     file_id: str,

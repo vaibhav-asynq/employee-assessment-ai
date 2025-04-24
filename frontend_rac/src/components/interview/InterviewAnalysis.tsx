@@ -1,4 +1,6 @@
 import { AuthStatus } from "../auth/AuthStatus";
+import { AppSidebar } from "../sidebar/AppSidebar";
+import { SidebarTrigger } from "../ui/sidebar";
 import { StepperProvider } from "../ui/stepper";
 import { StepperControls } from "./controls/StepperControls";
 import InterviewAnalysisContent from "./InterviewAnalysisContent";
@@ -11,6 +13,8 @@ export function InterviewAnalysis() {
     <>
       <StepperProvider>
         <div className="container mx-auto p-4">
+          <AppSidebar />
+          {/* <SidebarTrigger /> */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">RAC Copilot</h1>

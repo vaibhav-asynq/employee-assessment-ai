@@ -73,10 +73,11 @@ async def upload_file(
 @router.get("/api/tasks/{task_id}", response_model=Task)
 async def get_task(
     task_id: int,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get a specific task by ID"""
+    user_id=user.user_id
     try:
         task = get_db_task(task_id, user_id, db)
         return task
@@ -89,10 +90,11 @@ async def get_task(
 @router.get("/api/tasks/file/{file_id}", response_model=Task)
 async def get_task_by_file_id(
     file_id: str,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get a task by file ID"""
+    user_id=user.user_id
     try:
         task = get_task_by_user_and_fileId(user_id, file_id, db)
         return task
@@ -104,9 +106,10 @@ async def get_task_by_file_id(
 
 @router.get("/api/tasks", response_model=List[Task])
 async def get_user_tasks(
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user_id=user.user_id
     """Get all tasks for the current user"""
     try:
         # We need to add this function to db/file.py
@@ -120,10 +123,11 @@ async def get_user_tasks(
 async def update_task(
     task_id: int,
     task_data: dict,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a task"""
+    user_id=user.user_id
     try:
         # We need to add this function to db/file.py
         updated_task = update_db_task(task_id, user_id, task_data, db)
@@ -137,10 +141,11 @@ async def update_task(
 @router.delete("/api/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: int,
-    user_id: str,
+    user:User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a task"""
+    user_id=user.user_id
     try:
         # We need to add this function to db/file.py
         delete_db_task(task_id, user_id, db)
