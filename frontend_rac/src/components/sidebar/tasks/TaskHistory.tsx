@@ -25,7 +25,7 @@ export function TaskHistory() {
     useInterviewDataStore();
   const { loadSnapshot } = useSnapshotLoader(null, false);
   const { goToStep } = useStepper();
-  const { goToStep } = useStepper();
+
 
   const { data: tasks = [], isLoading: isTasksLoading, refetch: refetchTasks } = useTaskHistory(
     user?.id,

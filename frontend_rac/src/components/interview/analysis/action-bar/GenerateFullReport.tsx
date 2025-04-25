@@ -31,15 +31,17 @@ export function GenerateFullReport() {
       const data = await generateReport(fileId);
       const templatedData = convertInterviewAnalysisDataToTemplatedData(data);
 
-      if (templates[templateId]) {
-        //TODO: return or activate tab or update data
-        // handleAnalysisUpdate((prev) => {
-        //   return { ...prev, ...orderedData };
-        // });
-      } else {
+      console.log(templatedData)
+
+      // if (templates[templateId]) {
+      //   //TODO: return or activate tab or update data
+      //   // handleAnalysisUpdate((prev) => {
+      //   //   return { ...prev, ...orderedData };
+      //   // });
+      // } else {
         //create template
-        addTemplate(templateId, templatedData, false);
-      }
+        addTemplate(templateId, templatedData, false, true);
+      // }
 
       addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
       addChildTab(

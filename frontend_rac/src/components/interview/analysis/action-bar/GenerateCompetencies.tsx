@@ -128,9 +128,9 @@ export function GenerateCompetencies() {
         ],
         advices: orderedAdviceData,
       };
-
+      console.log(templatedData)
       if (templates[templateId]) {
-        handleAnalysisUpdate(() => templatedData);
+        addTemplate(templateId, templatedData, false, true);
       } else {
         addTemplate(templateId, templatedData, false);
       }

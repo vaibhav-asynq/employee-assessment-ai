@@ -298,7 +298,7 @@ export function EvidanceDisplay() {
           </div>
 
           {/* Advice Section */}
-          <div>
+          <div> 
             <h2 className="text-2xl font-bold mb-6">Advice</h2>
             <div className="space-y-6">
               <Card className="p-4">
@@ -314,7 +314,7 @@ export function EvidanceDisplay() {
               </Card>
             </div>
           </div>
-        </div>
+        </div> 
       </TabsContent>
     </Tabs>
   );

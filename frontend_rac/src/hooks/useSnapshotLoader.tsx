@@ -4,8 +4,6 @@ import { useSnapshotById, useLatestSnapshot } from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
-import { base } from "@/lib/analysis/templates";
-import { convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";
 import { useCallback, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Snapshot } from "@/lib/types/types.snapshot";
@@ -24,13 +22,7 @@ export const useSnapshotLoader = (
     data: snapshotData,
     refetch: refetchSnapshotById,
     error: errorSnapshotById,
-  } = useSnapshotById(snapshotId ?? null, { 
-    enabled: autofetch,
-    // Keep snapshot data in cache for 24 hours
-    gcTime: 1000 * 60 * 60 * 24,
-    // Consider data fresh for 5 minutes
-    staleTime: 1000 * 60 * 5,
-  });
+  } = useSnapshotById(snapshotId ?? null, { enabled: autofetch });
 
   const {
     data: latestSnapshotData,
@@ -38,18 +30,13 @@ export const useSnapshotLoader = (
     error: errorLatestSnapshot,
   } = useLatestSnapshot(fileId, snapshotId ? undefined : user?.id, {
     enabled: autofetch,
-    // Keep snapshot data in cache for 24 hours
-    gcTime: 1000 * 60 * 60 * 24,
-    // Consider data fresh for 5 minutes
-    staleTime: 1000 * 60 * 5,
   });
 
   const snapshot = snapshotData || latestSnapshotData;
   const refetch = snapshotId ? refetchSnapshotById : refetchLatestSnapshot;
   const error = snapshotId ? errorSnapshotById : errorLatestSnapshot;
-  const { addChildTab, addPath } = useUserPreferencesStore();
+  const { addChildTab, addPath, deleteChildTab, deletePath } = useUserPreferencesStore();
 
-  // Function to populate stores with snapshot data
   const populateSnapshotInStores = useCallback(
     (data: Snapshot) => {
       resetAnalysisToOriginal();
@@ -90,6 +77,7 @@ export const useSnapshotLoader = (
         ai_Competencies.editable.constructor === Object
       ) {
         console.log("JSON is blank");
+        deletePath("ai-competencies")
       } else {
         addPath("ai-competencies", "AI competencies");
         addChildTab(
@@ -117,99 +105,32 @@ export const useSnapshotLoader = (
     [addTemplate, setAdviceData, setFeedbackData],
   );
 
-  // Function to initialize empty templates when no snapshot is available
-  const initializeEmptyTemplates = useCallback(() => {
-    console.log("Initializing empty templates for all reports");
-    
-    // Convert the base template to the required format
-    const emptyTemplate = convertInterviewAnalysisDataToTemplatedData(base);
-    
-    // Add empty templates for all three report types
-    addTemplate(templatesIds.base, emptyTemplate, false, true);
-    addTemplate(templatesIds.fullReport, emptyTemplate, false, true);
-    addTemplate(templatesIds.aiCompetencies, emptyTemplate, false, true);
-    
-    console.log("Empty templates initialized successfully");
-  }, [addTemplate]);
-
   useEffect(() => {
     if (!autofetch) return;
-    
-    // If we have snapshot data, populate the stores with it
-    if (snapshotData || latestSnapshotData) {
-      const data = snapshotData || latestSnapshotData;
-      if (data) {
-        console.log("Autofetch: Populating stores with snapshot data");
-        populateSnapshotInStores(data);
-      }
-    } 
-    // If we don't have snapshot data but autofetch is enabled and we have a fileId,
-    // initialize empty templates
-    else if (fileId) {
-      console.log("Autofetch: No snapshot data found, initializing empty templates");
-      initializeEmptyTemplates();
-    }
-  }, [
-    autofetch, 
-    latestSnapshotData, 
-    snapshotData, 
-    populateSnapshotInStores, 
-    initializeEmptyTemplates,
-    fileId
-  ]);
+    if (!snapshotData && !latestSnapshotData) return;
+    const data = snapshotData || latestSnapshotData;
+    if (!data) return;
+
+    populateSnapshotInStores(data);
+  }, [autofetch, latestSnapshotData, populateSnapshotInStores, snapshotData]);
 
   const loadSnapshot = async (customSnapshotId?: number | null) => {
     try {
-      console.log("Loading snapshot...", { customSnapshotId, snapshotId, fileId, userId: user?.id });
-      let data: Snapshot | null = null;
+      let data: Snapshot | null;
 
-      // First try to load a specific snapshot if an ID is provided
       if (customSnapshotId ?? snapshotId) {
         const idToFetch = customSnapshotId ?? snapshotId;
-        console.log(`Fetching snapshot by ID: ${idToFetch}`);
         data = idToFetch ? await getSnapshotById(idToFetch) : null;
-        
-        if (data) {
-          console.log(`Successfully loaded snapshot with ID: ${idToFetch}`);
-        } else {
-          console.warn(`No snapshot found with ID: ${idToFetch}, will try to load latest snapshot`);
-        }
-      }
-      
-      // If no specific snapshot was found or requested, try to load the latest snapshot
-      if (!data && fileId) {
-        console.log(`Fetching latest snapshot for fileId: ${fileId}, userId: ${user?.id}`);
-        try {
-          const result = await refetchLatestSnapshot();
-          data = result.data ?? null;
-          
-          if (data) {
-            console.log(`Successfully loaded latest snapshot for fileId: ${fileId}`);
-          } else {
-            console.warn(`No latest snapshot found for fileId: ${fileId}`);
-          }
-        } catch (error) {
-          console.error("Error fetching latest snapshot:", error);
-        }
+      } else {
+        const result = await refetchLatestSnapshot();
+        data = result.data ?? null;
       }
 
-      // If no snapshot was found, initialize empty templates
-      if (!data) {
-        console.warn("No snapshot data returned, initializing empty templates");
-        initializeEmptyTemplates();
-        return null;
-      }
-      
-      console.log("Snapshot loaded successfully:", data);
+      if (!data) return;
       populateSnapshotInStores(data);
       return data;
-    } catch (error) {
-      console.error("Error loading snapshot:", error);
-      // Initialize empty templates when there's an error loading the snapshot
-      console.warn("Initializing empty templates due to snapshot loading error");
-      initializeEmptyTemplates();
-      // Rethrow the error so the caller can handle it
-      throw error;
+    } catch {
+      return;
     }
   };
 
