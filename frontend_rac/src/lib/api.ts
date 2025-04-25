@@ -6,6 +6,8 @@ import { Task } from "./types/types.filetask";
 //TODO: use other specified types in the types folder
 const API_URL = "http://34.202.149.23:8000";
 // const API_URL = "http://localhost:8000";
+const API_URL = "http://34.202.149.23:8000";
+// const API_URL = "http://localhost:8000";
 
 // Create axios instance
 const api = axios.create({
@@ -41,10 +43,16 @@ api.interceptors.request.use(
     const token = useAuthStore.getState().token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        headers: { Authorization: `Bearer ${token.substring(0, 10)}...` }
+      });
+    } else {
+      console.warn(`API Request without token: ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
   (error) => {
+    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   },
 );
@@ -71,8 +79,11 @@ api.interceptors.response.use(
 
     // If the error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log("Received 401 error, attempting to refresh token...");
+      
       if (isRefreshing) {
         // If we're already refreshing, add this request to the queue
+        console.log("Token refresh already in progress, adding request to queue");
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject, config: originalRequest });
         });
@@ -87,10 +98,11 @@ api.interceptors.response.use(
         const { refreshToken } = useAuthStore.getState();
 
         if (refreshToken) {
-          await refreshToken();
-          const newToken = useAuthStore.getState().token;
-
+          console.log("Calling refreshToken function");
+          const newToken = await refreshToken();
+          
           if (newToken && originalRequest.headers) {
+            console.log("Token refreshed successfully, retrying request");
             // Update the Authorization header with the new token
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
@@ -99,13 +111,18 @@ api.interceptors.response.use(
 
             // Retry the original request with the new token
             return api(originalRequest);
+          } else {
+            console.error("Failed to get new token after refresh");
           }
+        } else {
+          console.error("No refreshToken function available");
         }
 
         // If we couldn't refresh the token, process the queue with an error
         processQueue(new Error("Failed to refresh token"));
         return Promise.reject(error);
       } catch (refreshError) {
+        console.error("Error during token refresh:", refreshError);
         processQueue(refreshError as Error);
         return Promise.reject(refreshError);
       } finally {

@@ -31,6 +31,10 @@ export function FeedbackScreen() {
 
   const [useCache, setUseCache] = useState(true);
 
+  // Keep track of the last fileId we fetched data for
+  const [lastFetchedFileId, setLastFetchedFileId] = useState<string | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
+
   useEffect(() => {
     const fetch = async () => {
       if (fileId && !feedbackData) {
@@ -77,7 +81,16 @@ export function FeedbackScreen() {
     return (
       <ActionWrapper>
         <div className="grid place-items-center">
-          <p className="text-red-600">{error}</p>
+          <div className="flex flex-col items-center gap-4 max-w-md text-center">
+            <p className="text-xl font-semibold text-red-600">Error Loading Data</p>
+            <p className="text-red-600">{error}</p>
+            <Button 
+              onClick={() => fetchFeedbackData(useCache)}
+              className="mt-4"
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       </ActionWrapper>
     );
@@ -86,7 +99,22 @@ export function FeedbackScreen() {
     return (
       <ActionWrapper>
         <div className="grid place-items-center">
-          <p>problem in getting Feedback Data</p>
+          <div className="flex flex-col items-center gap-4 max-w-md text-center">
+            <p className="text-xl font-semibold text-amber-600">No Feedback Data Available</p>
+            <p className="text-gray-600">
+              {fileId 
+                ? "There was a problem retrieving feedback data for this task." 
+                : "Please select a task from the sidebar or upload a new file."}
+            </p>
+            {fileId && (
+              <Button 
+                onClick={() => fetchFeedbackData(useCache)}
+                className="mt-4"
+              >
+                Try Again
+              </Button>
+            )}
+          </div>
         </div>
       </ActionWrapper>
     );

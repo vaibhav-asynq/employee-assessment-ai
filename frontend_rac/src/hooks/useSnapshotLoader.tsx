@@ -4,6 +4,8 @@ import { useSnapshotById, useLatestSnapshot } from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { templatesIds } from "@/lib/types/types.analysis";
+import { base } from "@/lib/analysis/templates";
+import { convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";
 import { useCallback, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Snapshot } from "@/lib/types/types.snapshot";
@@ -37,6 +39,7 @@ export const useSnapshotLoader = (
   const error = snapshotId ? errorSnapshotById : errorLatestSnapshot;
   const { addChildTab, addPath } = useUserPreferencesStore();
 
+  // Function to populate stores with snapshot data
   const populateSnapshotInStores = useCallback(
     (data: Snapshot) => {
       resetAnalysisToOriginal();
@@ -104,32 +107,79 @@ export const useSnapshotLoader = (
     [addTemplate, setAdviceData, setFeedbackData],
   );
 
+  // Function to initialize empty templates when no snapshot is available
+  const initializeEmptyTemplates = useCallback(() => {
+    console.log("Initializing empty templates for all reports");
+    
+    // Convert the base template to the required format
+    const emptyTemplate = convertInterviewAnalysisDataToTemplatedData(base);
+    
+    // Add empty templates for all three report types
+    addTemplate(templatesIds.base, emptyTemplate, false, true);
+    addTemplate(templatesIds.fullReport, emptyTemplate, false, true);
+    addTemplate(templatesIds.aiCompetencies, emptyTemplate, false, true);
+    
+    console.log("Empty templates initialized successfully");
+  }, [addTemplate]);
+
   useEffect(() => {
     if (!autofetch) return;
-    if (!snapshotData && !latestSnapshotData) return;
-    const data = snapshotData || latestSnapshotData;
-    if (!data) return;
-
-    populateSnapshotInStores(data);
-  }, [autofetch, latestSnapshotData, populateSnapshotInStores, snapshotData]);
+    
+    // If we have snapshot data, populate the stores with it
+    if (snapshotData || latestSnapshotData) {
+      const data = snapshotData || latestSnapshotData;
+      if (data) {
+        console.log("Autofetch: Populating stores with snapshot data");
+        populateSnapshotInStores(data);
+      }
+    } 
+    // If we don't have snapshot data but autofetch is enabled and we have a fileId,
+    // initialize empty templates
+    else if (fileId) {
+      console.log("Autofetch: No snapshot data found, initializing empty templates");
+      initializeEmptyTemplates();
+    }
+  }, [
+    autofetch, 
+    latestSnapshotData, 
+    snapshotData, 
+    populateSnapshotInStores, 
+    initializeEmptyTemplates,
+    fileId
+  ]);
 
   const loadSnapshot = async (customSnapshotId?: number | null) => {
     try {
+      console.log("Loading snapshot...", { customSnapshotId, snapshotId, fileId, userId: user?.id });
       let data: Snapshot | null;
 
       if (customSnapshotId ?? snapshotId) {
         const idToFetch = customSnapshotId ?? snapshotId;
+        console.log(`Fetching snapshot by ID: ${idToFetch}`);
         data = idToFetch ? await getSnapshotById(idToFetch) : null;
       } else {
+        console.log(`Fetching latest snapshot for fileId: ${fileId}, userId: ${user?.id}`);
         const result = await refetchLatestSnapshot();
         data = result.data ?? null;
       }
 
-      if (!data) return;
+      if (!data) {
+        console.warn("No snapshot data returned, initializing empty templates");
+        // Initialize empty templates when no snapshot is found
+        initializeEmptyTemplates();
+        return null;
+      }
+      
+      console.log("Snapshot loaded successfully:", data);
       populateSnapshotInStores(data);
       return data;
-    } catch {
-      return;
+    } catch (error) {
+      console.error("Error loading snapshot:", error);
+      // Initialize empty templates when there's an error loading the snapshot
+      console.warn("Initializing empty templates due to snapshot loading error");
+      initializeEmptyTemplates();
+      // Rethrow the error so the caller can handle it
+      throw error;
     }
   };
 

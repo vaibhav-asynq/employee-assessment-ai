@@ -12,12 +12,28 @@ import {
   parseHierarchicalPath,
   SelectPathIds,
 } from "@/lib/types/types.user-preferences";
+import { templatesIds } from "@/lib/types/types.analysis";
 import { ManualReport } from "./manual-report/ManualReport";
 import { FullReport } from "./full-report/FullReport";
 import { TabsComponent } from "./Tabs";
 
 export function AnalysisDisplay() {
   const loading = useAnalysisStore((state) => state.loading);
+  const templates = useAnalysisStore((state) => state.templates);
+  const [initializing, setInitializing] = useState(false);
+  
+  // Check if templates are initialized
+  useEffect(() => {
+    // If templates object is empty or missing required templates, show initializing state
+    const hasRequiredTemplates = 
+      templates && 
+      Object.keys(templates).length >= 3 && 
+      templates[templatesIds.base] && 
+      templates[templatesIds.fullReport] && 
+      templates[templatesIds.aiCompetencies];
+    
+    setInitializing(!hasRequiredTemplates);
+  }, [templates]);
   const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
   const getChildTabs = useUserPreferencesStore((state) => state.getChildTabs);
   const availablePaths = useUserPreferencesStore(
@@ -57,11 +73,21 @@ export function AnalysisDisplay() {
     );
   };
 
-  if (loading) {
+  if (loading || initializing) {
     return (
       <>
-        <div className="grid place-items-center animate-spin w-full">
-          <Loader2 />
+        <div className="grid place-items-center w-full h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg font-medium text-gray-700">
+              {initializing ? "Initializing report templates..." : "Loading analysis data..."}
+            </p>
+            <p className="text-sm text-gray-500 max-w-md text-center">
+              {initializing 
+                ? "Creating empty templates for this task. This will only take a moment."
+                : "Please wait while we load your analysis data."}
+            </p>
+          </div>
         </div>
       </>
     );

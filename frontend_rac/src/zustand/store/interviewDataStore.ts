@@ -101,21 +101,46 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
 
   fetchFeedbackData: async (useCache: boolean = true) => {
     const { fileId } = get();
-    if (!fileId) return;
+    if (!fileId) {
+      console.error("Cannot fetch feedback data: No fileId set");
+      return;
+    }
+    
+    console.log(`Starting to fetch feedback data for fileId: ${fileId}, useCache: ${useCache}`);
     set({ loading: true, error: "" });
+    
     try {
-      console.log("Fetching feedback data...");
+      console.log(`Making API calls to getFeedback and getAdvice for fileId: ${fileId}`);
+      
+      // Track the start time for performance monitoring
+      const startTime = performance.now();
+      
       const [feedbackData, adviceData] = await Promise.all([
         getFeedback(fileId, useCache),
         getAdvice(fileId, useCache),
       ]);
-      //TODO: i think not doing anything from using feedback data.
-      console.log("Feedback data received:", feedbackData);
-      console.log("Advice data received:", adviceData);
+      
+      const endTime = performance.now();
+      console.log(`API calls completed in ${Math.round(endTime - startTime)}ms`);
+      
       if (!feedbackData) {
+        console.error("No feedback data received from API");
         throw new Error("No feedback data received");
       }
+      
+      console.log("Feedback data received successfully:", {
+        strengths: Object.keys(feedbackData.strengths || {}),
+        areas_to_target: Object.keys(feedbackData.areas_to_target || {})
+      });
+      
+      console.log("Advice data received successfully:", {
+        categories: adviceData ? Object.keys(adviceData) : 'No advice data'
+      });
+      
+      // Update the store with the new data
       set({ feedbackData, adviceData });
+      console.log("Store updated with new feedback and advice data");
+      
     } catch (err) {
       console.error("Error fetching feedback data:", err);
       set({
@@ -123,6 +148,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
       });
     } finally {
       set({ loading: false });
+      console.log("Feedback data fetch completed, loading state set to false");
     }
   },
 
@@ -135,7 +161,16 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   },
 
   setFileId: (fileId: string | null) => {
-    set({ fileId });
+    // Clear existing data when changing files to force a refetch
+    set({ 
+      fileId,
+      feedbackData: null,
+      adviceData: null,
+      rawData: null,
+      currentSnapshotId: null,
+      currentSnapshot: null
+    });
+    console.log("File ID set to:", fileId, "- cleared existing data to force refetch");
   },
 
   saveSnapshot: async (
@@ -157,7 +192,8 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
 
     try {
       // Create snapshot report objects
-      const snapshotData = {
+      // Use type assertion to fix TypeScript error
+      const snapshotData: any = {
         file_id: fileId,
         manual_report: {
           editable: manualReport,
