@@ -24,6 +24,8 @@ type UserPreferencesState = {
     id: ChildPathIds,
     name: string,
   ) => void; // Add a new child tab
+  deletePath: (id: SelectPathIds) => void; // Delete a parent tab and all its children
+  deleteChildTab: (parentId: SelectPathIds, childId: ChildPathIds) => void; // Delete a specific child tab
 };
 
 const child_feedback: ChildPath[] = [
@@ -138,6 +140,123 @@ export const useUserPreferencesStore = create<UserPreferencesState>(
               }
             : tab,
         ),
+      });
+    },
+
+    deletePath: (id: SelectPathIds) => {
+      const { availablePaths, selectedPath } = get();
+
+      // Check if the path exists
+      const pathExists = availablePaths.some((tab) => tab.id === id);
+      if (!pathExists) {
+        console.warn(`Path with ID "${id}" not found. Nothing to delete.`);
+        return;
+      }
+
+      // Filter out the path to be deleted
+      const updatedPaths = availablePaths.filter((tab) => tab.id !== id);
+
+      // If there are no paths left, show an error
+      if (updatedPaths.length === 0) {
+        console.error("Cannot delete the last remaining path.");
+        set({ error: "Cannot delete the last remaining path." });
+        return;
+      }
+
+      // Update selected path if the deleted path was selected
+      let updatedSelectedPath = selectedPath;
+      const { parentId } = parseHierarchicalPath(selectedPath);
+
+      if (parentId === id) {
+        // If the deleted path was selected, select the first available path
+        const firstPath = updatedPaths[0];
+        const firstChildId =
+          firstPath.child && firstPath.child.length > 0
+            ? firstPath.child[0].id
+            : undefined;
+
+        updatedSelectedPath = createHierarchicalPath(
+          firstPath.id,
+          firstChildId,
+        );
+      }
+
+      set({
+        availablePaths: updatedPaths,
+        selectedPath: updatedSelectedPath,
+      });
+    },
+
+    deleteChildTab: (parentId: SelectPathIds, childId: ChildPathIds) => {
+      const { availablePaths, selectedPath } = get();
+
+      // Find the parent tab
+      const parentTab = availablePaths.find((tab) => tab.id === parentId);
+      if (!parentTab) {
+        console.warn(`Parent tab with ID "${parentId}" not found.`);
+        return;
+      }
+
+      // Check if the child tab exists
+      const childExists = parentTab.child?.some(
+        (child) => child.id === childId,
+      );
+      if (!childExists) {
+        console.warn(
+          `Child tab with ID "${childId}" not found in parent "${parentId}".`,
+        );
+        return;
+      }
+
+      // Check if this is the last child tab
+      if (parentTab.child?.length === 1) {
+        console.warn(
+          `Cannot delete the last child tab from parent "${parentId}".`,
+        );
+        set({
+          error: `Cannot delete the last child tab from parent "${parentId}".`,
+        });
+        return;
+      }
+
+      // Filter out the child tab to be deleted
+      const updatedPaths = availablePaths.map((tab) => {
+        if (tab.id === parentId) {
+          return {
+            ...tab,
+            child: tab.child?.filter((child) => child.id !== childId) || [],
+          };
+        }
+        return tab;
+      });
+
+      // Update selected path if the deleted child tab was selected
+      let updatedSelectedPath = selectedPath;
+      const { parentId: selectedParentId, childId: selectedChildId } =
+        parseHierarchicalPath(selectedPath);
+
+      if (selectedParentId === parentId && selectedChildId === childId) {
+        // If the deleted child tab was selected, select the first available child tab
+        const updatedParentTab = updatedPaths.find(
+          (tab) => tab.id === parentId,
+        );
+        if (
+          updatedParentTab &&
+          updatedParentTab.child &&
+          updatedParentTab.child.length > 0
+        ) {
+          updatedSelectedPath = createHierarchicalPath(
+            parentId,
+            updatedParentTab.child[0].id,
+          );
+        } else {
+          updatedSelectedPath = parentId;
+        }
+      }
+
+      set({
+        availablePaths: updatedPaths,
+        selectedPath: updatedSelectedPath,
       });
     },
   }),
