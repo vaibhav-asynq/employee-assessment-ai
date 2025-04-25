@@ -4,8 +4,8 @@ import { useAuthStore } from "@/zustand/store/authStore";
 import { Task } from "./types/types.filetask";
 
 //TODO: use other specified types in the types folder
-// const API_URL = "http://34.202.149.23:8000";
-const API_URL = "http://localhost:8000";
+const API_URL = "http://34.202.149.23:8000";
+// const API_URL = "http://localhost:8000";
 
 // Create axios instance
 const api = axios.create({
@@ -23,7 +23,7 @@ let failedQueue: {
 
 // Process the queue of failed requests
 const processQueue = (error: Error | null, token: string | null = null) => {
-  failedQueue.forEach(request => {
+  failedQueue.forEach((request) => {
     if (error) {
       request.reject(error);
     } else if (token && request.config.headers) {
@@ -31,7 +31,7 @@ const processQueue = (error: Error | null, token: string | null = null) => {
       request.resolve(api(request.config));
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -65,8 +65,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
     // If the error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -83,25 +85,25 @@ api.interceptors.response.use(
         // Try to refresh the token
         // This will trigger the Clerk token refresh
         const { refreshToken } = useAuthStore.getState();
-        
+
         if (refreshToken) {
           await refreshToken();
           const newToken = useAuthStore.getState().token;
-          
+
           if (newToken && originalRequest.headers) {
             // Update the Authorization header with the new token
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            
+
             // Process any queued requests with the new token
             processQueue(null, newToken);
-            
+
             // Retry the original request with the new token
             return api(originalRequest);
           }
         }
-        
+
         // If we couldn't refresh the token, process the queue with an error
-        processQueue(new Error('Failed to refresh token'));
+        processQueue(new Error("Failed to refresh token"));
         return Promise.reject(error);
       } catch (refreshError) {
         processQueue(refreshError as Error);
@@ -110,9 +112,9 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export interface FeedbackEvidence {

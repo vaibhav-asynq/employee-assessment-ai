@@ -13,6 +13,9 @@ interface AdviceData {
 import { ActionWrapper } from "./ActionWrapper";
 import { Button } from "@/components/ui/button";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
+import { useStepper } from "@/components/ui/stepper";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 export function FeedbackScreen() {
   const error = useInterviewDataStore((state) => state.error);
@@ -23,15 +26,45 @@ export function FeedbackScreen() {
   const fetchFeedbackData = useInterviewDataStore(
     (state) => state.fetchFeedbackData,
   );
+  const { loadSnapshot } = useSnapshotLoader(null, true);
+  const { nextStep } = useStepper();
+
   const [useCache, setUseCache] = useState(true);
 
   useEffect(() => {
-    if (fileId && !feedbackData) {
-      fetchFeedbackData(useCache);
-    }
-  }, [feedbackData, fetchFeedbackData, fileId, useCache]);
+    const fetch = async () => {
+      if (fileId && !feedbackData) {
+        try {
+          const data = await loadSnapshot();
+          if (!data) {
+            console.log("NO SNAPSHOT DATA, FETCHING FEEDBACK DIRECTLY");
+            await fetchFeedbackData(useCache);
+          } else {
+            console.log("LOADED DATA FROM SNAPSHOT");
+            nextStep();
+          }
+        } catch (error) {
+          console.error("Error loading data:", error);
+          await fetchFeedbackData(useCache);
+        }
+      }
+    };
+
+    fetch();
+    // This effect should only run when fileId changes or when feedbackData is null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileId]);
 
   if (loading && !feedbackData) {
+    return (
+      <ActionWrapper>
+        <div className="grid place-items-center animate-spin">
+          <Loader2 />
+        </div>
+      </ActionWrapper>
+    );
+  }
+  if (fileId && !feedbackData) {
     return (
       <ActionWrapper>
         <div className="grid place-items-center animate-spin">
@@ -70,7 +103,10 @@ export function FeedbackScreen() {
               onChange={(e) => setUseCache(e.target.checked)}
               className="mr-2 h-4 w-4"
             />
-            <label htmlFor="use-cache-feedback" className="text-sm text-gray-700">
+            <label
+              htmlFor="use-cache-feedback"
+              className="text-sm text-gray-700"
+            >
               Use cached results if available
             </label>
           </div>

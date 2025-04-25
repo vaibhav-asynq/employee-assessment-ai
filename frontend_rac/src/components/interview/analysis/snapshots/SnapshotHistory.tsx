@@ -199,10 +199,16 @@ function SnapshotHistoryContent() {
 }
 
 function SnapshotHistory() {
+  const fileId = useInterviewDataStore((state) => state.fileId);
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          disabled={!fileId}
+        >
           <History size={16} />
           Snapshot History
         </Button>

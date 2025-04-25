@@ -3,19 +3,46 @@ import { Upload, Loader2 } from "lucide-react";
 import { ActionWrapper } from "./ActionWrapper";
 import { useStepper } from "@/components/ui/stepper";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/react-query";
+import { useAnalysisStore } from "@/zustand/store/analysisStore";
+import { templatesIds } from "@/lib/types/types.analysis";
 
 export function UploadScreen() {
+  const queryClient = useQueryClient();
   const handleSelectPdf = useInterviewDataStore(
     (state) => state.handleSelectPdf,
   );
   const error = useInterviewDataStore((state) => state.error);
   const loading = useInterviewDataStore((state) => state.loading);
-  const file = useInterviewDataStore((state) => state.file);
+  const { file, fileId } = useInterviewDataStore();
   const uploadProgress = useInterviewDataStore((state) => state.uploadProgress);
+  const { setFeedbackData, setAdviceData } = useInterviewDataStore();
+  const { templates, removeTemplate } = useAnalysisStore();
+  const { nextStep } = useStepper();
+
   const [useCache, setUseCache] = useState(true);
 
-  const { nextStep } = useStepper();
+  const handleUpload = async (e) => {
+    try {
+      setFeedbackData(null);
+      setAdviceData(null);
+      // removeTemplate(templatesIds.base);
+      // removeTemplate(templatesIds.fullReport);
+      // removeTemplate(templatesIds.aiCompetencies);
+      await handleSelectPdf(e, () => {}, useCache);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      queryClient.invalidateQueries(queryKeys.tasks.all);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (fileId) {
+      nextStep();
+    }
+  }, [fileId, nextStep]);
 
   return (
     <ActionWrapper>
@@ -36,7 +63,7 @@ export function UploadScreen() {
             type="file"
             accept=".pdf"
             onChange={async (e) => {
-              handleSelectPdf(e, nextStep, useCache);
+              await handleUpload(e);
             }}
             className="hidden"
           />
@@ -54,7 +81,7 @@ export function UploadScreen() {
         {file && (
           <p className="text-sm text-gray-500">Selected file: {file.name}</p>
         )}
-        
+
         <div className="flex items-center mt-4">
           <input
             type="checkbox"
