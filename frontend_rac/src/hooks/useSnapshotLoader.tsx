@@ -47,6 +47,7 @@ export const useSnapshotLoader = (
         manual_report.editable.constructor === Object
       ) {
         console.log("JSON is blank");
+        
       } else {
         addPath("manual-report", "Manual Report");
         addTemplate(templatesIds.base, manual_report.editable, false, true);
@@ -57,6 +58,7 @@ export const useSnapshotLoader = (
         full_report.editable.constructor === Object
       ) {
         console.log("JSON is blank");
+        deletePath("ai-agent-full-report")
       } else {
         addPath("ai-agent-full-report", "AI generated full report");
         addChildTab(
