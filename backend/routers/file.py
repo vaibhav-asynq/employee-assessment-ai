@@ -14,6 +14,7 @@ from fastapi.params import Depends
 from process_pdf import AssessmentProcessor
 from sqlalchemy.orm import Session
 from state import files_store
+from cache_manager import add_to_filename_map
 
 assessment_processor = AssessmentProcessor(env_variables.ANTHROPIC_API_KEY)
 
@@ -62,6 +63,7 @@ async def upload_file(
         }
         task = create_db_task(TaskCreate(**task_item) ,db)
         files_store[file_id] = {"file_path": file_path, "original_name": file.filename}
+        add_to_filename_map(file.filename, file_id)
         # TODO: return the task
         return {"file_id": task.file_id}
     except Exception as e:

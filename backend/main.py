@@ -45,6 +45,34 @@ from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
 
+import json
+import os
+
+def read_filename_map():
+    try:
+        # Define the path to the filename_map.json file
+        filepath = "/home/ubuntu/employee-assessment-ai/data/cache/filename_map.json"
+        
+        # Open and read the file
+        with open(filepath, 'r') as file:
+            filename_map = json.load(file)
+            
+        print(f"Successfully loaded filename map with {len(filename_map)} entries")
+        return filename_map
+    
+    except FileNotFoundError:
+        print(f"Error: File not found at {filepath}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON format in {filepath}")
+        return {}
+    except Exception as e:
+        print(f"Error reading filename map: {str(e)}")
+        return {}
+
+# Example usage:
+
+
 # Initialize license object
 license = aw.License()
 
@@ -263,6 +291,7 @@ async def upload_file(
         files_store[file_id] = {"file_path": file_path, "original_name": file.filename}
 
         # Add to cache mapping
+        # breakpoint()
         add_to_filename_map(file.filename, file_id)
 
         return {"file_id": file_id}
@@ -276,7 +305,8 @@ async def generate_report(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
-):
+):  
+    files_store = read_filename_map()
     if file_id not in files_store:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -772,7 +802,7 @@ async def sort_strengths_evidence(
 
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
-
+        # breakpoint()
         # Load and format prompt
         sort_prompt = load_prompt("sort_evidence_strenght.txt")
         prompt = sort_prompt.format(
@@ -789,6 +819,7 @@ async def sort_strengths_evidence(
 
         # Parse JSON response
         response_text = response.content[0].text
+
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:

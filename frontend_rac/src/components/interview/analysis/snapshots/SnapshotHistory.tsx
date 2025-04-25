@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSnapshotHistory } from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
@@ -39,6 +39,18 @@ function SnapshotHistoryContent() {
     refetch,
     isRefetching,
   } = useSnapshotHistory(fileId, limit, offset);
+
+  // Log snapshot data for debugging
+  useEffect(() => {
+    console.log("Snapshot history data:", {
+      fileId,
+      limit,
+      offset,
+      snapshotsData,
+      isLoading,
+      isError
+    });
+  }, [fileId, limit, offset, snapshotsData, isLoading, isError]);
 
   const snapshots = [...snapshotsData].sort(
     (a, b) =>

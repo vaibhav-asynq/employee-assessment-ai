@@ -76,7 +76,7 @@ def add_to_filename_map(filename: str, file_id: str) -> None:
             print(f"Error reading filename map: {e}")
     
     # Add new mapping
-    filename_map[filename] = file_id
+    filename_map[file_id] = file_id
     
     # Save updated map
     try:

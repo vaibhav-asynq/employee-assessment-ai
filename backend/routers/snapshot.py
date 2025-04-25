@@ -152,7 +152,6 @@ async def get_snapshot_history_endpoint(
     
     # Get snapshot history
     snapshots = get_snapshot_history(db, task.id, limit, offset)
-    
     # Convert datetime to string for JSON response
     return [
         SnapshotResponse(

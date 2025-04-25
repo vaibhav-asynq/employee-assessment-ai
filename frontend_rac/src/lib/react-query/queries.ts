@@ -1,4 +1,5 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useEffect } from "react";
 import * as api from "@/lib/api";
 import { queryKeys } from "./queryKeys";
 import { Task } from "@/lib/types/types.filetask";
@@ -19,6 +20,9 @@ export const useTaskHistory = (
     queryFn: () =>
       userId ? api.getFileTaskHistory(userId) : Promise.resolve([]),
     enabled: !!userId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60, // 1 hour
+    staleTime: options?.staleTime ?? 1000 * 60, // 1 minute
     ...options,
   });
 };
@@ -38,6 +42,9 @@ export const useLatestSnapshot = (
         ? api.getLatestSnapshot(fileId, userId)
         : Promise.resolve(null),
     enabled: !!fileId && !!userId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -51,6 +58,9 @@ export const useCurrentSnapshot = (
     queryFn: () =>
       fileId ? api.getCurrentSnapshot(fileId) : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -66,6 +76,9 @@ export const useSnapshotById = (
     queryFn: () =>
       snapshotId ? api.getSnapshotById(snapshotId) : Promise.resolve(null),
     enabled: !!snapshotId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -76,17 +89,43 @@ export const useSnapshotHistory = (
   offset?: number,
   options?: QueryOptions<Snapshot[]>,
 ) => {
-  return useQuery<Snapshot[]>({
+  const queryResult = useQuery<Snapshot[]>({
     queryKey: fileId
       ? [...queryKeys.snapshots.history(fileId), { limit, offset }]
       : ["no-fileid"],
-    queryFn: () =>
-      fileId
-        ? api.getSnapshotHistory(fileId, limit, offset)
-        : Promise.resolve([]),
+    queryFn: async () => {
+      console.log(`Fetching snapshot history for fileId: ${fileId}, limit: ${limit}, offset: ${offset}`);
+      if (!fileId) return [];
+      
+      try {
+        const data = await api.getSnapshotHistory(fileId, limit, offset);
+        console.log(`Snapshot history fetch successful, received ${data.length} snapshots`);
+        return data;
+      } catch (error) {
+        console.error(`Error fetching snapshot history:`, error);
+        throw error;
+      }
+    },
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
+
+  // Log query state changes
+  useEffect(() => {
+    console.log(`Snapshot history query state:`, {
+      fileId,
+      isLoading: queryResult.isLoading,
+      isError: queryResult.isError,
+      error: queryResult.error,
+      dataLength: queryResult.data?.length || 0,
+      isFetching: queryResult.isFetching
+    });
+  }, [fileId, queryResult.isLoading, queryResult.isError, queryResult.error, queryResult.data, queryResult.isFetching]);
+
+  return queryResult;
 };
 
 export const useReport = (
@@ -101,6 +140,9 @@ export const useReport = (
     queryFn: () =>
       fileId ? api.generateReport(fileId, useCache) : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -117,6 +159,9 @@ export const useFeedback = (
     queryFn: () =>
       fileId ? api.getFeedback(fileId, useCache) : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -133,6 +178,9 @@ export const useAdvice = (
     queryFn: () =>
       fileId ? api.getAdvice(fileId, useCache) : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -149,6 +197,9 @@ export const useRawData = (
     queryFn: () =>
       fileId ? api.getRawData(fileId, useCache) : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -171,6 +222,9 @@ export const useStrengthEvidences = (
         ? api.getStrengthEvidences(fileId, numCompetencies, useCache)
         : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };
@@ -193,6 +247,9 @@ export const useDevelopmentAreas = (
         ? api.getDevelopmentAreas(fileId, numCompetencies, useCache)
         : Promise.resolve(null),
     enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
     ...options,
   });
 };

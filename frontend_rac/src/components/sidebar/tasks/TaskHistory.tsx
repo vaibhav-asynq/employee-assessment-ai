@@ -17,6 +17,7 @@ import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useTaskHistory } from "@/lib/react-query";
 import { format } from "date-fns";
+import { useEffect } from "react";
 
 export function TaskHistory() {
   const { user } = useUser();
@@ -26,9 +27,23 @@ export function TaskHistory() {
   const { goToStep } = useStepper();
   const { goToStep } = useStepper();
 
-  const { data: tasks = [], isLoading: isTasksLoading } = useTaskHistory(
+  const { data: tasks = [], isLoading: isTasksLoading, refetch: refetchTasks } = useTaskHistory(
     user?.id,
+    {
+      // Keep task history in cache for 24 hours
+      gcTime: 1000 * 60 * 60 * 24,
+      // Consider data fresh for 5 minutes
+      staleTime: 1000 * 60 * 5,
+    }
   );
+  
+  // Fetch task history when component mounts or user changes
+  useEffect(() => {
+    if (user?.id) {
+      console.log("Fetching task history for user:", user.id);
+      refetchTasks();
+    }
+  }, [user?.id, refetchTasks]);
 
   const loading = isTasksLoading;
 
@@ -65,31 +80,39 @@ export function TaskHistory() {
       console.log("Navigating to Feedback screen (step 2)");
       goToStep(2);
       
-      // Then load the snapshot if available
-      if (snapShotId) {
-        console.log("Loading snapshot:", snapShotId);
-        try {
-          const snapshotData = await loadSnapshot(snapShotId);
+      // Try to load the snapshot
+      try {
+        let snapshotData;
+        
+        if (snapShotId) {
+          // If we have a specific snapshot ID, load that one
+          console.log("Loading specific snapshot:", snapShotId);
+          snapshotData = await loadSnapshot(snapShotId);
           if (snapshotData) {
-            console.log("Snapshot loaded successfully");
+            console.log("Specific snapshot loaded successfully");
           } else {
-            console.log("No snapshot data found - empty templates initialized");
+            console.log("Specific snapshot not found - trying to load latest snapshot");
           }
-        } catch (error) {
-          console.error("Error loading snapshot:", error);
-          // Continue even if snapshot loading fails
-          // The user can still see the file without the snapshot
-          console.log("Continuing without snapshot - empty templates initialized");
         }
-      } else {
-        console.log("No snapshot ID available for this task - initializing empty templates");
-        // Explicitly load empty templates when no snapshot ID is available
-        try {
-          await loadSnapshot(null);
-          console.log("Empty templates initialized successfully");
-        } catch (error) {
-          console.error("Error initializing empty templates:", error);
+        
+        // If we don't have a specific snapshot ID or it wasn't found, try to load the latest snapshot
+        if (!snapshotData) {
+          console.log("Attempting to load latest snapshot for fileId:", file_id);
+          
+          // The loadSnapshot function will try to fetch the latest snapshot when no specific ID is provided
+          snapshotData = await loadSnapshot(null);
+          
+          if (snapshotData) {
+            console.log("Latest snapshot loaded successfully");
+          } else {
+            console.log("No snapshots found for this task - empty templates initialized");
+          }
         }
+      } catch (error) {
+        console.error("Error loading snapshot:", error);
+        // Continue even if snapshot loading fails
+        // The user can still see the file without the snapshot
+        console.log("Continuing without snapshot - empty templates initialized");
       }
     } catch (error) {
       console.error("Error in handleTaskClick:", error);

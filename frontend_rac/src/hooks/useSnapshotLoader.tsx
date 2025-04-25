@@ -24,7 +24,13 @@ export const useSnapshotLoader = (
     data: snapshotData,
     refetch: refetchSnapshotById,
     error: errorSnapshotById,
-  } = useSnapshotById(snapshotId ?? null, { enabled: autofetch });
+  } = useSnapshotById(snapshotId ?? null, { 
+    enabled: autofetch,
+    // Keep snapshot data in cache for 24 hours
+    gcTime: 1000 * 60 * 60 * 24,
+    // Consider data fresh for 5 minutes
+    staleTime: 1000 * 60 * 5,
+  });
 
   const {
     data: latestSnapshotData,
@@ -32,6 +38,10 @@ export const useSnapshotLoader = (
     error: errorLatestSnapshot,
   } = useLatestSnapshot(fileId, snapshotId ? undefined : user?.id, {
     enabled: autofetch,
+    // Keep snapshot data in cache for 24 hours
+    gcTime: 1000 * 60 * 60 * 24,
+    // Consider data fresh for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const snapshot = snapshotData || latestSnapshotData;
@@ -151,21 +161,41 @@ export const useSnapshotLoader = (
   const loadSnapshot = async (customSnapshotId?: number | null) => {
     try {
       console.log("Loading snapshot...", { customSnapshotId, snapshotId, fileId, userId: user?.id });
-      let data: Snapshot | null;
+      let data: Snapshot | null = null;
 
+      // First try to load a specific snapshot if an ID is provided
       if (customSnapshotId ?? snapshotId) {
         const idToFetch = customSnapshotId ?? snapshotId;
         console.log(`Fetching snapshot by ID: ${idToFetch}`);
         data = idToFetch ? await getSnapshotById(idToFetch) : null;
-      } else {
+        
+        if (data) {
+          console.log(`Successfully loaded snapshot with ID: ${idToFetch}`);
+        } else {
+          console.warn(`No snapshot found with ID: ${idToFetch}, will try to load latest snapshot`);
+        }
+      }
+      
+      // If no specific snapshot was found or requested, try to load the latest snapshot
+      if (!data && fileId) {
         console.log(`Fetching latest snapshot for fileId: ${fileId}, userId: ${user?.id}`);
-        const result = await refetchLatestSnapshot();
-        data = result.data ?? null;
+        try {
+          const result = await refetchLatestSnapshot();
+          data = result.data ?? null;
+          
+          if (data) {
+            console.log(`Successfully loaded latest snapshot for fileId: ${fileId}`);
+          } else {
+            console.warn(`No latest snapshot found for fileId: ${fileId}`);
+          }
+        } catch (error) {
+          console.error("Error fetching latest snapshot:", error);
+        }
       }
 
+      // If no snapshot was found, initialize empty templates
       if (!data) {
         console.warn("No snapshot data returned, initializing empty templates");
-        // Initialize empty templates when no snapshot is found
         initializeEmptyTemplates();
         return null;
       }
