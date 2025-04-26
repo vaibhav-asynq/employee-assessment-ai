@@ -45,17 +45,6 @@ type InterviewDataState = {
     callback?: () => void,
     useCache?: boolean,
   ) => Promise<void>;
-  saveSnapshot: (
-    userId: string,
-    manualReport: Record<string, any>,
-    fullReport: Record<string, any>,
-    aiCompetencies: Record<string, any>,
-    triggerType?: "manual" | "auto",
-    sorted_by_competencies_full_report?: any,
-    parentId?: number | null,
-    make_active?: boolean,
-  ) => Promise<void>;
-  loadSnapshotById: (snapshotId: number) => Promise<Snapshot | null>;
 
   // Full Report update functions
   setFullReport: (fullReport: InterviewDataState["fullReport"]) => void;
@@ -208,101 +197,6 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
       fileId,
       "- cleared existing data to force refetch",
     );
-  },
-
-  saveSnapshot: async (
-    userId,
-    manualReport,
-    fullReport,
-    aiCompetencies,
-    triggerType = "manual",
-    sorted_by_competencies_full_report,
-    parentId,
-    make_active = false,
-  ) => {
-    const { fileId, adviceData, feedbackData } = get();
-    if (!fileId) {
-      set({ error: "No file selected. Cannot save snapshot." });
-      return;
-    }
-
-    set({ isSavingSnapshot: true, error: "" });
-
-    try {
-      // Create snapshot report objects
-      // Use type assertion to fix TypeScript error
-      const snapshotData: any = {
-        file_id: fileId,
-        manual_report: {
-          editable: manualReport,
-          sorted_by: {
-            stakeholders: { adviceData, feedbackData },
-            competency: {},
-          },
-        },
-        full_report: {
-          editable: fullReport,
-          sorted_by: {
-            stakeholders: {},
-            competency: sorted_by_competencies_full_report,
-          },
-        },
-        ai_Competencies: {
-          editable: aiCompetencies,
-          sorted_by: {
-            stakeholders: {},
-            competency: {},
-          },
-        },
-        trigger_type: triggerType,
-        parent_id: parentId,
-      };
-
-      const response = await saveSnapshotAPI(snapshotData, userId, make_active);
-      set({ currentSnapshotId: response.id });
-      console.log("Snapshot saved successfully:", response);
-      return response;
-    } catch (error) {
-      console.error("Error saving snapshot:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to save snapshot",
-      });
-      throw error;
-    } finally {
-      set({ isSavingSnapshot: false });
-    }
-  },
-  loadSnapshotById: async (snapshotId: number) => {
-    set({ isLoadingSnapshot: true, error: "" });
-
-    try {
-      const snapshot = await getSnapshotById(snapshotId);
-
-      if (!snapshot) {
-        throw new Error(`Snapshot with ID ${snapshotId} not found`);
-      }
-
-      set({
-        currentSnapshotId: snapshot.id,
-        currentSnapshot: snapshot,
-        fileId: snapshot.file_id,
-      });
-
-      console.log("Snapshot loaded successfully:", snapshot);
-      return snapshot;
-    } catch (error) {
-      console.error(`Error loading snapshot with ID ${snapshotId}:`, error);
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : `Failed to load snapshot with ID ${snapshotId}`,
-      });
-      return null;
-    } finally {
-      set({ isLoadingSnapshot: false });
-    }
   },
 
   // Full Report update functions

@@ -1,6 +1,10 @@
 "use client";
 import { getSnapshotById } from "@/lib/api";
-import { useSnapshotById, useLatestSnapshot } from "@/lib/react-query";
+import {
+  useSnapshotById,
+  useLatestSnapshot,
+  useCurrentSnapshot,
+} from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { TemplatedData, templatesIds } from "@/lib/types/types.analysis";
@@ -104,7 +108,8 @@ export const useSnapshotLoader = (
     data: latestSnapshotData,
     refetch: refetchLatestSnapshot,
     error: errorLatestSnapshot,
-  } = useLatestSnapshot(fileId, snapshotId ? undefined : user?.id, {
+  } = useCurrentSnapshot(fileId, {
+    // } = useLatestSnapshot(fileId, snapshotId ? undefined : user?.id, {
     enabled: autofetch,
   });
 

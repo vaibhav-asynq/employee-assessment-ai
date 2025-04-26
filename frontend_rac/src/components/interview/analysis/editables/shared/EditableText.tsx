@@ -5,6 +5,26 @@ import {
   containsCode,
   hasSuspiciousContent,
 } from "@/lib/sanitize";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
+import debounce from "lodash.debounce";
+
+const debouncedSnapshotSave = debounce(
+  (
+    input: {
+      triggerType: "manual" | "auto";
+      makeActive?: boolean;
+      parentId?: number;
+    },
+    fetchFunction: (
+      triggerType: "manual" | "auto",
+      makeActive?: boolean,
+      parentId?: number,
+    ) => void,
+  ) => {
+    fetchFunction(input.triggerType, input.makeActive, input.parentId);
+  },
+  2000,
+);
 
 interface EditableTextProps {
   value: string;
@@ -25,6 +45,14 @@ export function EditableText({
   const [hasHTML, setHasHTML] = useState(false);
   const [hasCode, setHasCode] = useState(false);
   const [hasSuspicious, setHasSuspicious] = useState(false);
+  const { saveSnapshotToDb } = useSnapshotSaver();
+
+  const debouncedSaveSnapshot = useCallback(
+    debounce(() => {
+      saveSnapshotToDb("auto", true);
+    }, 4000),
+    [saveSnapshotToDb],
+  );
 
   // Sync with parent value when not editing
   useEffect(() => {
@@ -81,8 +109,17 @@ export function EditableText({
         setHasCode(false);
         setHasSuspicious(false);
       }
+      debouncedSaveSnapshot();
     }
-  }, [localValue, value, onChange, hasHTML, hasCode, hasSuspicious]);
+  }, [
+    localValue,
+    value,
+    onChange,
+    hasHTML,
+    hasCode,
+    hasSuspicious,
+    debouncedSaveSnapshot,
+  ]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback(

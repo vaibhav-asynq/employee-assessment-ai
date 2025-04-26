@@ -17,6 +17,7 @@ import { FullReportView } from "./FullReportView";
 import { SortedReport } from "./SortedReport";
 import type { SortedEvidence } from "@/lib/api";
 import { Sortings } from "./Sortings";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 export function FullReport() {
   const parentTabId: SelectPathIds = "ai-agent-full-report";
@@ -32,26 +33,21 @@ export function FullReport() {
   );
   const { updateFullReportSortedCompetency, fullReport } =
     useInterviewDataStore();
-
-  //TODO: implement better sort
-  // const [sortedStrengths, setSortedStrengths] = useState<
-  //   SortedEvidence[] | undefined
-  // >();
-  // const [sortedAreas, setSortedAreas] = useState<
-  //   SortedEvidence[] | undefined
-  // >();
+  const { saveSnapshotToDb } = useSnapshotSaver();
 
   const setSortedAreas = useCallback(
     (value: SortedEvidence[]) => {
       updateFullReportSortedCompetency({ sorted_areas: value });
+      saveSnapshotToDb("auto", true);
     },
-    [updateFullReportSortedCompetency],
+    [saveSnapshotToDb, updateFullReportSortedCompetency],
   );
   const setSortedStrengths = useCallback(
     (value: SortedEvidence[]) => {
       updateFullReportSortedCompetency({ sorted_strength: value });
+      saveSnapshotToDb("auto", true);
     },
-    [updateFullReportSortedCompetency],
+    [saveSnapshotToDb, updateFullReportSortedCompetency],
   );
 
   const [currentTab, setCurrentTab] = useState<ChildPathIds>();

@@ -1,16 +1,15 @@
-import json
 from typing import List, Optional
 
 from auth.user import User, get_current_user
 from db.core import get_db
 from db.file import get_db_task, get_task_by_user_and_fileId
-from db.snapshot import (SnapshotCreate, SnapshotReport, SortedBy,
-                         count_snapshots, create_snapshot, delete_snapshot,
-                         get_current_snapshot, get_latest_snapshot,
-                         get_manual_snapshots, get_snapshot_by_id,
-                         get_snapshot_history, get_snapshot_with_children,
-                         get_snapshots_by_type, redo_snapshot,
-                         restore_snapshot, undo_snapshot)
+from db.snapshot import (SnapshotCreate, SnapshotReport, count_snapshots,
+                         create_snapshot, delete_snapshot,
+                         get_current_snapshot, get_last_auto_snapshot,
+                         get_latest_snapshot, get_manual_snapshots,
+                         get_snapshot_by_id, get_snapshot_history,
+                         get_snapshot_with_children, get_snapshots_by_type,
+                         redo_snapshot, restore_snapshot, undo_snapshot)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -56,6 +55,12 @@ async def create_snapshot_endpoint(
         full_report=SnapshotReport(**request.full_report),
         ai_Competencies=SnapshotReport(**request.ai_Competencies)
     )
+    
+    # If this is an auto snapshot, replace the last auto snapshot if it exists
+    if request.trigger_type == "auto":
+        last_auto_snapshot = get_last_auto_snapshot(db, task.id)
+        if last_auto_snapshot:
+            delete_snapshot(db, last_auto_snapshot.id)
     
     # Create snapshot
     snapshot = create_snapshot(
@@ -384,6 +389,43 @@ async def get_snapshot_by_id_endpoint(
         raise HTTPException(status_code=403, detail="Not authorized to access this snapshot")
     
     # Convert datetime to string for JSON response
+    return SnapshotResponse(
+        id=snapshot.id,
+        task_id=snapshot.task_id,
+        created_at=snapshot.created_at.isoformat(),
+        parent_id=snapshot.parent_id,
+        trigger_type=snapshot.trigger_type,
+        manual_report=snapshot.manual_report,
+        full_report=snapshot.full_report,
+        ai_Competencies=snapshot.ai_Competencies
+    )
+
+@router.post("/set-current/{file_id}/{snapshot_id}", response_model=SnapshotResponse)
+async def set_current_snapshot_endpoint(
+    file_id: str,
+    snapshot_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = user.user_id
+    
+    # Verify task belongs to user
+    task = get_task_by_user_and_fileId(user_id, file_id, db)
+    
+    # Get snapshot to verify it exists
+    snapshot = get_snapshot_by_id(db, snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    
+    # Verify snapshot belongs to the task
+    if snapshot.task_id != task.id:
+        raise HTTPException(status_code=400, detail="Snapshot doesn't belong to this task")
+    
+    # Set as current snapshot
+    task.current_snapshot_id = snapshot_id
+    db.commit()
+    
+    # Return the snapshot that was set as current
     return SnapshotResponse(
         id=snapshot.id,
         task_id=snapshot.task_id,

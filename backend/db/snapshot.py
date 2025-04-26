@@ -198,3 +198,11 @@ def get_snapshot_with_children(
     )
     
     return snapshot, children
+
+
+def get_last_auto_snapshot(db: Session, task_id: int):
+    """Get the last auto snapshot for a task"""
+    return db.query(DBSnapshot).filter(
+        DBSnapshot.task_id == task_id,
+        DBSnapshot.trigger_type == "auto"
+    ).order_by(desc(DBSnapshot.created_at)).first()

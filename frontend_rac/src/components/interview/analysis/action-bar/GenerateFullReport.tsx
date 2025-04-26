@@ -9,6 +9,7 @@ import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { convertInterviewAnalysisDataToTemplatedData } from "@/lib/utils/analysisUtils";
 import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 export function GenerateFullReport() {
   const fileId = useInterviewDataStore((state) => state.fileId);
@@ -21,6 +22,7 @@ export function GenerateFullReport() {
   //TODO: use react-query for data fetching
 
   const [generating, setGenerating] = useState(false);
+  const { saveSnapshotToDb } = useSnapshotSaver();
 
   const handleGenrateFullReport = async () => {
     if (!fileId) return;
@@ -31,17 +33,8 @@ export function GenerateFullReport() {
       const data = await generateReport(fileId);
       const templatedData = convertInterviewAnalysisDataToTemplatedData(data);
 
-      console.log(templatedData)
-
-      // if (templates[templateId]) {
-      //   //TODO: return or activate tab or update data
-      //   // handleAnalysisUpdate((prev) => {
-      //   //   return { ...prev, ...orderedData };
-      //   // });
-      // } else {
-        //create template
-        addTemplate(templateId, templatedData, false, true);
-      // }
+      addTemplate(templateId, templatedData, false, true);
+      saveSnapshotToDb("auto", true);
 
       addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
       addChildTab(

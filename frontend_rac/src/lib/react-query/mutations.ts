@@ -57,6 +57,29 @@ export const useSaveSnapshot = () => {
 };
 
 /**
+ * Hook to set a snapshot as the current snapshot
+ */
+export const useSetCurrentSnapshot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      fileId,
+      snapshotId,
+    }: {
+      fileId: string;
+      snapshotId: number;
+    }) => api.setCurrentSnapshot(fileId, snapshotId),
+    onSuccess: (data, variables) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.snapshots.current(variables.fileId),
+      });
+    },
+  });
+};
+
+/**
  * Hook to generate strength content
  */
 export const useGenerateStrengthContent = () => {
