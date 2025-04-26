@@ -145,9 +145,9 @@ export function EvidanceDisplay() {
           key={`${evidence.source}-${feedbackText}`}
           className={cn(
             "mb-4 p-4 rounded-lg",
-            evidence.isStrong && isAreaToTarget
+            evidence.is_strong && isAreaToTarget
               ? "bg-red-50 border-l-4 border-red-500" 
-              : evidence.isStrong && !isAreaToTarget
+              : evidence.is_strong && !isAreaToTarget
                 ? "bg-green-50 border-l-4 border-green-500"
                 : "bg-gray-50"
           )}
