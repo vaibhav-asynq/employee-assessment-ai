@@ -72,7 +72,7 @@ Guidelines for analysis:
 - Ensure titles are forward-looking and development-oriented
 - IMPORTANT: ALWAYS include an "Additional areas" category in your response, even if it's empty with no evidence
 - IMPORTANT: Preserve the "is_strong" flag from the pre-extracted feedback data. If a feedback item has "is_strong": true in the input, make sure it has "is_strong": true in the output.
-
+- Write the source name properly spaced, without underscores.
 
 When organizing feedback:
 1. First identify core themes in the developmental feedback

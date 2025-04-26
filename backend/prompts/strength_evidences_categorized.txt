@@ -76,6 +76,7 @@ Special Instructions:
 - IMPORTANT: Preserve the "is_strong" flag from the pre-extracted strengths data. If a feedback item has "is_strong": true in the input, make sure it has "is_strong": true in the output.
 - Do not discard any evidence - ensure ALL input strengths are categorized.
 - Double-check that every piece of feedback from the input appears somewhere in your output.
+- Write the source name properly spaced, without underscores.
 
 Here are the pre-extracted strengths to categorize:
 
