@@ -8,7 +8,7 @@ export const useSnapshotSaver = () => {
   const { user } = useUser();
   const fileId = useInterviewDataStore((state) => state.fileId);
   const templates = useAnalysisStore((state) => state.templates);
-  const { saveSnapshot } = useInterviewDataStore();
+  const { fullReport, saveSnapshot } = useInterviewDataStore();
 
   //TODO: use react-query for data fetching
 
@@ -31,6 +31,10 @@ export const useSnapshotSaver = () => {
           full_report_data,
           ai_competencies_data,
           triggerType,
+          {
+            sorted_strength: fullReport?.sorted_competency?.sorted_strength,
+            sorted_areas: fullReport?.sorted_competency?.sorted_areas,
+          },
           null,
           makeActive,
         );

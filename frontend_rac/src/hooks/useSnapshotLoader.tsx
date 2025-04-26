@@ -8,13 +8,79 @@ import { useCallback, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Snapshot } from "@/lib/types/types.snapshot";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
+import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
+
+// TODO: move it to proper folder/file
+function hasMeaningfulEditableData(editable: any): boolean {
+  if (!editable) return false;
+
+  // Check name
+  if (editable.name.trim() !== "") return true;
+
+  // Check advices
+  if (
+    Array.isArray(editable.advices) &&
+    editable.advices.some((advice) => advice.trim() !== "")
+  ) {
+    return true;
+  }
+
+  // Check strengths items
+  if (editable.strengths?.items) {
+    for (const key in editable.strengths.items) {
+      const item = editable.strengths.items[key];
+      if (
+        item.heading.trim() !== "" ||
+        item.content.trim() !== "" ||
+        (Array.isArray(item.evidance) && item.evidance.length > 0)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  // Check areas_to_target items
+  if (editable.areas_to_target?.items) {
+    for (const key in editable.areas_to_target.items) {
+      const item = editable.areas_to_target.items[key];
+      if (
+        item.heading.trim() !== "" ||
+        item.content.trim() !== "" ||
+        (Array.isArray(item.evidance) && item.evidance.length > 0) ||
+        (Array.isArray(item.competencyAlignment) &&
+          item.competencyAlignment.length > 0)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  // Check next_steps
+  if (Array.isArray(editable.next_steps)) {
+    for (const step of editable.next_steps) {
+      if (typeof step === "string") {
+        if (step.trim() !== "") return true;
+      } else if (typeof step === "object" && step !== null) {
+        if (
+          step.main.trim() !== "" ||
+          step.sub_points.some((sub: string) => sub.trim() !== "")
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // If none of the above have meaningful data
+  return false;
+}
 
 export const useSnapshotLoader = (
   snapshotId?: number | null,
   autofetch: boolean = false,
 ) => {
   const { user } = useUser();
-  const { fileId } = useInterviewDataStore();
+  const { fileId, updateFullReportSortedCompetency } = useInterviewDataStore();
   const { addTemplate, resetAnalysisToOriginal } = useAnalysisStore();
   const { setFeedbackData, setAdviceData } = useInterviewDataStore();
 
@@ -35,7 +101,8 @@ export const useSnapshotLoader = (
   const snapshot = snapshotData || latestSnapshotData;
   const refetch = snapshotId ? refetchSnapshotById : refetchLatestSnapshot;
   const error = snapshotId ? errorSnapshotById : errorLatestSnapshot;
-  const { addChildTab, addPath, deleteChildTab, deletePath } = useUserPreferencesStore();
+  const { addChildTab, addPath, deleteChildTab, deletePath } =
+    useUserPreferencesStore();
 
   const populateSnapshotInStores = useCallback(
     (data: Snapshot) => {
@@ -47,7 +114,6 @@ export const useSnapshotLoader = (
         manual_report.editable.constructor === Object
       ) {
         console.log("JSON is blank");
-        
       } else {
         addPath("manual-report", "Manual Report");
         addTemplate(templatesIds.base, manual_report.editable, false, true);
@@ -57,54 +123,79 @@ export const useSnapshotLoader = (
         Object.keys(full_report.editable).length === 0 &&
         full_report.editable.constructor === Object
       ) {
-        console.log("JSON is blank");
-        deletePath("ai-agent-full-report")
+        console.log("full report JSON is blank");
+        deletePath("ai-agent-full-report");
       } else {
-        addPath("ai-agent-full-report", "AI generated full report");
+        addTemplate(templatesIds.fullReport, full_report.editable, false, true);
+        updateFullReportSortedCompetency({
+          sorted_areas: full_report.sorted_by?.competency?.sorted_areas,
+          sorted_strength: full_report.sorted_by?.competency?.sorted_strength,
+        });
+        // addPath("ai-agent-full-report", "AI generated full report");
+        addPath(
+          "ai-agent-full-report",
+          ANALYSIS_TAB_NAMES.aiGeneratedFullReport,
+        );
         addChildTab(
           "ai-agent-full-report",
           "interview-feedback",
           "Sorted by stakeholders",
         );
-        addChildTab(
-          "ai-agent-full-report",
-          "sorted-evidence",
-          "Sorted by competency",
-        );
-        addTemplate(templatesIds.fullReport, full_report.editable, false, true);
+        if (
+          full_report.sorted_by?.competency?.sorted_areas ||
+          full_report.sorted_by?.competency?.sorted_strength
+        ) {
+          addChildTab(
+            "ai-agent-full-report",
+            "sorted-evidence",
+            "Sorted by competency",
+          );
+        }
       }
 
-      if (
-        Object.keys(ai_Competencies.editable).length === 0 &&
-        ai_Competencies.editable.constructor === Object
-      ) {
-        console.log("JSON is blank");
-        deletePath("ai-competencies")
-      } else {
-        addPath("ai-competencies", "AI competencies");
-        addChildTab(
-          "ai-competencies",
-          "interview-feedback",
-          "Sorted by stakeholders",
-        );
-        addChildTab(
-          "ai-agent-full-report",
-          "sorted-evidence",
-          "Sorted Evidence",
-        );
-        addTemplate(
-          templatesIds.aiCompetencies,
-          ai_Competencies.editable,
-          false,
-          true,
-        );
+      if (hasMeaningfulEditableData(ai_Competencies.editable)) {
+        if (
+          Object.keys(ai_Competencies.editable).length === 0 &&
+          ai_Competencies.editable.constructor === Object
+        ) {
+          console.log("JSON is blank");
+          deletePath("ai-competencies");
+        } else {
+          console.log("ai competencies from db: ", ai_Competencies);
+          addPath("ai-competencies", "AI competencies");
+          addChildTab(
+            "ai-competencies",
+            "interview-feedback",
+            "Sorted by stakeholders",
+          );
+          addChildTab(
+            "ai-agent-full-report",
+            "sorted-evidence",
+            "Sorted Evidence",
+          );
+          addTemplate(
+            templatesIds.aiCompetencies,
+            ai_Competencies.editable,
+            false,
+            true,
+          );
+        }
       }
       setAdviceData(manual_report.sorted_by?.stakeholders?.adviceData ?? {});
       setFeedbackData(
         manual_report.sorted_by?.stakeholders?.feedbackData ?? {},
       );
     },
-    [addTemplate, setAdviceData, setFeedbackData],
+    [
+      addChildTab,
+      addPath,
+      addTemplate,
+      deletePath,
+      resetAnalysisToOriginal,
+      setAdviceData,
+      setFeedbackData,
+      updateFullReportSortedCompetency,
+    ],
   );
 
   useEffect(() => {

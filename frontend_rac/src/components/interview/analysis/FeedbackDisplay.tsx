@@ -30,14 +30,17 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
   // Transform advice data to match feedback format
   const transformedAdvice: Record<string, FeedbackInfo> | null = adviceData
     ? Object.entries(adviceData as Record<string, AdviceInfo>).reduce(
-        (acc: Record<string, FeedbackInfo>, [name, info]: [string, AdviceInfo]) => {
+        (
+          acc: Record<string, FeedbackInfo>,
+          [name, info]: [string, AdviceInfo],
+        ) => {
           acc[name] = {
             role: info.role,
             feedback: info.advice, // advice array becomes feedback array
           };
           return acc;
         },
-        {}
+        {},
       )
     : null;
 

@@ -7,6 +7,7 @@ import { EditableCopetencies } from "./EditableCopetencies";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidanceDisplay } from "./EvidanceDisplay";
 import FallbackAiCompetencies from "./fallbacks/FallbackAiCompetencies";
+import { FallbackAiCompetenciesDisplay } from "./fallbacks/FallbackAiCompetenciesDisplay";
 
 export function AiCompetencies() {
   const isLoading = useAnalysisStore((state) => state.loading);
@@ -41,7 +42,9 @@ export function AiCompetencies() {
       <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
         {/* Left side - Evidence Display */}
         <div className="overflow-y-auto pr-4">
-          <EvidanceDisplay />
+          <ErrorBoundary FallbackComponent={FallbackAiCompetenciesDisplay}>
+            <EvidanceDisplay />
+          </ErrorBoundary>
         </div>
 
         {/* Right side - Editable Content */}

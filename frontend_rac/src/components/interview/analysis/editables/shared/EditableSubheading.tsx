@@ -99,13 +99,11 @@ export function EditableSubheading({
         placeholder={placeholder}
       />
 
-      {hasHTML ||
-        hasCode ||
-        (hasSuspicious && (
-          <div className="text-red-500 text-xs mt-1">
-            this heading is not allowed! Please change it.
-          </div>
-        ))}
+      {(hasHTML || hasCode || hasSuspicious) && (
+        <div className="text-red-500 text-xs mt-1">
+          this heading is not allowed! Please change it.
+        </div>
+      )}
     </div>
   );
 }
