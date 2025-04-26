@@ -31,12 +31,18 @@ Guidelines:
 9. Capture both direct praise and implicit positive feedback
 10. Include positive feedback about management style, leadership, and interpersonal skills
 11. For each feedback item, evaluate if it's a "strong" strength by setting "is_strong" to true or false:
-    - Set "is_strong" to true if the feedback:
-      * Contains superlative language (e.g., "exceptional", "outstanding", "excellent")
-      * Describes unique or rare qualities
-      * Mentions consistent demonstration of the strength
-      * Indicates the strength has significant positive impact
-    - Set "is_strong" to false for more moderate or qualified positive feedback
+    - Be HIGHLY SELECTIVE - only mark 20-30% of feedback items as "strong" at most
+    - Set "is_strong" to true ONLY if the feedback meets AT LEAST TWO of these criteria:
+      * Contains strong superlative language (e.g., "exceptional", "outstanding", "excellent", "extraordinary")
+      * Describes unique or rare qualities that clearly differentiate the person
+      * Explicitly mentions consistent and repeated demonstration of the strength over time
+      * Provides specific examples of how the strength has had significant positive impact on the business, team, or organization
+      * Is emphasized by multiple stakeholders independently
+    - Set "is_strong" to false for all other positive feedback, including:
+      * Feedback with mild positive language (e.g., "good", "solid", "effective")
+      * General statements without specific examples or impact
+      * Qualified praise (e.g., "usually good at...")
+      * Feedback that mentions a skill without emphasizing excellence
 
 Important:
 - Review document page by page systematically

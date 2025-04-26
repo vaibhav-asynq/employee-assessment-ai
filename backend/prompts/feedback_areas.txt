@@ -39,13 +39,18 @@ Guidelines:
 5. Create a "General_Updates" category for negative feedback not attributed to specific individuals
 6. Preserve the original language and context of the feedback
 7. For each feedback item, evaluate if it's a "strong" area to target by setting "is_strong" to true or false:
-   - Set "is_strong" to true if the feedback:
-     * Uses strong critical language
-     * Identifies a significant performance gap
-     * Highlights an issue mentioned by multiple stakeholders
-     * Points to a behavior that has substantial negative impact
-     * Describes a consistent pattern rather than a one-time issue
-   - Set "is_strong" to false for more moderate or qualified constructive feedback
+   - Be HIGHLY SELECTIVE - only mark 20-30% of feedback items as "strong" at most
+   - Set "is_strong" to true ONLY if the feedback meets AT LEAST TWO of these criteria:
+     * Uses explicitly strong critical language (e.g., "significant concern", "major issue", "critical gap")
+     * Identifies a clear and substantial performance gap with specific examples
+     * Is mentioned by multiple stakeholders independently as a concern
+     * Provides concrete examples of how the behavior has substantial negative impact on business outcomes, team dynamics, or organizational effectiveness
+     * Describes a consistent and repeated pattern of behavior rather than isolated incidents
+   - Set "is_strong" to false for all other constructive feedback, including:
+     * Mild or moderate suggestions for improvement
+     * General development areas without specific examples
+     * Qualified criticism (e.g., "sometimes struggles with...")
+     * Feedback that mentions an area for growth without emphasizing urgency or severity
 
 Important:
 - Review document page by page systematically

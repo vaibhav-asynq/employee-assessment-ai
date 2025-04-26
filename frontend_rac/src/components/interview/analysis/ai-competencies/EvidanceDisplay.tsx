@@ -134,7 +134,7 @@ export function EvidanceDisplay() {
   };
 
   const renderEvidence = useCallback(
-    (evidence: EvidenceOfFeedback) => {
+    (evidence: EvidenceOfFeedback, isAreaToTarget: boolean = false) => {
       // Extract the feedback text (could be a string or an object with text property)
       const feedbackText = typeof evidence.feedback === 'string' 
         ? evidence.feedback 
@@ -145,9 +145,11 @@ export function EvidanceDisplay() {
           key={`${evidence.source}-${feedbackText}`}
           className={cn(
             "mb-4 p-4 rounded-lg",
-            evidence.isStrong 
-              ? "bg-green-100 border-l-4 border-green-500" 
-              : "bg-gray-50"
+            evidence.isStrong && isAreaToTarget
+              ? "bg-red-50 border-l-4 border-red-500" 
+              : evidence.isStrong && !isAreaToTarget
+                ? "bg-green-50 border-l-4 border-green-500"
+                : "bg-gray-50"
           )}
         >
           <p className="text-gray-800 mb-2">{feedbackText}</p>
@@ -301,7 +303,7 @@ export function EvidanceDisplay() {
                       {item.heading}
                     </h3>
                     <div className="space-y-4">
-                      {item.evidence.map((item) => renderEvidence(item))}
+                      {item.evidence.map((item) => renderEvidence(item, true))}
                     </div>
                   </Card>
                 );
