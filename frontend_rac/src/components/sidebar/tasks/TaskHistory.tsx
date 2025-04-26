@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FileText, Plus, Calendar } from "lucide-react";
@@ -21,22 +20,23 @@ import { useEffect } from "react";
 
 export function TaskHistory() {
   const { user } = useUser();
-  const { fileId, setFileId, setFeedbackData, setAdviceData } =
-    useInterviewDataStore();
+  const { fileId, setFileId } = useInterviewDataStore();
   const { loadSnapshot } = useSnapshotLoader(null, false);
   const { goToStep } = useStepper();
 
+  const {
+    data: tasks = [],
+    isLoading: isTasksLoading,
+    refetch: refetchTasks,
+  } = useTaskHistory(user?.id, {
+    // Keep task history in cache for 24 hours
+    gcTime: 1000 * 60 * 60 * 24,
+    // Consider data fresh for 5 minutes
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const { data: tasks = [], isLoading: isTasksLoading, refetch: refetchTasks } = useTaskHistory(
-    user?.id,
-    {
-      // Keep task history in cache for 24 hours
-      gcTime: 1000 * 60 * 60 * 24,
-      // Consider data fresh for 5 minutes
-      staleTime: 1000 * 60 * 5,
-    }
-  );
-  
+  console.log(tasks);
+
   // Fetch task history when component mounts or user changes
   useEffect(() => {
     if (user?.id) {
@@ -47,22 +47,13 @@ export function TaskHistory() {
 
   const loading = isTasksLoading;
 
-  // Function to format date - using current date as fallback
-  const formatDate = () => {
-    try {
-      return format(new Date(), "MMM d, yyyy h:mm a");
-    } catch (error) {
-      return "Unknown date";
-    }
-  };
-
   const handleTaskClick = async (
     file_id: string | null,
     snapShotId?: number,
   ) => {
     try {
       console.log("Task clicked:", file_id, snapShotId);
-      
+
       if (file_id === null) {
         console.log("Setting fileId to null (new task)");
         setFileId(file_id);
@@ -71,19 +62,19 @@ export function TaskHistory() {
         goToStep(1);
         return;
       }
-      
+
       // Set the file ID first - this will clear existing data in the store
       console.log("Setting fileId to:", file_id);
       setFileId(file_id);
-      
+
       // Always navigate to the second step (Feedback screen)
       console.log("Navigating to Feedback screen (step 2)");
       goToStep(2);
-      
+
       // Try to load the snapshot
       try {
         let snapshotData;
-        
+
         if (snapShotId) {
           // If we have a specific snapshot ID, load that one
           console.log("Loading specific snapshot:", snapShotId);
@@ -91,28 +82,37 @@ export function TaskHistory() {
           if (snapshotData) {
             console.log("Specific snapshot loaded successfully");
           } else {
-            console.log("Specific snapshot not found - trying to load latest snapshot");
+            console.log(
+              "Specific snapshot not found - trying to load latest snapshot",
+            );
           }
         }
-        
+
         // If we don't have a specific snapshot ID or it wasn't found, try to load the latest snapshot
         if (!snapshotData) {
-          console.log("Attempting to load latest snapshot for fileId:", file_id);
-          
+          console.log(
+            "Attempting to load latest snapshot for fileId:",
+            file_id,
+          );
+
           // The loadSnapshot function will try to fetch the latest snapshot when no specific ID is provided
           snapshotData = await loadSnapshot(null);
-          
+
           if (snapshotData) {
             console.log("Latest snapshot loaded successfully");
           } else {
-            console.log("No snapshots found for this task - empty templates initialized");
+            console.log(
+              "No snapshots found for this task - empty templates initialized",
+            );
           }
         }
       } catch (error) {
         console.error("Error loading snapshot:", error);
         // Continue even if snapshot loading fails
         // The user can still see the file without the snapshot
-        console.log("Continuing without snapshot - empty templates initialized");
+        console.log(
+          "Continuing without snapshot - empty templates initialized",
+        );
       }
     } catch (error) {
       console.error("Error in handleTaskClick:", error);
@@ -121,7 +121,9 @@ export function TaskHistory() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="font-semibold">Task History</SidebarGroupLabel>
+      <SidebarGroupLabel className="font-semibold">
+        Task History
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -153,10 +155,14 @@ export function TaskHistory() {
                 >
                   <FileText className="text-gray-600" />
                   <span className="flex flex-col w-full overflow-hidden max-w-[200px]">
-                    <span className="truncate font-medium">{task.file_name}</span>
+                    <span className="truncate font-medium">
+                      {task.file_name}
+                    </span>
                     <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                       <Calendar size={10} />
-                      <span className="truncate">{formatDate()}</span>
+                      <span className="truncate">
+                        {format(task.created_at, "MMM d, yyyy h:mm a")}
+                      </span>
                     </span>
                   </span>
                 </SidebarMenuButton>

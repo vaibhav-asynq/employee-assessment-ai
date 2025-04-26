@@ -59,6 +59,7 @@ export function ClerkAuthSync() {
     };
   }, [syncToken, setRefreshToken]);
 
+  //TODO: remove this after implementing debounce save
   useEffect(() => {
     const intervalId = setInterval(() => {
       console.log("Saving snapshot via 15-second interval...");

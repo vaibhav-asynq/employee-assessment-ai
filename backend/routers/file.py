@@ -2,6 +2,7 @@ from typing import List
 
 import env_variables
 from auth.user import User, get_current_user
+from cache_manager import add_to_filename_map
 from db.core import NotFoundError, get_db
 from db.file import (Task, TaskCreate, create_db_task, delete_db_task,
                      get_cached_file_id, get_db_task,
@@ -14,7 +15,6 @@ from fastapi.params import Depends
 from process_pdf import AssessmentProcessor
 from sqlalchemy.orm import Session
 from state import files_store
-from cache_manager import add_to_filename_map
 
 assessment_processor = AssessmentProcessor(env_variables.ANTHROPIC_API_KEY)
 
@@ -108,13 +108,12 @@ async def get_task_by_file_id(
 
 @router.get("/api/tasks", response_model=List[Task])
 async def get_user_tasks(
-    user:User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    user_id=user.user_id
     """Get all tasks for the current user"""
+    user_id = user.user_id
     try:
-        # We need to add this function to db/file.py
         tasks = get_user_tasks_db(user_id, db)
         return tasks
     except Exception as e:

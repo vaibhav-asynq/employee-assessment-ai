@@ -13,6 +13,7 @@ class DBTask(Base):
     __tablename__ = "task"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(default=lambda: datetime.datetime.now(datetime.timezone.utc))
     user_id: Mapped[str]
     name: Mapped[str] 
     file_id: Mapped[str]
