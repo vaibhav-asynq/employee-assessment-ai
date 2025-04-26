@@ -43,7 +43,7 @@ export function SortedEvidenceView({
                     {item.evidence.map((evidence, idx) => (
                       <li 
                         key={idx} 
-                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-green-500' : ''}`}
+                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-green-500 bg-green-50' : ''}`}
                       >
                         <div className="mb-1 text-sm font-medium text-gray-500">
                           {evidence.name} - {evidence.position}
@@ -75,7 +75,7 @@ export function SortedEvidenceView({
                     {item.evidence.map((evidence, idx) => (
                       <li 
                         key={idx} 
-                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-red-500' : ''}`}
+                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-red-500 bg-red-50' : ''}`}
                       >
                         <div className="mb-1 text-sm font-medium text-gray-500">
                           {evidence.name} - {evidence.position}

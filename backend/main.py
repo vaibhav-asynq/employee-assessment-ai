@@ -51,7 +51,8 @@ import os
 def read_filename_map():
     try:
         # Define the path to the filename_map.json file
-        filepath = "/home/ubuntu/employee-assessment-ai/data/cache/filename_map.json"
+        CACHE_DIR = "../data/cache"
+        filepath = os.path.join(CACHE_DIR, "filename_map.json")
         
         # Open and read the file
         with open(filepath, 'r') as file:

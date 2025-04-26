@@ -73,9 +73,9 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                         typeof point === "object" ? point.is_strong : false;
 
                       return (
-                        <li
-                          key={index}
-                          className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-green-500" : ""}`}
+                        <li 
+                          key={index} 
+                          className={`text-gray-800 ${isStrong ? 'pl-2 border-l-4 border-green-500 bg-green-50' : ''}`}
                         >
                           {text}
                         </li>
@@ -110,7 +110,7 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                       return (
                         <li
                           key={index}
-                          className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-red-500" : ""}`}
+                          className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
                         >
                           {text}
                         </li>

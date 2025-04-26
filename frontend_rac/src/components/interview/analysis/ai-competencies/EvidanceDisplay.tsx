@@ -146,7 +146,7 @@ export function EvidanceDisplay() {
           className={cn(
             "mb-4 p-4 rounded-lg",
             evidence.isStrong 
-              ? "bg-green-50 border-l-4 border-green-500" 
+              ? "bg-green-100 border-l-4 border-green-500" 
               : "bg-gray-50"
           )}
         >
