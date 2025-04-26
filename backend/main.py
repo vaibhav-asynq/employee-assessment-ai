@@ -51,7 +51,8 @@ import os
 def read_filename_map():
     try:
         # Define the path to the filename_map.json file
-        filepath = "/home/ubuntu/employee-assessment-ai/data/cache/filename_map.json"
+        CACHE_DIR = "../data/cache"
+        filepath = os.path.join(CACHE_DIR, "filename_map.json")
         
         # Open and read the file
         with open(filepath, 'r') as file:
@@ -1028,7 +1029,58 @@ async def get_advice(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Original get_feedback endpoint commented out
+# @app.get("/api/get_feedback/{file_id}")
+
+# Dummy endpoint for testing the frontend with the new feedback structure
 @app.get("/api/get_feedback/{file_id}")
+# async def get_feedback(file_id: str, use_cache: bool = Query(True)):
+#     """
+#     Dummy endpoint that returns test data with the updated feedback structure.
+#     This includes the is_strong flag for each feedback item.
+#     """
+#     # Create dummy data with the new structure
+#     dummy_data = {
+#         "strengths": {
+#             "Manager": {
+#                 "role": "Direct Manager",
+#                 "feedback": [
+#                     {"text": "Excellent communication skills with the team.", "is_strong": True},
+#                     {"text": "Good at delegating tasks appropriately.", "is_strong": False},
+#                     {"text": "Outstanding leadership during the project crisis.", "is_strong": True},
+#                     {"text": "Handles pressure well.", "is_strong": False}
+#                 ]
+#             },
+#             "Peer": {
+#                 "role": "Team Member",
+#                 "feedback": [
+#                     {"text": "Always willing to help others.", "is_strong": False},
+#                     {"text": "Exceptional problem-solving abilities.", "is_strong": True},
+#                     {"text": "Good team player.", "is_strong": False}
+#                 ]
+#             }
+#         },
+#         "areas_to_target": {
+#             "Manager": {
+#                 "role": "Direct Manager",
+#                 "feedback": [
+#                     {"text": "Could improve time management skills.", "is_strong": False},
+#                     {"text": "Significant issues with documentation quality.", "is_strong": True},
+#                     {"text": "Sometimes misses deadlines.", "is_strong": False}
+#                 ]
+#             },
+#             "Peer": {
+#                 "role": "Team Member",
+#                 "feedback": [
+#                     {"text": "Needs to speak up more in meetings.", "is_strong": False},
+#                     {"text": "Major communication gaps with other departments.", "is_strong": True},
+#                     {"text": "Could be more proactive in identifying issues.", "is_strong": False}
+#                 ]
+#             }
+#         }
+#     }
+    
+#     return dummy_data
 async def get_feedback(
     file_id: str,
     use_cache: bool = Query(
@@ -1113,10 +1165,56 @@ async def get_feedback(
                 else:
                     raise ValueError("No JSON content found in areas response")
 
+            # Process the strengths data to handle the new structure with is_strong flag
+            processed_strengths = {}
+            for person, data in strengths_data.get("strengths", {}).items():
+                processed_feedback = []
+                for feedback_item in data.get("feedback", []):
+                    if isinstance(feedback_item, dict):
+                        # New format with is_strong flag
+                        processed_feedback.append({
+                            "text": feedback_item.get("text", ""),
+                            "is_strong": feedback_item.get("is_strong", False)
+                        })
+                    else:
+                        # Handle legacy format (plain string)
+                        processed_feedback.append({
+                            "text": feedback_item,
+                            "is_strong": False
+                        })
+                
+                processed_strengths[person] = {
+                    "role": data.get("role", ""),
+                    "feedback": processed_feedback
+                }
+            
+            # Process the areas_to_target data to handle the new structure with is_strong flag
+            processed_areas = {}
+            for person, data in areas_data.get("areas_to_target", {}).items():
+                processed_feedback = []
+                for feedback_item in data.get("feedback", []):
+                    if isinstance(feedback_item, dict):
+                        # New format with is_strong flag
+                        processed_feedback.append({
+                            "text": feedback_item.get("text", ""),
+                            "is_strong": feedback_item.get("is_strong", False)
+                        })
+                    else:
+                        # Handle legacy format (plain string)
+                        processed_feedback.append({
+                            "text": feedback_item,
+                            "is_strong": False
+                        })
+                
+                processed_areas[person] = {
+                    "role": data.get("role", ""),
+                    "feedback": processed_feedback
+                }
+
             # Combine results
             result = {
-                "strengths": strengths_data.get("strengths", {}),
-                "areas_to_target": areas_data.get("areas_to_target", {}),
+                "strengths": processed_strengths,
+                "areas_to_target": processed_areas,
             }
 
             # Save to cache

@@ -6,8 +6,14 @@ Required Output Format:
     "[Person_Name]": {{
       "role": "[Their Role/Relationship]",
       "feedback": [
-        "Complete verbatim quote of constructive feedback 1",
-        "Complete verbatim quote of constructive feedback 2"
+        {{
+          "text": "Complete verbatim quote of constructive feedback 1",
+          "is_strong": true/false
+        }},
+        {{
+          "text": "Complete verbatim quote of constructive feedback 2",
+          "is_strong": true/false
+        }}
       ]
     }}
   }}
@@ -32,6 +38,14 @@ Guidelines:
 4. Maintain person's exact role/title as mentioned in the document
 5. Create a "General_Updates" category for negative feedback not attributed to specific individuals
 6. Preserve the original language and context of the feedback
+7. For each feedback item, evaluate if it's a "strong" area to target by setting "is_strong" to true or false:
+   - Set "is_strong" to true if the feedback:
+     * Uses strong critical language
+     * Identifies a significant performance gap
+     * Highlights an issue mentioned by multiple stakeholders
+     * Points to a behavior that has substantial negative impact
+     * Describes a consistent pattern rather than a one-time issue
+   - Set "is_strong" to false for more moderate or qualified constructive feedback
 
 Important:
 - Review document page by page systematically
