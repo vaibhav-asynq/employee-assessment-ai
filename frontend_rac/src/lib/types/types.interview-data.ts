@@ -1,7 +1,7 @@
 // individual data
 export type Role = string;
 export type Source = string;
-export type Feedback = string;
+export type Feedback = string | { text: string; is_strong?: boolean };
 
 export type CompetenciesAlignment = string[];
 
@@ -10,6 +10,7 @@ export interface EvidenceOfFeedback {
   feedback: Feedback;
   source: Source;
   role: Role;
+  isStrong?: boolean;
 }
 
 interface DevelopmentAreas {

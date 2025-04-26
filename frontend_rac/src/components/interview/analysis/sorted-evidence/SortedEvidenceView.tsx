@@ -5,6 +5,7 @@ interface Evidence {
   quote: string;
   name: string;
   position: string;
+  isStrong?: boolean;
 }
 
 interface SortedEvidence {
@@ -40,7 +41,10 @@ export function SortedEvidenceView({
                 <CardContent>
                   <ul className="list-disc pl-6 space-y-2">
                     {item.evidence.map((evidence, idx) => (
-                      <li key={idx} className="text-gray-700">
+                      <li 
+                        key={idx} 
+                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-green-500' : ''}`}
+                      >
                         <div className="mb-1 text-sm font-medium text-gray-500">
                           {evidence.name} - {evidence.position}
                         </div>
@@ -69,7 +73,10 @@ export function SortedEvidenceView({
                 <CardContent>
                   <ul className="list-disc pl-6 space-y-2">
                     {item.evidence.map((evidence, idx) => (
-                      <li key={idx} className="text-gray-700">
+                      <li 
+                        key={idx} 
+                        className={`text-gray-700 ${evidence.isStrong ? 'pl-2 border-l-4 border-red-500' : ''}`}
+                      >
                         <div className="mb-1 text-sm font-medium text-gray-500">
                           {evidence.name} - {evidence.position}
                         </div>

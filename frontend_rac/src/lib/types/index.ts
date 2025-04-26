@@ -60,10 +60,11 @@ export interface OrderedInterviewAnalysis {
   next_steps: NextStep[];
 }
 
-type StregthsFeedback = Record<string, { role: string; feedback: string[] }>;
+type FeedbackItem = string | { text: string; is_strong?: boolean };
+type StregthsFeedback = Record<string, { role: string; feedback: FeedbackItem[] }>;
 type AreasToTargetFeedback = Record<
   string,
-  { role: string; feedback: string[] }
+  { role: string; feedback: FeedbackItem[] }
 >;
 export interface FeedbackData {
   strengths: StregthsFeedback;

@@ -134,19 +134,31 @@ export function EvidanceDisplay() {
   };
 
   const renderEvidence = useCallback(
-    (evidence: EvidenceOfFeedback) => (
-      <div
-        key={`${evidence.source}-${evidence.feedback}`}
-        className="mb-4 p-4 bg-gray-50 rounded-lg"
-      >
-        <p className="text-gray-800 mb-2">{evidence.feedback}</p>
-        <div className="text-sm text-gray-600">
-          <span className="font-semibold">{evidence.source}</span>
-          <span className="mx-2">•</span>
-          <span>{evidence.role}</span>
+    (evidence: EvidenceOfFeedback) => {
+      // Extract the feedback text (could be a string or an object with text property)
+      const feedbackText = typeof evidence.feedback === 'string' 
+        ? evidence.feedback 
+        : evidence.feedback.text;
+      
+      return (
+        <div
+          key={`${evidence.source}-${feedbackText}`}
+          className={cn(
+            "mb-4 p-4 rounded-lg",
+            evidence.isStrong 
+              ? "bg-green-50 border-l-4 border-green-500" 
+              : "bg-gray-50"
+          )}
+        >
+          <p className="text-gray-800 mb-2">{feedbackText}</p>
+          <div className="text-sm text-gray-600">
+            <span className="font-semibold">{evidence.source}</span>
+            <span className="mx-2">•</span>
+            <span>{evidence.role}</span>
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
     [],
   );
 
@@ -305,7 +317,7 @@ export function EvidanceDisplay() {
                 <div className="space-y-4">
                   {analysisAiCompetencies.advices.map((advice) => {
                     return renderEvidence({
-                      feedback: advice.advice.join(". "),
+                      feedback: { text: advice.advice.join(". "), is_strong: false },
                       source: advice.name.replace(/_/g, " "),
                       role: advice.role,
                     });

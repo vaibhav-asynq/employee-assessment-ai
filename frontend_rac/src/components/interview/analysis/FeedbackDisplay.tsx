@@ -6,9 +6,14 @@ interface AdviceInfo {
   advice: string[];
 }
 
+interface FeedbackItem {
+  text: string;
+  is_strong?: boolean;
+}
+
 interface FeedbackInfo {
   role: string;
-  feedback: string[];
+  feedback: (string | FeedbackItem)[];
 }
 
 interface FeedbackData {
@@ -58,11 +63,19 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      const text = typeof point === 'string' ? point : point.text;
+                      const isStrong = typeof point === 'object' ? point.is_strong : false;
+                      
+                      return (
+                        <li 
+                          key={index} 
+                          className={`text-gray-800 ${isStrong ? 'pl-2 border-l-4 border-green-500' : ''}`}
+                        >
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -83,11 +96,19 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      const text = typeof point === 'string' ? point : point.text;
+                      const isStrong = typeof point === 'object' ? point.is_strong : false;
+                      
+                      return (
+                        <li 
+                          key={index} 
+                          className={`text-gray-800 ${isStrong ? 'pl-2 border-l-4 border-red-500' : ''}`}
+                        >
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -108,11 +129,16 @@ export function FeedbackDisplay({ data }: FeedbackDisplayProps) {
                   </h4>
                   <p className="text-gray-600 italic mb-3">{info.role}</p>
                   <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point: string, index: number) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
+                    {info.feedback.map((point, index: number) => {
+                      const text = typeof point === 'string' ? point : point.text;
+                      const isStrong = typeof point === 'object' ? point.is_strong : false;
+                      
+                      return (
+                        <li key={index} className="text-gray-800">
+                          {text}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
