@@ -133,26 +133,24 @@ export const useSnapshotLoader = (
           sorted_areas: full_report.sorted_by?.competency?.sorted_areas,
           sorted_strength: full_report.sorted_by?.competency?.sorted_strength,
         });
-        addPath(
-          "ai-agent-full-report",
-          ANALYSIS_TAB_NAMES.aiGeneratedFullReport,
-        );
-        addChildTab(
-          "ai-agent-full-report",
-          "interview-feedback",
-          "Sorted by stakeholders",
-        );
         if (
           full_report.sorted_by?.competency?.sorted_areas ||
           full_report.sorted_by?.competency?.sorted_strength
         ) {
+          addPath(
+            "ai-agent-full-report",
+            ANALYSIS_TAB_NAMES.aiGeneratedFullReport,
+          );
+          addChildTab(
+            "ai-agent-full-report",
+            "interview-feedback",
+            "Sorted by stakeholder",
+          );
           addChildTab(
             "ai-agent-full-report",
             "sorted-evidence",
             "Sorted by competency",
           );
-        } else {
-          deleteChildTab("ai-agent-full-report", "sorted-evidence");
         }
       } else {
         deletePath("ai-agent-full-report");
@@ -172,7 +170,7 @@ export const useSnapshotLoader = (
         addChildTab(
           "ai-competencies",
           "interview-feedback",
-          "Sorted by stakeholders",
+          "Sorted by stakeholder",
         );
         addChildTab(
           "ai-agent-full-report",
