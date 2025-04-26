@@ -16,6 +16,7 @@ import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useStepper } from "@/components/ui/stepper";
 import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
+import { FeedbackDisplay } from "../analysis/FeedbackDisplay";
 
 export function FeedbackScreen() {
   const error = useInterviewDataStore((state) => state.error);
@@ -32,7 +33,9 @@ export function FeedbackScreen() {
   const [useCache, setUseCache] = useState(true);
 
   // Keep track of the last fileId we fetched data for
-  const [lastFetchedFileId, setLastFetchedFileId] = useState<string | null>(null);
+  const [lastFetchedFileId, setLastFetchedFileId] = useState<string | null>(
+    null,
+  );
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
@@ -82,9 +85,11 @@ export function FeedbackScreen() {
       <ActionWrapper>
         <div className="grid place-items-center">
           <div className="flex flex-col items-center gap-4 max-w-md text-center">
-            <p className="text-xl font-semibold text-red-600">Error Loading Data</p>
+            <p className="text-xl font-semibold text-red-600">
+              Error Loading Data
+            </p>
             <p className="text-red-600">{error}</p>
-            <Button 
+            <Button
               onClick={() => fetchFeedbackData(useCache)}
               className="mt-4"
             >
@@ -100,14 +105,16 @@ export function FeedbackScreen() {
       <ActionWrapper>
         <div className="grid place-items-center">
           <div className="flex flex-col items-center gap-4 max-w-md text-center">
-            <p className="text-xl font-semibold text-amber-600">No Feedback Data Available</p>
+            <p className="text-xl font-semibold text-amber-600">
+              No Feedback Data Available
+            </p>
             <p className="text-gray-600">
-              {fileId 
-                ? "There was a problem retrieving feedback data for this task." 
+              {fileId
+                ? "There was a problem retrieving feedback data for this task."
                 : "Please select a task from the sidebar or upload a new file."}
             </p>
             {fileId && (
-              <Button 
+              <Button
                 onClick={() => fetchFeedbackData(useCache)}
                 className="mt-4"
               >
@@ -155,80 +162,81 @@ export function FeedbackScreen() {
     <ActionWrapper>
       <div className="pr-4 max-h-[80vh] overflow-y-auto">
         <div className="space-y-16 pb-8">
+          <FeedbackDisplay data={feedbackData} />
           {/* Strengths */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6 text-green-700 sticky top-0 bg-white py-4">
-              Strengths
-            </h2>
-            <div className="space-y-8">
-              {Object.entries(feedbackData.strengths).map(([name, info]) => (
-                <div key={name} className="border-b pb-6">
-                  <h3 className="text-xl font-semibold">
-                    {name.replace(/_/g, " ")}
-                  </h3>
-                  <p className="text-gray-600 italic mb-3">{info.role}</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index) => (
-                      <li key={index} className="text-gray-800">
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* <div className="space-y-6"> */}
+          {/*   <h2 className="text-2xl font-bold mb-6 text-green-700 sticky top-0 bg-white py-4"> */}
+          {/*     Strengths */}
+          {/*   </h2> */}
+          {/*   <div className="space-y-8"> */}
+          {/*     {Object.entries(feedbackData.strengths).map(([name, info]) => ( */}
+          {/*       <div key={name} className="border-b pb-6"> */}
+          {/*         <h3 className="text-xl font-semibold"> */}
+          {/*           {name.replace(/_/g, " ")} */}
+          {/*         </h3> */}
+          {/*         <p className="text-gray-600 italic mb-3">{info.role}</p> */}
+          {/*         <ul className="list-disc pl-5 space-y-2"> */}
+          {/*           {info.feedback.map((point, index) => ( */}
+          {/*             <li key={index} className="text-gray-800"> */}
+          {/*               {/* {point} */}
+          {/*             </li> */}
+          {/*           ))} */}
+          {/*         </ul> */}
+          {/*       </div> */}
+          {/*     ))} */}
+          {/*   </div> */}
+          {/* </div> */}
 
           {/* Areas to Target */}
-          <div className="space-y-6 border-t pt-8">
-            <h2 className="text-2xl font-bold mb-6 text-red-700 sticky top-0 bg-white py-4">
-              Areas to Target
-            </h2>
-            <div className="space-y-8">
-              {Object.entries(feedbackData.areas_to_target).map(
-                ([name, info]) => (
-                  <div key={name} className="border-b pb-6">
-                    <h3 className="text-xl font-semibold">
-                      {name.replace(/_/g, " ")}
-                    </h3>
-                    <p className="text-gray-600 italic mb-3">{info.role}</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {info.feedback.map((point, index) => (
-                        <li key={index} className="text-gray-800">
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
+          {/* <div className="space-y-6 border-t pt-8"> */}
+          {/*   <h2 className="text-2xl font-bold mb-6 text-red-700 sticky top-0 bg-white py-4"> */}
+          {/*     Areas to Target */}
+          {/*   </h2> */}
+          {/*   <div className="space-y-8"> */}
+          {/*     {Object.entries(feedbackData.areas_to_target).map( */}
+          {/*       ([name, info]) => ( */}
+          {/*         <div key={name} className="border-b pb-6"> */}
+          {/*           <h3 className="text-xl font-semibold"> */}
+          {/*             {name.replace(/_/g, " ")} */}
+          {/*           </h3> */}
+          {/*           <p className="text-gray-600 italic mb-3">{info.role}</p> */}
+          {/*           <ul className="list-disc pl-5 space-y-2"> */}
+          {/*             {info.feedback.map((point, index) => ( */}
+          {/*               <li key={index} className="text-gray-800"> */}
+          {/*                 {/* {point} */}
+          {/*               </li> */}
+          {/*             ))} */}
+          {/*           </ul> */}
+          {/*         </div> */}
+          {/*       ), */}
+          {/*     )} */}
+          {/*   </div> */}
+          {/* </div> */}
 
           {/* Advice */}
-          <div className="space-y-6 border-t pt-8">
-            <h2 className="text-2xl font-bold mb-6 text-indigo-700 sticky top-0 bg-white py-4">
-              Advice
-            </h2>
-            <div className="space-y-8">
-              {adviceData &&
-                Object.entries(adviceData as AdviceData).map(([name, info]) => (
-                  <div key={name} className="border-b pb-6">
-                    <h3 className="text-xl font-semibold">
-                      {name.replace(/_/g, " ")}
-                    </h3>
-                    <p className="text-gray-600 italic mb-3">{info.role}</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {info.advice.map((point: string, index: number) => (
-                        <li key={index} className="text-gray-800">
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-            </div>
-          </div>
+          {/* <div className="space-y-6 border-t pt-8"> */}
+          {/*   <h2 className="text-2xl font-bold mb-6 text-indigo-700 sticky top-0 bg-white py-4"> */}
+          {/*     Advice */}
+          {/*   </h2> */}
+          {/*   <div className="space-y-8"> */}
+          {/*     {adviceData && */}
+          {/*       Object.entries(adviceData as AdviceData).map(([name, info]) => ( */}
+          {/*         <div key={name} className="border-b pb-6"> */}
+          {/*           <h3 className="text-xl font-semibold"> */}
+          {/*             {name.replace(/_/g, " ")} */}
+          {/*           </h3> */}
+          {/*           <p className="text-gray-600 italic mb-3">{info.role}</p> */}
+          {/*           <ul className="list-disc pl-5 space-y-2"> */}
+          {/*             {info.advice.map((point: string, index: number) => ( */}
+          {/*               <li key={index} className="text-gray-800"> */}
+          {/*                 {point} */}
+          {/*               </li> */}
+          {/*             ))} */}
+          {/*           </ul> */}
+          {/*         </div> */}
+          {/*       ))} */}
+          {/*   </div> */}
+          {/* </div> */}
         </div>
       </div>
     </ActionWrapper>
