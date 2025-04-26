@@ -3,7 +3,7 @@ import { getSnapshotById } from "@/lib/api";
 import { useSnapshotById, useLatestSnapshot } from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { templatesIds } from "@/lib/types/types.analysis";
+import { TemplatedData, templatesIds } from "@/lib/types/types.analysis";
 import { useCallback, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Snapshot } from "@/lib/types/types.snapshot";
@@ -11,16 +11,19 @@ import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
 
 // TODO: move it to proper folder/file
-function hasMeaningfulEditableData(editable: any): boolean {
+function hasMeaningfulTemplateData(editable: TemplatedData): boolean {
   if (!editable) return false;
 
   // Check name
-  if (editable.name.trim() !== "") return true;
+  if (editable.name && editable.name.trim() !== "") return true;
 
   // Check advices
   if (
     Array.isArray(editable.advices) &&
-    editable.advices.some((advice) => advice.trim() !== "")
+    editable.advices.length > 0 &&
+    editable.advices.some(
+      (advice) => advice.advice && advice.advice.some((a) => a.trim() !== ""),
+    )
   ) {
     return true;
   }
@@ -30,9 +33,9 @@ function hasMeaningfulEditableData(editable: any): boolean {
     for (const key in editable.strengths.items) {
       const item = editable.strengths.items[key];
       if (
-        item.heading.trim() !== "" ||
-        item.content.trim() !== "" ||
-        (Array.isArray(item.evidance) && item.evidance.length > 0)
+        (item.heading && item.heading.trim() !== "") ||
+        (item.content && item.content.trim() !== "") ||
+        (Array.isArray(item.evidence) && item.evidence.length > 0)
       ) {
         return true;
       }
@@ -44,9 +47,9 @@ function hasMeaningfulEditableData(editable: any): boolean {
     for (const key in editable.areas_to_target.items) {
       const item = editable.areas_to_target.items[key];
       if (
-        item.heading.trim() !== "" ||
-        item.content.trim() !== "" ||
-        (Array.isArray(item.evidance) && item.evidance.length > 0) ||
+        (item.heading && item.heading.trim() !== "") ||
+        (item.content && item.content.trim() !== "") ||
+        (Array.isArray(item.evidence) && item.evidence.length > 0) ||
         (Array.isArray(item.competencyAlignment) &&
           item.competencyAlignment.length > 0)
       ) {
@@ -56,14 +59,15 @@ function hasMeaningfulEditableData(editable: any): boolean {
   }
 
   // Check next_steps
-  if (Array.isArray(editable.next_steps)) {
+  if (Array.isArray(editable.next_steps) && editable.next_steps.length > 0) {
     for (const step of editable.next_steps) {
       if (typeof step === "string") {
         if (step.trim() !== "") return true;
       } else if (typeof step === "object" && step !== null) {
         if (
-          step.main.trim() !== "" ||
-          step.sub_points.some((sub: string) => sub.trim() !== "")
+          (step.main && step.main.trim() !== "") ||
+          (Array.isArray(step.sub_points) &&
+            step.sub_points.some((sub: string) => sub && sub.trim() !== ""))
         ) {
           return true;
         }
@@ -72,6 +76,12 @@ function hasMeaningfulEditableData(editable: any): boolean {
   }
 
   // If none of the above have meaningful data
+  return false;
+}
+
+function isBlankJson(jsonObject: object) {
+  if (Object.keys(jsonObject).length === 0 && jsonObject.constructor === Object)
+    return true;
   return false;
 }
 
@@ -109,29 +119,20 @@ export const useSnapshotLoader = (
       resetAnalysisToOriginal();
       const { manual_report, ai_Competencies, full_report } = data;
 
-      if (
-        Object.keys(manual_report.editable).length === 0 &&
-        manual_report.editable.constructor === Object
-      ) {
-        console.log("JSON is blank");
-      } else {
-        addPath("manual-report", "Manual Report");
+      if (!isBlankJson(manual_report.editable)) {
         addTemplate(templatesIds.base, manual_report.editable, false, true);
+        addPath("manual-report", "Manual Report");
       }
 
       if (
-        Object.keys(full_report.editable).length === 0 &&
-        full_report.editable.constructor === Object
+        !isBlankJson(full_report.editable) &&
+        hasMeaningfulTemplateData(full_report.editable)
       ) {
-        console.log("full report JSON is blank");
-        deletePath("ai-agent-full-report");
-      } else {
         addTemplate(templatesIds.fullReport, full_report.editable, false, true);
         updateFullReportSortedCompetency({
           sorted_areas: full_report.sorted_by?.competency?.sorted_areas,
           sorted_strength: full_report.sorted_by?.competency?.sorted_strength,
         });
-        // addPath("ai-agent-full-report", "AI generated full report");
         addPath(
           "ai-agent-full-report",
           ANALYSIS_TAB_NAMES.aiGeneratedFullReport,
@@ -150,37 +151,38 @@ export const useSnapshotLoader = (
             "sorted-evidence",
             "Sorted by competency",
           );
+        } else {
+          deleteChildTab("ai-agent-full-report", "sorted-evidence");
         }
+      } else {
+        deletePath("ai-agent-full-report");
       }
 
-      if (hasMeaningfulEditableData(ai_Competencies.editable)) {
-        if (
-          Object.keys(ai_Competencies.editable).length === 0 &&
-          ai_Competencies.editable.constructor === Object
-        ) {
-          console.log("JSON is blank");
-          deletePath("ai-competencies");
-        } else {
-          console.log("ai competencies from db: ", ai_Competencies);
-          addPath("ai-competencies", "AI competencies");
-          addChildTab(
-            "ai-competencies",
-            "interview-feedback",
-            "Sorted by stakeholders",
-          );
-          addChildTab(
-            "ai-agent-full-report",
-            "sorted-evidence",
-            "Sorted Evidence",
-          );
-          addTemplate(
-            templatesIds.aiCompetencies,
-            ai_Competencies.editable,
-            false,
-            true,
-          );
-        }
+      if (
+        !isBlankJson(ai_Competencies.editable) &&
+        hasMeaningfulTemplateData(ai_Competencies.editable)
+      ) {
+        addTemplate(
+          templatesIds.aiCompetencies,
+          ai_Competencies.editable,
+          false,
+          true,
+        );
+        addPath("ai-competencies", ANALYSIS_TAB_NAMES.aiCompetencies);
+        addChildTab(
+          "ai-competencies",
+          "interview-feedback",
+          "Sorted by stakeholders",
+        );
+        addChildTab(
+          "ai-agent-full-report",
+          "sorted-evidence",
+          "Sorted Evidence",
+        );
+      } else {
+        deletePath("ai-competencies");
       }
+
       setAdviceData(manual_report.sorted_by?.stakeholders?.adviceData ?? {});
       setFeedbackData(
         manual_report.sorted_by?.stakeholders?.feedbackData ?? {},
