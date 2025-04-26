@@ -44,6 +44,11 @@ from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
+from auth.user import get_current_user
+from sqlalchemy.orm import Session
+from db.core import get_db
+from db.feedback import get_cached_feedback
+
 
 import json
 import os
@@ -133,30 +138,31 @@ def authenticate_user(username: str, password: str):
 
 
 # Simple authentication check
-async def get_current_user(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401, detail="Missing or invalid Authorization header"
-        )
+# async def get_current_user(authorization: Optional[str] = Header(None)):
+#     if not authorization or not authorization.startswith("Bearer "):
+#         raise HTTPException(
+#             status_code=401, detail="Missing or invalid Authorization header"
+#         )
 
-    token = authorization.split("Bearer ")[1]
-    user_claims = verify_clerk_token(token)
-    user_id = user_claims.get("sub")
-    if not user_id:
-        user_id = (
-            user_claims.get("id")
-            or user_claims.get("user_id")
-            or user_claims.get("userId")
-        )
-    if user_id:
-        user_claims["user_id"] = user_id
-        return user_claims
-    return user_claims
+#     token = authorization.split("Bearer ")[1]
+#     user_claims = verify_clerk_token(token)
+#     user_id = user_claims.get("sub")
+#     if not user_id:
+#         user_id = (
+#             user_claims.get("id")
+#             or user_claims.get("user_id")
+#             or user_claims.get("userId")
+#         )
+#     if user_id:
+#         user_claims["user_id"] = user_id
+#         return user_claims
+#     return user_claims
 
 
 app = FastAPI()
 
 # Configure CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -787,28 +793,79 @@ async def generate_area_content(
 
 @app.post("/api/sort-strengths-evidence")
 async def sort_strengths_evidence(
-    request: SortEvidenceRequest, 
+    request: SortEvidenceRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     try:
-        # Load transcript using file ID
-        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
-        if not os.path.exists(feedback_path):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Feedback transcript not found at {feedback_path}",
+        # Get previously generated strengths from the database
+        user_id = current_user.user_id if current_user else None
+        feedback_data = None
+        
+        if user_id:
+            try:
+                feedback_data = get_cached_feedback(user_id, request.file_id, db)
+            except Exception as e:
+                print(f"Error getting cached feedback: {str(e)}")
+        
+        if not feedback_data:
+            # If no cached feedback data, use the transcript directly
+            feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
+            if not os.path.exists(feedback_path):
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Feedback transcript not found at {feedback_path}",
+                )
+
+            with open(feedback_path, "r") as f:
+                transcript = f.read()
+                
+            # Initialize Claude client
+            client = anthropic.Anthropic(api_key=api_key)
+            
+            # Load and format prompt
+            sort_prompt = load_prompt("sort_evidence_strenght.txt")
+            prompt = sort_prompt.format(
+                strengths=transcript, headings="\n".join(request.headings)
             )
-
-        with open(feedback_path, "r") as f:
-            transcript = f.read()
-
-        # Initialize Claude client
-        client = anthropic.Anthropic(api_key=api_key)
-        # breakpoint()
-        # Load and format prompt
-        sort_prompt = load_prompt("sort_evidence_strenght.txt")
-        prompt = sort_prompt.format(
-            transcript=transcript, headings="\n".join(request.headings)
-        )
+        else:
+            # Use the previously generated strengths from the database
+            strengths_data = feedback_data.get("strengths", {})
+            
+            # Process the strengths data to ensure it has the is_strong flag
+            processed_strengths = {}
+            for person, data in strengths_data.items():
+                processed_feedback = []
+                for feedback_item in data.get("feedback", []):
+                    if isinstance(feedback_item, dict):
+                        # New format with is_strong flag
+                        processed_feedback.append({
+                            "text": feedback_item.get("text", ""),
+                            "is_strong": feedback_item.get("is_strong", False)
+                        })
+                    else:
+                        # Handle legacy format (plain string)
+                        processed_feedback.append({
+                            "text": feedback_item,
+                            "is_strong": False
+                        })
+                
+                processed_strengths[person] = {
+                    "role": data.get("role", ""),
+                    "feedback": processed_feedback
+                }
+            
+            # Convert strengths data to JSON string for the prompt
+            strengths_json = json.dumps(processed_strengths, indent=2)
+            
+            # Initialize Claude client
+            client = anthropic.Anthropic(api_key=api_key)
+            
+            # Load and format prompt
+            sort_prompt = load_prompt("sort_evidence_strenght.txt")
+            prompt = sort_prompt.format(
+                strengths=strengths_json, headings="\n".join(request.headings)
+            )
 
         # Get sorted evidence from Claude
         response = client.messages.create(
@@ -889,32 +946,67 @@ async def get_strength_evidences(
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     try:
-        # Check cache first with parameters
-        if use_cache:
-            cached_data = get_cached_data(
-                "strength_evidences", file_id, {"num_competencies": numCompetencies}
+    #     # Check cache first with parameters
+    #     if use_cache:
+    #         cached_data = get_cached_data(
+    #             "strength_evidences", file_id, {"num_competencies": numCompetencies}
+    #         )
+    #         if cached_data:
+    #             print(
+    #                 f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
+    #             )
+    #             return cached_data
+
+        # Get previously generated strengths from the database
+        user_id = current_user.user_id
+        feedback_data = get_cached_feedback(user_id, file_id, db)
+        print(user_id)
+        print(feedback_data)
+        
+        if not feedback_data:
+            # If not in database, we need to generate it first
+            raise HTTPException(
+                status_code=400,
+                detail="Feedback data not found. Please generate feedback data first."
             )
-            if cached_data:
-                print(
-                    f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
-                )
-                return cached_data
-
-        # If not cached or cache disabled, process normally
-        # Get the feedback transcript
-        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-        if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail="Feedback transcript not found")
-
-        with open(feedback_path, "r") as f:
-            feedback_transcript = f.read()
+            
+        # Use the previously generated strengths from the database
+        strengths_data = feedback_data.get("strengths", {})
+        
+        # Process the strengths data to ensure it has the is_strong flag
+        processed_strengths = {}
+        for person, data in strengths_data.items():
+            processed_feedback = []
+            for feedback_item in data.get("feedback", []):
+                if isinstance(feedback_item, dict):
+                    # New format with is_strong flag
+                    processed_feedback.append({
+                        "text": feedback_item.get("text", ""),
+                        "is_strong": feedback_item.get("is_strong", False)
+                    })
+                else:
+                    # Handle legacy format (plain string)
+                    processed_feedback.append({
+                        "text": feedback_item,
+                        "is_strong": False
+                    })
+            
+            processed_strengths[person] = {
+                "role": data.get("role", ""),
+                "feedback": processed_feedback
+            }
+        
+        # Convert strengths data to JSON string for the prompt
+        strengths_json = json.dumps(processed_strengths, indent=2)
 
         # Load and format prompt
         strength_prompt = load_prompt("strength_evidences_categorized.txt")
         prompt = strength_prompt.format(
-            feedback=feedback_transcript, num_competencies=numCompetencies
+            strengths=strengths_json, num_competencies=numCompetencies
         )
 
         # Generate analysis using Claude
@@ -958,6 +1050,8 @@ async def get_strength_evidences(
         print(f"Error in get_strength_evidences: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 @app.get("/api/get_advice/{file_id}")
@@ -1033,7 +1127,7 @@ async def get_advice(
 # @app.get("/api/get_feedback/{file_id}")
 
 # Dummy endpoint for testing the frontend with the new feedback structure
-@app.get("/api/get_feedback/{file_id}")
+@app.get("/api/old_get_feedback/{file_id}")
 # async def get_feedback(file_id: str, use_cache: bool = Query(True)):
 #     """
 #     Dummy endpoint that returns test data with the updated feedback structure.
@@ -1241,34 +1335,72 @@ async def get_development_areas(
     file_id: str,
     numCompetencies: int,
     use_cache: bool = Query(
-        True, description="Whether to use cached results if available"
+        False, description="Whether to use cached results if available"
     ),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     try:
         # Check cache first with parameters
-        if use_cache:
-            cached_data = get_cached_data(
-                "development_areas", file_id, {"num_competencies": numCompetencies}
+        # if use_cache:
+        #     cached_data = get_cached_data(
+        #         "development_areas", file_id, {"num_competencies": numCompetencies}
+        #     )
+        #     if cached_data:
+        #         print(
+        #             f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies"
+        #         )
+        #         return cached_data
+
+        # Get previously generated areas to target from the database
+        user_id = current_user.user_id if current_user else None
+        feedback_data = None
+        
+        if user_id:
+            try:
+                feedback_data = get_cached_feedback(user_id, file_id, db)
+            except Exception as e:
+                print(f"Error getting cached feedback: {str(e)}")
+        
+        if not feedback_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Feedback data not found. Please generate feedback data first."
             )
-            if cached_data:
-                print(
-                    f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies"
-                )
-                return cached_data
-
-        # If not cached or cache disabled, process normally
-        # Get the feedback transcript
-        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-        if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail="Feedback transcript not found")
-
-        with open(feedback_path, "r") as f:
-            feedback_transcript = f.read()
-
+            
+        # Use the previously generated areas to target from the database
+        areas_data = feedback_data.get("areas_to_target", {})
+        
+        # Process the areas data to ensure it has the is_strong flag
+        processed_areas = {}
+        for person, data in areas_data.items():
+            processed_feedback = []
+            for feedback_item in data.get("feedback", []):
+                if isinstance(feedback_item, dict):
+                    # New format with is_strong flag
+                    processed_feedback.append({
+                        "text": feedback_item.get("text", ""),
+                        "is_strong": feedback_item.get("is_strong", False)
+                    })
+                else:
+                    # Handle legacy format (plain string)
+                    processed_feedback.append({
+                        "text": feedback_item,
+                        "is_strong": False
+                    })
+            
+            processed_areas[person] = {
+                "role": data.get("role", ""),
+                "feedback": processed_feedback
+            }
+        
+        # Convert areas data to JSON string for the prompt
+        areas_json = json.dumps(processed_areas, indent=2)
+        
         # Load and format prompt
         development_prompt = load_prompt("development_areas_categorized.txt")
         prompt = development_prompt.format(
-            feedback=feedback_transcript, num_competencies=numCompetencies
+            feedback=areas_json, num_competencies=numCompetencies
         )
 
         # Generate analysis using Claude
@@ -1317,27 +1449,63 @@ async def get_development_areas(
 
 @app.post("/api/sort-areas-evidence")
 async def sort_areas_evidence(
-    request: SortEvidenceRequest, 
+    request: SortEvidenceRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     try:
-        # Load transcript using file ID
-        feedback_path = f"../data/processed_assessments/filtered_{request.file_id}.txt"
-        if not os.path.exists(feedback_path):
+        # Get previously generated areas to target from the database
+        user_id = current_user.user_id if current_user else None
+        feedback_data = None
+        
+        if user_id:
+            try:
+                feedback_data = get_cached_feedback(user_id, request.file_id, db)
+            except Exception as e:
+                print(f"Error getting cached feedback: {str(e)}")
+        
+        if not feedback_data:
             raise HTTPException(
-                status_code=404,
-                detail=f"Feedback transcript not found at {feedback_path}",
+                status_code=400,
+                detail="Feedback data not found. Please generate feedback data first."
             )
-
-        with open(feedback_path, "r") as f:
-            transcript = f.read()
-
+            
+        # Use the previously generated areas to target from the database
+        areas_data = feedback_data.get("areas_to_target", {})
+        
+        # Process the areas data to ensure it has the is_strong flag
+        processed_areas = {}
+        for person, data in areas_data.items():
+            processed_feedback = []
+            for feedback_item in data.get("feedback", []):
+                if isinstance(feedback_item, dict):
+                    # New format with is_strong flag
+                    processed_feedback.append({
+                        "text": feedback_item.get("text", ""),
+                        "is_strong": feedback_item.get("is_strong", False)
+                    })
+                else:
+                    # Handle legacy format (plain string)
+                    processed_feedback.append({
+                        "text": feedback_item,
+                        "is_strong": False
+                    })
+            
+            processed_areas[person] = {
+                "role": data.get("role", ""),
+                "feedback": processed_feedback
+            }
+        
+        # Convert areas data to JSON string for the prompt
+        areas_json = json.dumps(processed_areas, indent=2)
+        
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
-
+        
         # Load and format prompt
         sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
         prompt = sort_prompt.format(
-            transcript=transcript, headings="\n".join(request.headings)
+            areas=areas_json, headings="\n".join(request.headings)
         )
 
         # Get sorted evidence from Claude

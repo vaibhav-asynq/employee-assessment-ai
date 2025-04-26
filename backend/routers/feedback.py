@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 # here tasks will be created
-@router.get("/api/db/get_feedback/{file_id}")
+@router.get("/api/get_feedback/{file_id}")
 async def get_feedback(
     request: Request, 
     file_id: str,
@@ -81,7 +81,6 @@ async def get_feedback(
                 }
             ],
         )
-
         # Parse JSON responses
         try:
             strengths_text = strengths_response.content[0].text
@@ -109,11 +108,66 @@ async def get_feedback(
                 else:
                     raise ValueError("No JSON content found in areas response")
 
+            # Process the strengths data to handle the new structure with is_strong flag
+            processed_strengths = {}
+            for person, data in strengths_data.get("strengths", {}).items():
+                processed_feedback = []
+                for feedback_item in data.get("feedback", []):
+                    if isinstance(feedback_item, dict):
+                        # New format with is_strong flag
+                        processed_feedback.append({
+                            "text": feedback_item.get("text", ""),
+                            "is_strong": feedback_item.get("is_strong", False)
+                        })
+                    else:
+                        # Handle legacy format (plain string)
+                        processed_feedback.append({
+                            "text": feedback_item,
+                            "is_strong": False
+                        })
+                
+                processed_strengths[person] = {
+                    "role": data.get("role", ""),
+                    "feedback": processed_feedback
+                }
+            
+            # Process the areas_to_target data to handle the new structure with is_strong flag
+            processed_areas = {}
+            for person, data in areas_data.get("areas_to_target", {}).items():
+                processed_feedback = []
+                for feedback_item in data.get("feedback", []):
+                    if isinstance(feedback_item, dict):
+                        # New format with is_strong flag
+                        processed_feedback.append({
+                            "text": feedback_item.get("text", ""),
+                            "is_strong": feedback_item.get("is_strong", False)
+                        })
+                    else:
+                        # Handle legacy format (plain string)
+                        processed_feedback.append({
+                            "text": feedback_item,
+                            "is_strong": False
+                        })
+                
+                processed_areas[person] = {
+                    "role": data.get("role", ""),
+                    "feedback": processed_feedback
+                }
+
             # Combine results
             result = {
-                "strengths": strengths_data.get("strengths", {}),
-                "areas_to_target": areas_data.get("areas_to_target", {}),
+                "strengths": processed_strengths,
+                "areas_to_target": processed_areas,
             }
+
+            # Save to cache
+            # save_cached_data("feedback", file_id, result)
+
+            # Combine results
+            # result = {
+            #     "strengths": strengths_data.get("strengths", {}),
+            #     "areas_to_target": areas_data.get("areas_to_target", {}),
+            # }
 
 
             feedback_data = {
