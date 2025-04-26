@@ -1,4 +1,4 @@
-Please analyze the provided feedback/reviews and identify exactly {num_competencies} most significant development areas. Create a structured analysis using the following criteria:
+Please analyze the provided pre-extracted areas to target data and identify exactly {num_competencies} most significant development areas. Create a structured analysis using the following criteria:
 
 1. Title Construction:
 Reference these competencies when creating titles: 
@@ -43,7 +43,19 @@ Examples of professional titles:
         {{
           "feedback": "[Full verbatim feedback sentence]",
           "source": "[Name of person providing feedback]",
-          "role": "[Role/title of person]"
+          "role": "[Role/title of person]",
+          "is_strong": true/false
+        }}
+      ]
+    }},
+    "Additional areas.": {{
+      "competencyAlignment": ["Other"],
+      "evidence": [
+        {{
+          "feedback": "[Full verbatim feedback sentence that doesn't fit other categories]",
+          "source": "[Name of person providing feedback]",
+          "role": "[Role/title of person]",
+          "is_strong": true/false
         }}
       ]
     }}
@@ -58,7 +70,9 @@ Guidelines for analysis:
 - Focus on actionable development opportunities
 - Connect feedback to relevant competencies
 - Ensure titles are forward-looking and development-oriented
-
+- IMPORTANT: ALWAYS include an "Additional areas" category in your response, even if it's empty with no evidence
+- IMPORTANT: Preserve the "is_strong" flag from the pre-extracted feedback data. If a feedback item has "is_strong": true in the input, make sure it has "is_strong": true in the output.
+- Write the source name properly spaced, without underscores.
 
 When organizing feedback:
 1. First identify core themes in the developmental feedback

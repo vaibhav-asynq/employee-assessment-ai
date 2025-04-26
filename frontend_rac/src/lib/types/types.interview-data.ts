@@ -10,7 +10,7 @@ export interface EvidenceOfFeedback {
   feedback: Feedback;
   source: Source;
   role: Role;
-  isStrong?: boolean;
+  is_strong?: boolean;
 }
 
 interface DevelopmentAreas {

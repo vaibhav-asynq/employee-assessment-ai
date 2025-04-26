@@ -1,4 +1,4 @@
-Please analyze the provided feedback/reviews and identify exactly {num_competencies} most prominent leadership strengths. Create a structured analysis using the following format:
+Please analyze the provided pre-extracted strengths and organize them into {num_competencies} most prominent leadership quality categories. Your task is to categorize existing strengths.
 
 1. Leadership Quality Categories:
 Group evidence under categories such as (but not limited to):
@@ -31,6 +31,16 @@ Group evidence under categories such as (but not limited to):
         {{
           "feedback": "[Full verbatim feedback sentence]",
           "source": "[Name of person providing feedback]",
+          "role": "[Role/title of person]",
+          "is_strong": true/false
+        }}
+      ]
+    }},
+    "Additional strengths.": {{
+      "evidence": [
+        {{
+          "feedback": "[Feedback that doesn't fit other categories]",
+          "source": "[Name of person providing feedback]",
           "role": "[Role/title of person]"
         }}
       ]
@@ -38,50 +48,36 @@ Group evidence under categories such as (but not limited to):
   }}
 }}
 
-Guidelines for analysis:
+Guidelines for categorization:
 
-Evidence Collection:
-- Include complete sentences and full context
-- Maintain original wording from feedback
-- Preserve source attribution and roles
-- Capture specific examples and situations
-- Include impact where mentioned
-- Note consistent themes across multiple sources
-
-Category Creation:
+Category Selection:
 - Create categories that reflect enduring leadership qualities
 - Use professional, positive terminology
 - Focus on demonstrated strengths
 - Group related feedback themes
 - Consider both technical and behavioral strengths
 - Identify unique differentiators
-
-Quality Standards:
-- Each piece of evidence should be substantial and specific
-- Include context when relevant
-- Maintain proper attribution
-- Eliminate exact duplicates but keep meaningful variations
-- Preserve nuanced differences in similar feedback
-- Cross-reference evidence that could fit multiple categories
 - Add the full stop at the end of the headings. Examples: Selfless style.  Business leadership.
 
 Organization Principles:
-1. First identify core strength themes in the feedback
+1. Identify core strength themes in the provided strengths
 2. Create appropriate category headings
 3. Group specific evidence under each strength
-4. Include source attribution and role context
+4. Preserve source attribution and role context
 5. Note patterns of consistent feedback
 6. Highlight unique or distinctive qualities
 7.⁠ ⁠Do not use underscore in headings
 
-When categorizing evidence:
-- Look for patterns across multiple sources
-- Identify recurring themes
-- Note strength areas mentioned by different levels (peers, reports, superiors)
-- Consider both technical and leadership strengths
-- Capture both natural talents and developed capabilities
-- Include impact and results where mentioned
+Special Instructions:
+- IMPORTANT: After categorizing strengths into the main categories, review all input strengths again and identify any that don't clearly fit into your chosen categories.
+- Place ALL uncategorized content into a category called "Additional strengths." - this category MUST be included in the output even if it's empty.
+- The "Additional strengths." category should contain any feedback that doesn't align well with your main categories.
+- Maintain the original wording, source attribution, and roles from the input.
+- IMPORTANT: Preserve the "is_strong" flag from the pre-extracted strengths data. If a feedback item has "is_strong": true in the input, make sure it has "is_strong": true in the output.
+- Do not discard any evidence - ensure ALL input strengths are categorized.
+- Double-check that every piece of feedback from the input appears somewhere in your output.
+- Write the source name properly spaced, without underscores.
 
-Here is the feedback to analyze:
+Here are the pre-extracted strengths to categorize:
 
-{feedback}
+{strengths}
