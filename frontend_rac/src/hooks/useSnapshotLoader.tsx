@@ -15,7 +15,7 @@ import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
 
 // TODO: move it to proper folder/file
-function hasMeaningfulTemplateData(editable: TemplatedData): boolean {
+export function hasMeaningfulTemplateData(editable: TemplatedData): boolean {
   if (!editable) return false;
 
   // Check name
@@ -83,7 +83,7 @@ function hasMeaningfulTemplateData(editable: TemplatedData): boolean {
   return false;
 }
 
-function isBlankJson(jsonObject: object) {
+export function isBlankJson(jsonObject: object) {
   if (Object.keys(jsonObject).length === 0 && jsonObject.constructor === Object)
     return true;
   return false;
@@ -186,10 +186,16 @@ export const useSnapshotLoader = (
         deletePath("ai-competencies");
       }
 
-      setAdviceData(manual_report.sorted_by?.stakeholders?.adviceData ?? {});
-      setFeedbackData(
-        manual_report.sorted_by?.stakeholders?.feedbackData ?? {},
-      );
+      if (
+        !isBlankJson(manual_report.sorted_by?.stakeholders?.adviceData ?? {})
+      ) {
+        setAdviceData(manual_report.sorted_by?.stakeholders?.adviceData);
+      }
+      if (
+        !isBlankJson(manual_report.sorted_by?.stakeholders?.feedbackData ?? {})
+      ) {
+        setFeedbackData(manual_report.sorted_by?.stakeholders?.feedbackData);
+      }
     },
     [
       addChildTab,

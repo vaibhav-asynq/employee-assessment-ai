@@ -20,6 +20,11 @@ import { format, parseISO, isValid } from "date-fns";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Task } from "@/lib/types/types.filetask";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function TaskHistory() {
   const { user } = useUser();
@@ -60,72 +65,25 @@ export function TaskHistory() {
     file_id: string | null,
     snapShotId?: number,
   ) => {
-    try {
-      console.log("Task clicked:", file_id, snapShotId);
-
-      if (file_id === null) {
-        console.log("Setting fileId to null (new task)");
-        setFileId(file_id);
-        // Navigate to the first step (Upload PDF screen) for new tasks
-        console.log("Navigating to Upload PDF screen (step 1)");
-        goToStep(1);
-        return;
-      }
-
-      // Set the file ID first - this will clear existing data in the store
-      console.log("Setting fileId to:", file_id);
+    if (file_id === fileId) return;
+    if (file_id === null) {
       setFileId(file_id);
-
-      // Always navigate to the second step (Feedback screen)
-      console.log("Navigating to Feedback screen (step 2)");
-      goToStep(2);
-
-      // Try to load the snapshot
-      try {
-        let snapshotData;
-
-        if (snapShotId) {
-          // If we have a specific snapshot ID, load that one
-          console.log("Loading specific snapshot:", snapShotId);
-          snapshotData = await loadSnapshot(snapShotId);
-          if (snapshotData) {
-            console.log("Specific snapshot loaded successfully");
-          } else {
-            console.log(
-              "Specific snapshot not found - trying to load latest snapshot",
-            );
-          }
-        }
-
-        // If we don't have a specific snapshot ID or it wasn't found, try to load the latest snapshot
-        if (!snapshotData) {
-          console.log(
-            "Attempting to load latest snapshot for fileId:",
-            file_id,
-          );
-
-          // The loadSnapshot function will try to fetch the latest snapshot when no specific ID is provided
-          snapshotData = await loadSnapshot(null);
-
-          if (snapshotData) {
-            console.log("Latest snapshot loaded successfully");
-          } else {
-            console.log(
-              "No snapshots found for this task - empty templates initialized",
-            );
-          }
-        }
-      } catch (error) {
-        console.error("Error loading snapshot:", error);
-        // Continue even if snapshot loading fails
-        // The user can still see the file without the snapshot
-        console.log(
-          "Continuing without snapshot - empty templates initialized",
-        );
-      }
-    } catch (error) {
-      console.error("Error in handleTaskClick:", error);
+      goToStep(1);
+      return;
     }
+    setFileId(file_id);
+    goToStep(2);
+    // try {
+    //   let snapshotData;
+    //   if (snapShotId) {
+    //     snapshotData = await loadSnapshot(snapShotId);
+    //   }
+    //   if (!snapshotData) {
+    //     snapshotData = await loadSnapshot(null);
+    //   }
+    // } catch (error) {
+    //   console.error("Error loading snapshot:", error);
+    // }
   };
 
   return (
@@ -165,49 +123,58 @@ export function TaskHistory() {
               .sort((a, b) => b.id - a.id) // Sort by ID descending (most recent first)
               .map((task) => (
                 <SidebarMenuItem key={task.id}>
-                  <SidebarMenuButton
-                    onClick={() =>
-                      handleTaskClick(task.file_id, task.current_snapshot_id)
-                    }
-                    tooltip={task.file_name || "Task"}
-                    isActive={task.file_id === fileId}
-                    className={cn(
-                      "hover:bg-gray-100 transition-all duration-200 cursor-pointer rounded-md",
-                      "border border-transparent hover:border-gray-200",
-                      "py-1 px-1", // Moderate padding
-                      "h-13", // Explicit height set to 5rem (80px)
-                      "flex items-center", // Ensure content is vertically centered
-                      task.file_id === fileId
-                        ? "bg-gray-100 border-gray-200 shadow-sm"
-                        : "",
-                    )}
-                  >
-                    <FileText
-                      className={cn(
-                        "transition-colors",
-                        task.file_id === fileId
-                          ? "text-blue-600"
-                          : "text-gray-400",
-                      )}
-                    />
-                    <span className="flex flex-col w-full overflow-hidden max-w-[200px] gap-0.5">
-                      <span className="truncate font-medium text-sm text-gray-600 line-clamp-2">
-                        {task.file_name.includes(" - ")
-                          ? task.file_name
-                          : `File ${task.id}`}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={12} className="text-blue-500" />
-                        <span className="text-sm font-medium text-blue-600">
-                        {format(task.created_at, "MMM d, yyyy h:mm a")}
-                          {task.id === Math.max(...tasks.map((t) => t.id))
-                            ? "6 days ago"
-                            : "2 weeks ago"}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton
+                        onClick={() =>
+                          handleTaskClick(
+                            task.file_id,
+                            task.current_snapshot_id,
+                          )
+                        }
+                        tooltip={{
+                          content: "test content",
+                        }}
+                        isActive={task.file_id === fileId}
+                        className={cn(
+                          "hover:bg-gray-100 transition-all duration-200 cursor-pointer rounded-md",
+                          "border border-transparent hover:border-gray-200",
+                          "py-1 px-1", // Moderate padding
+                          "h-13", // Explicit height set to 5rem (80px)
+                          "flex items-center", // Ensure content is vertically centered
+                          task.file_id === fileId
+                            ? "bg-gray-100 border-gray-200 shadow-sm"
+                            : "",
+                        )}
+                      >
+                        <FileText
+                          className={cn(
+                            "transition-colors",
+                            task.file_id === fileId
+                              ? "text-blue-600"
+                              : "text-gray-400",
+                          )}
+                        />
+                        <span className="flex flex-col w-full overflow-hidden max-w-[200px] gap-0.5">
+                          <span className="truncate font-medium text-sm text-gray-600 line-clamp-2">
+                            {task.file_name.includes(" - ")
+                              ? task.file_name
+                              : `File ${task.id}`}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={12} className="text-blue-300" />
+                            <span className="text-xs font-medium text-blue-500">
+                              {format(task.created_at, "MMM d, yyyy h:mm a")}
+                            </span>
+                          </div>
                         </span>
-                      </div>
-                    </span>
-                    {/* Removed snapshot ID badge as requested */}
-                  </SidebarMenuButton>
+                        {/* Removed snapshot ID badge as requested */}
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>{task.file_name}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </SidebarMenuItem>
               ))
           ) : (

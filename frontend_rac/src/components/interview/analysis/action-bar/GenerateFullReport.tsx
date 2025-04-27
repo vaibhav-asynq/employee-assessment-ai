@@ -34,7 +34,6 @@ export function GenerateFullReport() {
       const templatedData = convertInterviewAnalysisDataToTemplatedData(data);
 
       addTemplate(templateId, templatedData, false, true);
-      saveSnapshotToDb("auto", true);
 
       addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
       addChildTab(
@@ -47,6 +46,7 @@ export function GenerateFullReport() {
         "sorted-evidence",
         ANALYSIS_TAB_NAMES.sortedEvidences,
       );
+      saveSnapshotToDb("auto", true);
 
       // Set a flag in localStorage to indicate auto-sorting should happen
       localStorage.setItem("autoSortFullReport", "true");

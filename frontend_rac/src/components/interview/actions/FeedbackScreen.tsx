@@ -13,10 +13,11 @@ interface AdviceData {
 import { ActionWrapper } from "./ActionWrapper";
 import { Button } from "@/components/ui/button";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
-import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
+import { isBlankJson, useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useStepper } from "@/components/ui/stepper";
 import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 import { FeedbackDisplay } from "../analysis/FeedbackDisplay";
+import { saveSnapshot } from "@/lib/api";
 
 export function FeedbackScreen() {
   const error = useInterviewDataStore((state) => state.error);
@@ -28,22 +29,27 @@ export function FeedbackScreen() {
     (state) => state.fetchFeedbackData,
   );
   const { loadSnapshot } = useSnapshotLoader(null, true);
+  const { saveSnapshotToDb } = useSnapshotSaver();
   const { nextStep } = useStepper();
 
   const [useCache, setUseCache] = useState(true);
 
-  // Keep track of the last fileId we fetched data for
-  const [lastFetchedFileId, setLastFetchedFileId] = useState<string | null>(
-    null,
-  );
-  const [isFetching, setIsFetching] = useState(false);
-
   useEffect(() => {
     const fetch = async () => {
-      if (fileId && !feedbackData) {
+      if (fileId && (!feedbackData || isBlankJson(feedbackData))) {
+        console.log("===> calling useEffect");
         try {
           const data = await loadSnapshot();
-          if (!data) {
+          // const data = feedbackData;
+          if (
+            !data ||
+            isBlankJson(
+              data.manual_report.sorted_by?.stakeholders?.adviceData ?? {},
+            ) ||
+            isBlankJson(
+              data.manual_report.sorted_by?.stakeholders?.feedbackData ?? {},
+            )
+          ) {
             console.log("NO SNAPSHOT DATA, FETCHING FEEDBACK DIRECTLY");
             await fetchFeedbackData(useCache);
           } else {

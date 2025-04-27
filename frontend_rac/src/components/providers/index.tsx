@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ClerkAuthSync } from "../auth/ClerkAuthSync";
 import { SidebarProvider } from "../ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "../ui/tooltip";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,8 +23,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={<Skeleton />}>
           <ClerkProvider>
-            <ClerkAuthSync />
-            <SidebarProvider>{children}</SidebarProvider>
+            <TooltipProvider>
+              <ClerkAuthSync />
+              <SidebarProvider>{children}</SidebarProvider>
+            </TooltipProvider>
           </ClerkProvider>
         </Suspense>
       </QueryClientProvider>
