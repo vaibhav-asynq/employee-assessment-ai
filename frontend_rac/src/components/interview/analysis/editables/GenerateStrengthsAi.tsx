@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { generateStrengthContent } from "@/lib/api";
 import { useEditAnalysis } from "../../hooks/useEditAnalysis";
+import { sanitizeInput, containsHTML } from "@/lib/sanitize";
 
 interface GenerateStrengthsAi {
   templateId: TemplateId;
@@ -39,6 +40,16 @@ export function GenerateStrengthsAi({
   const [suggestion, setSuggestion] = useState<string>("");
   const [generating, setGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [hasHTML, setHasHTML] = useState<boolean>(false);
+
+  const handleSuggestionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = e.target.value;
+      setSuggestion(newValue);
+      setHasHTML(containsHTML(newValue));
+    },
+    [],
+  );
 
   const content = templates[templateId];
   if (!content) {
@@ -53,10 +64,11 @@ export function GenerateStrengthsAi({
     if (!content) throw Error("Content is required");
 
     try {
+      const sanitizedSuggestion = sanitizeInput(suggestion);
       const response = await generateStrengthContent(
         heading,
         fileId,
-        suggestion,
+        sanitizedSuggestion,
       );
       handleStrengthContentChange(strenghtItemId, response);
     } catch (error) {
@@ -69,6 +81,13 @@ export function GenerateStrengthsAi({
   const handleGenerate = async () => {
     setGenerating(true);
     setError("");
+
+    if (hasHTML) {
+      setError("Please correct content before generating");
+      setGenerating(false);
+      return;
+    }
+
     try {
       await generateAiResponse(suggestion);
       setSuggestion("");
@@ -114,10 +133,19 @@ export function GenerateStrengthsAi({
           )}
           <Textarea
             value={suggestion}
-            onChange={(e) => setSuggestion(e.target.value)}
+            onChange={handleSuggestionChange}
             placeholder="Enter your content suggestion here..."
-            className="min-h-[200px] resize-none"
+            className={`min-h-[200px] resize-none ${
+              hasHTML
+                ? "focus-visible:ring-0 border-red-500 focus:ring-red-500"
+                : ""
+            }`}
           />
+          {hasHTML && (
+            <div className="text-red-500 text-xs mt-1">
+              Content is not allowed. Please correct it.
+            </div>
+          )}
         </div>
         <DialogFooter>
           <div className="flex items-center gap-3">
@@ -128,7 +156,7 @@ export function GenerateStrengthsAi({
             </DialogClose>
             <Button
               onClick={handleGenerate}
-              disabled={generating || !heading.trim()}
+              disabled={generating || !heading.trim() || hasHTML}
               className="w-auto sm:w-[180px]"
             >
               {generating ? (

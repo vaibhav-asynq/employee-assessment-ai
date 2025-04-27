@@ -33,8 +33,6 @@ export function EditableReport() {
     );
   }
 
-  console.log(analysisFullReport.strengths);
-
   return (
     <div>
       <h2 className="text-2xl font-bold tracking-tight mb-8">AI Suggestions</h2>

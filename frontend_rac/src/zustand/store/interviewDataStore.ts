@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { FeedbackData } from "@/lib/types";
 import { Snapshot, SnapshotReport } from "@/lib/types/types.snapshot";
+import { TemplatedData } from "@/lib/types/types.analysis";
 
 import {
   uploadFile,
   getFeedback,
   getAdvice,
-  saveSnapshot,
+  saveSnapshot as saveSnapshotAPI,
   getSnapshotById,
+  SortedEvidence,
 } from "@/lib/api";
 
 type InterviewDataState = {
@@ -20,6 +22,14 @@ type InterviewDataState = {
   //TODO: check if implementing rawData?
   rawData: any | null;
   adviceData: any | null;
+  fullReport?: {
+    sorted_competency?: {
+      sorted_strength?: SortedEvidence[];
+      sorted_areas?: SortedEvidence[];
+    };
+    //TODO: implement editable late
+    editable?: TemplatedData;
+  } | null;
   feedbackData: FeedbackData | null;
   currentSnapshotId: number | null;
   currentSnapshot: Snapshot | null;
@@ -35,16 +45,22 @@ type InterviewDataState = {
     callback?: () => void,
     useCache?: boolean,
   ) => Promise<void>;
-  saveSnapshot: (
-    userId: string,
-    manualReport: Record<string, any>,
-    fullReport: Record<string, any>,
-    aiCompetencies: Record<string, any>,
-    triggerType?: "manual" | "auto",
-    parentId?: number | null,
-    make_active?: boolean,
-  ) => Promise<void>;
-  loadSnapshotById: (snapshotId: number) => Promise<Snapshot | null>;
+
+  // Full Report update functions
+  setFullReport: (fullReport: InterviewDataState["fullReport"]) => void;
+  updateFullReportEditable: (editableData: Partial<TemplatedData>) => void;
+  updateFullReportName: (name: string) => void;
+  updateFullReportDate: (date: string) => void;
+  updateFullReportStrengths: (strengths: TemplatedData["strengths"]) => void;
+  updateFullReportAreasToTarget: (
+    areasToTarget: TemplatedData["areas_to_target"],
+  ) => void;
+  updateFullReportNextSteps: (nextSteps: TemplatedData["next_steps"]) => void;
+  updateFullReportAdvices: (advices: TemplatedData["advices"]) => void;
+  updateFullReportSortedCompetency: (sortedCompetency: {
+    sorted_strength?: SortedEvidence[];
+    sorted_areas?: SortedEvidence[];
+  }) => void;
 };
 
 export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
@@ -61,6 +77,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   currentSnapshot: null,
   isSavingSnapshot: false,
   isLoadingSnapshot: false,
+  fullReport: null,
 
   // Handle PDF Upload
   handleSelectPdf: async (
@@ -105,42 +122,47 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
       console.error("Cannot fetch feedback data: No fileId set");
       return;
     }
-    
-    console.log(`Starting to fetch feedback data for fileId: ${fileId}, useCache: ${useCache}`);
+
+    console.log(
+      `Starting to fetch feedback data for fileId: ${fileId}, useCache: ${useCache}`,
+    );
     set({ loading: true, error: "" });
-    
+
     try {
-      console.log(`Making API calls to getFeedback and getAdvice for fileId: ${fileId}`);
-      
+      console.log(
+        `Making API calls to getFeedback and getAdvice for fileId: ${fileId}`,
+      );
+
       // Track the start time for performance monitoring
       const startTime = performance.now();
-      
+
       const [feedbackData, adviceData] = await Promise.all([
         getFeedback(fileId, useCache),
         getAdvice(fileId, useCache),
       ]);
-      
+
       const endTime = performance.now();
-      console.log(`API calls completed in ${Math.round(endTime - startTime)}ms`);
-      
+      console.log(
+        `API calls completed in ${Math.round(endTime - startTime)}ms`,
+      );
+
       if (!feedbackData) {
         console.error("No feedback data received from API");
         throw new Error("No feedback data received");
       }
-      
+
       console.log("Feedback data received successfully:", {
         strengths: Object.keys(feedbackData.strengths || {}),
-        areas_to_target: Object.keys(feedbackData.areas_to_target || {})
+        areas_to_target: Object.keys(feedbackData.areas_to_target || {}),
       });
-      
+
       console.log("Advice data received successfully:", {
-        categories: adviceData ? Object.keys(adviceData) : 'No advice data'
+        categories: adviceData ? Object.keys(adviceData) : "No advice data",
       });
-      
+
       // Update the store with the new data
       set({ feedbackData, adviceData });
       console.log("Store updated with new feedback and advice data");
-      
     } catch (err) {
       console.error("Error fetching feedback data:", err);
       set({
@@ -162,108 +184,199 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
 
   setFileId: (fileId: string | null) => {
     // Clear existing data when changing files to force a refetch
-    set({ 
+    set({
       fileId,
       feedbackData: null,
       adviceData: null,
       rawData: null,
       currentSnapshotId: null,
-      currentSnapshot: null
+      currentSnapshot: null,
     });
-    console.log("File ID set to:", fileId, "- cleared existing data to force refetch");
+    console.log(
+      "File ID set to:",
+      fileId,
+      "- cleared existing data to force refetch",
+    );
   },
 
-  saveSnapshot: async (
-    userId: string,
-    manualReport: Record<string, any>,
-    fullReport: Record<string, any>,
-    aiCompetencies: Record<string, any>,
-    triggerType: "manual" | "auto" = "manual",
-    parentId?: number | null,
-    make_active: boolean = false,
-  ) => {
-    const { fileId, adviceData, feedbackData } = get();
-    if (!fileId) {
-      set({ error: "No file selected. Cannot save snapshot." });
-      return;
-    }
-
-    set({ isSavingSnapshot: true, error: "" });
-
-    try {
-      // Create snapshot report objects
-      // Use type assertion to fix TypeScript error
-      const snapshotData: any = {
-        file_id: fileId,
-        manual_report: {
-          editable: manualReport,
-          sorted_by: {
-            stakeholders: { adviceData, feedbackData },
-            competency: {},
-          },
-        },
-        full_report: {
-          editable: fullReport,
-          sorted_by: {
-            stakeholders: {},
-            competency: {},
-          },
-        },
-        ai_Competencies: {
-          editable: aiCompetencies,
-          sorted_by: {
-            stakeholders: {},
-            competency: {},
-          },
-        },
-        trigger_type: triggerType,
-        parent_id: parentId,
-      };
-
-      const response = await saveSnapshot(snapshotData, userId, make_active);
-      set({ currentSnapshotId: response.id });
-      console.log("Snapshot saved successfully:", response);
-      return response;
-    } catch (error) {
-      console.error("Error saving snapshot:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to save snapshot",
-      });
-      throw error;
-    } finally {
-      set({ isSavingSnapshot: false });
-    }
+  // Full Report update functions
+  setFullReport: (fullReport) => {
+    set({ fullReport });
   },
-  loadSnapshotById: async (snapshotId: number) => {
-    set({ isLoadingSnapshot: true, error: "" });
 
-    try {
-      const snapshot = await getSnapshotById(snapshotId);
-
-      if (!snapshot) {
-        throw new Error(`Snapshot with ID ${snapshotId} not found`);
+  updateFullReportEditable: (editableData) => {
+    set((state) => {
+      if (!state.fullReport) {
+        return {
+          fullReport: {
+            editable: editableData as TemplatedData,
+          },
+        };
       }
 
-      set({
-        currentSnapshotId: snapshot.id,
-        currentSnapshot: snapshot,
-        fileId: snapshot.file_id,
-      });
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...(state.fullReport.editable || {}),
+            ...editableData,
+          } as TemplatedData,
+        },
+      };
+    });
+  },
 
-      console.log("Snapshot loaded successfully:", snapshot);
-      return snapshot;
-    } catch (error) {
-      console.error(`Error loading snapshot with ID ${snapshotId}:`, error);
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : `Failed to load snapshot with ID ${snapshotId}`,
-      });
-      return null;
-    } finally {
-      set({ isLoadingSnapshot: false });
-    }
+  updateFullReportName: (name) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { name } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            name,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportDate: (date) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { date } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            date,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportStrengths: (strengths) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { strengths } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            strengths,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportAreasToTarget: (areasToTarget) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { areas_to_target: areasToTarget } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            areas_to_target: areasToTarget,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportNextSteps: (nextSteps) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { next_steps: nextSteps } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            next_steps: nextSteps,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportAdvices: (advices) => {
+    set((state) => {
+      if (!state.fullReport?.editable) {
+        return {
+          fullReport: {
+            editable: { advices } as TemplatedData,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          editable: {
+            ...state.fullReport.editable,
+            advices,
+          },
+        },
+      };
+    });
+  },
+
+  updateFullReportSortedCompetency: (sortedCompetency) => {
+    set((state) => {
+      if (!state.fullReport) {
+        return {
+          fullReport: {
+            sorted_competency: sortedCompetency,
+          },
+        };
+      }
+
+      return {
+        fullReport: {
+          ...state.fullReport,
+          sorted_competency: {
+            ...(state.fullReport.sorted_competency || {}),
+            ...sortedCompetency,
+          },
+        },
+      };
+    });
   },
 }));

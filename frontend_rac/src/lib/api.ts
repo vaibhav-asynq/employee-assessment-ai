@@ -1,12 +1,14 @@
+//TODO: use other specified types in the types folder
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { NextStep } from "./types";
 import { useAuthStore } from "@/zustand/store/authStore";
 import { Task } from "./types/types.filetask";
 
-//TODO: use other specified types in the types folder
-// const API_URL = "http://34.202.149.23:8000";
-const API_URL = "http://localhost:8000";
+if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+  throw new Error("❌ Missing required env: NEXT_PUBLIC_API_BASE_URL");
+}
 
+export const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Create axios instance
 const api = axios.create({
@@ -42,11 +44,16 @@ api.interceptors.request.use(
     const token = useAuthStore.getState().token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-        headers: { Authorization: `Bearer ${token.substring(0, 10)}...` }
-      });
+      console.log(
+        `API Request: ${config.method?.toUpperCase()} ${config.url}`,
+        {
+          headers: { Authorization: `Bearer ${token.substring(0, 10)}...` },
+        },
+      );
     } else {
-      console.warn(`API Request without token: ${config.method?.toUpperCase()} ${config.url}`);
+      console.warn(
+        `API Request without token: ${config.method?.toUpperCase()} ${config.url}`,
+      );
     }
     return config;
   },
@@ -79,10 +86,12 @@ api.interceptors.response.use(
     // If the error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.log("Received 401 error, attempting to refresh token...");
-      
+
       if (isRefreshing) {
         // If we're already refreshing, add this request to the queue
-        console.log("Token refresh already in progress, adding request to queue");
+        console.log(
+          "Token refresh already in progress, adding request to queue",
+        );
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject, config: originalRequest });
         });
@@ -99,7 +108,7 @@ api.interceptors.response.use(
         if (refreshToken) {
           console.log("Calling refreshToken function");
           const newToken = await refreshToken();
-          
+
           if (newToken && originalRequest.headers) {
             console.log("Token refreshed successfully, retrying request");
             // Update the Authorization header with the new token
@@ -439,6 +448,21 @@ export const getSnapshotHistory = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching snapshot history:", error);
+    throw error;
+  }
+};
+
+export const setCurrentSnapshot = async (
+  fileId: string,
+  snapshotId: number,
+) => {
+  try {
+    const response = await api.post(
+      `/api/snapshots/set-current/${fileId}/${snapshotId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error setting current snapshot:", error);
     throw error;
   }
 };

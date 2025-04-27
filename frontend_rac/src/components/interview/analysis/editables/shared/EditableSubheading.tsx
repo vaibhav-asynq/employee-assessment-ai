@@ -1,4 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import {
+  sanitizeInput,
+  containsHTML,
+  containsCode,
+  hasSuspiciousContent,
+} from "@/lib/sanitize";
 
 interface EditableSubheadingProps {
   value: string;
@@ -14,6 +20,9 @@ export function EditableSubheading({
   const inputRef = useRef<HTMLInputElement>(null);
   const [localValue, setLocalValue] = useState(value);
   const [isEditing, setIsEditing] = useState(false);
+  const [hasHTML, setHasHTML] = useState(false);
+  const [hasCode, setHasCode] = useState(false);
+  const [hasSuspicious, setHasSuspicious] = useState(false);
 
   // Sync with parent value when not editing
   useEffect(() => {
@@ -25,7 +34,13 @@ export function EditableSubheading({
   // Handle local changes without updating parent
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    setLocalValue(e.target.value);
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+
+    // Check for various suspicious content
+    setHasHTML(containsHTML(newValue));
+    setHasCode(containsCode(newValue));
+    setHasSuspicious(hasSuspiciousContent(newValue));
   }, []);
 
   // Handle focus
@@ -41,9 +56,17 @@ export function EditableSubheading({
   const handleBlur = useCallback(() => {
     setIsEditing(false);
     if (localValue !== value) {
-      onChange(localValue);
+      const sanitizedValue = sanitizeInput(localValue);
+      onChange(sanitizedValue);
+
+      if (hasHTML || hasCode || hasSuspicious) {
+        setLocalValue(sanitizedValue);
+        setHasHTML(false);
+        setHasCode(false);
+        setHasSuspicious(false);
+      }
     }
-  }, [localValue, value, onChange]);
+  }, [localValue, value, onChange, hasHTML, hasCode, hasSuspicious]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback(
@@ -59,11 +82,15 @@ export function EditableSubheading({
   );
 
   return (
-    <div className="flex">
+    <div className="flex flex-col group">
       <input
         ref={inputRef}
         type="text"
-        className="flex-1 text-lg font-semibold p-2 border rounded mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className={`flex-1 text-lg font-semibold p-2 border rounded focus:outline-none focus:ring-1 ${
+          hasHTML || hasCode || hasSuspicious
+            ? "border-red-500 focus:ring-red-500"
+            : "focus:ring-blue-500"
+        }`}
         value={localValue}
         onChange={handleChange}
         onFocus={handleFocus}
@@ -71,6 +98,12 @@ export function EditableSubheading({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
       />
+
+      {(hasHTML || hasCode || hasSuspicious) && (
+        <div className="text-red-500 text-xs mt-1">
+          this heading is not allowed! Please change it.
+        </div>
+      )}
     </div>
   );
 }

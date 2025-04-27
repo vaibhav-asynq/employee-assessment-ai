@@ -1,10 +1,13 @@
 "use client";
 import React, { useEffect } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { Spinner } from "@/components/ui/spinner";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { EditableCopetencies } from "./EditableCopetencies";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidanceDisplay } from "./EvidanceDisplay";
+import FallbackAiCompetencies from "./fallbacks/FallbackAiCompetencies";
+import { FallbackAiCompetenciesDisplay } from "./fallbacks/FallbackAiCompetenciesDisplay";
 
 export function AiCompetencies() {
   const isLoading = useAnalysisStore((state) => state.loading);
@@ -35,16 +38,20 @@ export function AiCompetencies() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
-      {/* Left side - Evidence Display */}
-      <div className="overflow-y-auto pr-4">
-        <EvidanceDisplay />
-      </div>
+    <ErrorBoundary FallbackComponent={FallbackAiCompetencies}>
+      <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
+        {/* Left side - Evidence Display */}
+        <div className="overflow-y-auto pr-4">
+          <ErrorBoundary FallbackComponent={FallbackAiCompetenciesDisplay}>
+            <EvidanceDisplay />
+          </ErrorBoundary>
+        </div>
 
-      {/* Right side - Editable Content */}
-      <div className="border-l pl-4 overflow-y-auto p-6">
-        <EditableCopetencies />
+        {/* Right side - Editable Content */}
+        <div className="border-l pl-4 overflow-y-auto p-6">
+          <EditableCopetencies />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

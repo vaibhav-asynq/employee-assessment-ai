@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import uuid
 from typing import Optional
@@ -6,6 +7,7 @@ from db.core import NotFoundError
 from db.models import DBTask
 from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from .models import DBTask
@@ -13,6 +15,7 @@ from .models import DBTask
 
 class Task(BaseModel):
     id: int
+    created_at: datetime
     user_id: str
     name: str
     file_id: str
@@ -82,8 +85,8 @@ def get_cached_task(user_id: str, file_id:str, session: Session) -> Optional[DBT
 
 
 def get_user_tasks_db(user_id: str, session: Session) -> list[DBTask]:
-    """Get all tasks for a specific user"""
-    db_tasks = session.query(DBTask).filter(DBTask.user_id == user_id).all()
+    """Get all tasks for a specific user, sorted by creation date (newest first)"""
+    db_tasks = session.query(DBTask).filter(DBTask.user_id == user_id).order_by(desc(DBTask.created_at))
     return db_tasks
 
 

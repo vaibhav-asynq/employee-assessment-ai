@@ -13,6 +13,7 @@ class DBTask(Base):
     __tablename__ = "task"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(default=lambda: datetime.datetime.now(datetime.timezone.utc))
     user_id: Mapped[str]
     name: Mapped[str] 
     file_id: Mapped[str]
@@ -47,7 +48,7 @@ class DBSnapshot(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("task.id"))
-    created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now(datetime.timezone.utc))
+    created_at: Mapped[datetime.datetime] = mapped_column(default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     # Either null (initial snapshot) or ID of parent snapshot
     parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("snapshot.id"), nullable=True)

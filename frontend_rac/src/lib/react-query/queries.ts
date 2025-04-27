@@ -94,12 +94,16 @@ export const useSnapshotHistory = (
       ? [...queryKeys.snapshots.history(fileId), { limit, offset }]
       : ["no-fileid"],
     queryFn: async () => {
-      console.log(`Fetching snapshot history for fileId: ${fileId}, limit: ${limit}, offset: ${offset}`);
+      console.log(
+        `Fetching snapshot history for fileId: ${fileId}, limit: ${limit}, offset: ${offset}`,
+      );
       if (!fileId) return [];
-      
+
       try {
         const data = await api.getSnapshotHistory(fileId, limit, offset);
-        console.log(`Snapshot history fetch successful, received ${data.length} snapshots`);
+        console.log(
+          `Snapshot history fetch successful, received ${data.length} snapshots`,
+        );
         return data;
       } catch (error) {
         console.error(`Error fetching snapshot history:`, error);
@@ -110,6 +114,7 @@ export const useSnapshotHistory = (
     // Default cache settings if not provided in options
     gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
     staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: true,
     ...options,
   });
 
@@ -121,9 +126,16 @@ export const useSnapshotHistory = (
       isError: queryResult.isError,
       error: queryResult.error,
       dataLength: queryResult.data?.length || 0,
-      isFetching: queryResult.isFetching
+      isFetching: queryResult.isFetching,
     });
-  }, [fileId, queryResult.isLoading, queryResult.isError, queryResult.error, queryResult.data, queryResult.isFetching]);
+  }, [
+    fileId,
+    queryResult.isLoading,
+    queryResult.isError,
+    queryResult.error,
+    queryResult.data,
+    queryResult.isFetching,
+  ]);
 
   return queryResult;
 };

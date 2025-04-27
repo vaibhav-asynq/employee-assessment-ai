@@ -37,6 +37,7 @@ export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
           strengthsEvidence={sortedStrengths}
           areasEvidence={sortedAreas}
           adviceEvidence={transformedAdvice}
+          // adviceEvidence={undefined}
         />
       </div>
       <div className="border-l pl-8 overflow-y-auto p-6">

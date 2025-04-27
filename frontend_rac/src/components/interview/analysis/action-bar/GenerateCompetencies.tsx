@@ -25,14 +25,21 @@ import {
   getStrengthEvidences,
 } from "@/lib/api";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { TemplatedData, templatesIds, AreasToTarget, Strengths } from "@/lib/types/types.analysis";
+import {
+  TemplatedData,
+  templatesIds,
+  AreasToTarget,
+  Strengths,
+} from "@/lib/types/types.analysis";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
-import {
-  convertAdviceToOrderedAdvice,
-} from "@/lib/utils/analysisUtils";
+import { convertAdviceToOrderedAdvice } from "@/lib/utils/analysisUtils";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
-import { EvidenceOfFeedback, CompetenciesAlignment } from "@/lib/types/types.interview-data";
+import {
+  EvidenceOfFeedback,
+  CompetenciesAlignment,
+} from "@/lib/types/types.interview-data";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 const formSchema = z.object({
   noOfGenerate: z.string({
@@ -45,9 +52,12 @@ export function GenerateCompetencies() {
   const fileId = useInterviewDataStore((state) => state.fileId);
   const templates = useAnalysisStore((state) => state.templates);
   const addTemplate = useAnalysisStore((state) => state.addTemplate);
-  const handleAnalysisUpdate = useAnalysisStore((state) => state.handleAnalysisUpdate);
+  const handleAnalysisUpdate = useAnalysisStore(
+    (state) => state.handleAnalysisUpdate,
+  );
   const addTab = useUserPreferencesStore((state) => state.addPath);
   const selectTab = useUserPreferencesStore((state) => state.setSelectedPath);
+  const { saveSnapshotToDb } = useSnapshotSaver();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -67,7 +77,7 @@ export function GenerateCompetencies() {
       ]);
 
       const orderedAdviceData = convertAdviceToOrderedAdvice(adviceData);
-      
+
       // Create areas to target with proper typing
       const areasToTarget: AreasToTarget = {
         order: Object.keys(developmentData.developmentAreas),
@@ -82,16 +92,19 @@ export function GenerateCompetencies() {
             };
             return acc;
           },
-          {} as Record<string, {
-            id: string;
-            heading: string;
-            content: string;
-            evidence: EvidenceOfFeedback[];
-            competencyAlignment: CompetenciesAlignment;
-          }>,
+          {} as Record<
+            string,
+            {
+              id: string;
+              heading: string;
+              content: string;
+              evidence: EvidenceOfFeedback[];
+              competencyAlignment: CompetenciesAlignment;
+            }
+          >,
         ),
       };
-      
+
       // Create strengths with proper typing
       const strengths: Strengths = {
         order: Object.keys(strengthData.leadershipQualities),
@@ -105,35 +118,34 @@ export function GenerateCompetencies() {
             };
             return acc;
           },
-          {} as Record<string, {
-            id: string;
-            heading: string;
-            content: string;
-            evidence: EvidenceOfFeedback[];
-          }>,
+          {} as Record<
+            string,
+            {
+              id: string;
+              heading: string;
+              content: string;
+              evidence: EvidenceOfFeedback[];
+            }
+          >,
         ),
       };
-      
+
       const templatedData: TemplatedData = {
         name: "",
         date: new Date().toISOString(),
         strengths,
         areas_to_target: areasToTarget,
         next_steps: [
-          { main: "", sub_points: ["", "", ""] },  // First point with 3 sub-points
-          "",                                      // Text box
-          { main: "", sub_points: ["", "", ""] },  // Second point with 3 sub-points
-          { main: "", sub_points: ["", "", ""] },  // Third point with 3 sub-points
-          { main: "", sub_points: ["", "", ""] },  // Fourth point with 3 sub-points
+          { main: "", sub_points: ["", "", ""] }, // First point with 3 sub-points
+          "", // Text box
+          { main: "", sub_points: ["", "", ""] }, // Second point with 3 sub-points
+          { main: "", sub_points: ["", "", ""] }, // Third point with 3 sub-points
+          { main: "", sub_points: ["", "", ""] }, // Fourth point with 3 sub-points
         ],
         advices: orderedAdviceData,
       };
-      console.log(templatedData)
-      if (templates[templateId]) {
-        addTemplate(templateId, templatedData, false, true);
-      } else {
-        addTemplate(templateId, templatedData, false);
-      }
+      addTemplate(templateId, templatedData, false, true);
+      saveSnapshotToDb("auto", true);
       addTab("ai-competencies", ANALYSIS_TAB_NAMES.aiCompetencies);
       selectTab("ai-competencies");
     } catch (err) {
@@ -170,7 +182,7 @@ export function GenerateCompetencies() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {[3,4, 5, 6, 7, 8, 9, 10].map((item) => (
+                        {[3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
                           <SelectItem key={item} value={`${item}`}>
                             {item}
                           </SelectItem>

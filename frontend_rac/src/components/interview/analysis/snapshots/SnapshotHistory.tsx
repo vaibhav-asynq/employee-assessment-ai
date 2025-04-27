@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useSnapshotHistory } from "@/lib/react-query";
+import { useState, useEffect } from "react";
+import { useSnapshotHistory, useCurrentSnapshot } from "@/lib/react-query";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
+import { useSetCurrentSnapshot } from "@/lib/react-query/mutations";
 import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,18 @@ function SnapshotHistoryContent() {
   const limit = 5;
   const offset = page * limit;
   const { loadSnapshot } = useSnapshotLoader(null, false);
+  const setCurrentSnapshot = useSetCurrentSnapshot();
+
+  const [loadingSnapshotId, setLoadingSnapshotId] = useState<number | null>(
+    null,
+  );
+  const [loadingStage, setLoadingStage] = useState<
+    "loading" | "setting" | null
+  >(null);
+
+  // Get the current snapshot to highlight it
+  const { data: currentSnapshot, isLoading: isLoadingCurrentSnapshot } =
+    useCurrentSnapshot(fileId);
 
   const {
     data: snapshotsData = [],
@@ -48,9 +61,18 @@ function SnapshotHistoryContent() {
       offset,
       snapshotsData,
       isLoading,
-      isError
+      isError,
+      currentSnapshot: currentSnapshot?.id,
     });
-  }, [fileId, limit, offset, snapshotsData, isLoading, isError]);
+  }, [
+    fileId,
+    limit,
+    offset,
+    snapshotsData,
+    isLoading,
+    isError,
+    currentSnapshot,
+  ]);
 
   const snapshots = [...snapshotsData].sort(
     (a, b) =>
@@ -59,10 +81,32 @@ function SnapshotHistoryContent() {
 
   const handleLoadSnapshot = async (snapshotId: number) => {
     try {
+      setLoadingSnapshotId(snapshotId);
+      setLoadingStage("loading");
+
+      // First load the snapshot data into the UI
       await loadSnapshot(snapshotId);
+
+      // Then set it as the current snapshot in the database
+      if (fileId) {
+        setLoadingStage("setting");
+        await setCurrentSnapshot.mutateAsync({
+          fileId,
+          snapshotId,
+        });
+        // Refetch the current snapshot to update the UI
+        await refetch();
+      }
     } catch (error) {
       console.error("Error loading snapshot:", error);
+    } finally {
+      setLoadingSnapshotId(null);
+      setLoadingStage(null);
     }
+  };
+
+  const isCurrentSnapshot = (snapshotId: number) => {
+    return currentSnapshot?.id === snapshotId;
   };
 
   const formatTriggerType = (type: string) => {
@@ -109,7 +153,7 @@ function SnapshotHistoryContent() {
         </Button>
       </div>
 
-      {isLoading ? (
+      {isLoading || isLoadingCurrentSnapshot ? (
         // Loading state
         Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="mb-4 space-y-2">
@@ -142,7 +186,13 @@ function SnapshotHistoryContent() {
           {snapshots.map((snapshot) => (
             <div
               key={snapshot.id}
-              className="border rounded-md p-3 hover:bg-accent/50 transition-colors"
+              // className="border rounded-md p-3 hover:bg-accent/50 transition-colors"
+              className={cn(
+                "border rounded-md p-3 transition-colors",
+                isCurrentSnapshot(snapshot.id)
+                  ? "bg-accent border-primary"
+                  : "hover:bg-accent/50",
+              )}
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -172,12 +222,27 @@ function SnapshotHistoryContent() {
                 </Badge>
               </div>
               <Button
-                variant="secondary"
+                variant={
+                  isCurrentSnapshot(snapshot.id) ? "default" : "secondary"
+                }
                 size="sm"
                 className="w-full mt-2"
                 onClick={() => handleLoadSnapshot(snapshot.id)}
+                disabled={
+                  isCurrentSnapshot(snapshot.id) ||
+                  loadingSnapshotId !== null ||
+                  setCurrentSnapshot.isPending
+                }
               >
-                Load This Snapshot
+                {isCurrentSnapshot(snapshot.id)
+                  ? "Current Snapshot"
+                  : loadingSnapshotId === snapshot.id &&
+                      loadingStage === "loading"
+                    ? "Loading Snapshot Data..."
+                    : loadingSnapshotId === snapshot.id &&
+                        loadingStage === "setting"
+                      ? "Setting as Current..."
+                      : "Load This Snapshot"}
               </Button>
             </div>
           ))}
