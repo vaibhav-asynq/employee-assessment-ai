@@ -21,6 +21,7 @@ router = APIRouter(
 
 class SnapshotCreateRequest(BaseModel):
     file_id: str
+    snapshot_name: Optional[str] = None
     manual_report: dict
     full_report: dict
     ai_Competencies: dict
@@ -30,6 +31,7 @@ class SnapshotCreateRequest(BaseModel):
 class SnapshotResponse(BaseModel):
     id: int
     task_id: int
+    snapshot_name: Optional[str] = None
     created_at: str
     parent_id: Optional[int] = None
     trigger_type: str
@@ -51,6 +53,7 @@ async def create_snapshot_endpoint(
     # Create snapshot data
     snapshot_data = SnapshotCreate(
         task_id=task.id,
+        snapshot_name= request.snapshot_name,
         manual_report=SnapshotReport(**request.manual_report),
         full_report=SnapshotReport(**request.full_report),
         ai_Competencies=SnapshotReport(**request.ai_Competencies)
@@ -76,6 +79,7 @@ async def create_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -104,6 +108,7 @@ async def get_latest_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -133,6 +138,7 @@ async def get_current_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -161,6 +167,7 @@ async def get_snapshot_history_endpoint(
     return [
         SnapshotResponse(
             id=snapshot.id,
+            snapshot_name=snapshot.snapshot_name,
             task_id=snapshot.task_id,
             created_at=snapshot.created_at.isoformat(),
             parent_id=snapshot.parent_id,
@@ -192,6 +199,7 @@ async def get_manual_snapshots_endpoint(
     return [
         SnapshotResponse(
             id=snapshot.id,
+            snapshot_name=snapshot.snapshot_name,
             task_id=snapshot.task_id,
             created_at=snapshot.created_at.isoformat(),
             parent_id=snapshot.parent_id,
@@ -224,6 +232,7 @@ async def get_snapshots_by_type_endpoint(
     return [
         SnapshotResponse(
             id=snapshot.id,
+            snapshot_name=snapshot.snapshot_name,
             task_id=snapshot.task_id,
             created_at=snapshot.created_at.isoformat(),
             parent_id=snapshot.parent_id,
@@ -270,6 +279,7 @@ async def restore_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -299,6 +309,7 @@ async def undo_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -328,6 +339,7 @@ async def redo_snapshot_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -391,6 +403,7 @@ async def get_snapshot_by_id_endpoint(
     # Convert datetime to string for JSON response
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -428,6 +441,7 @@ async def set_current_snapshot_endpoint(
     # Return the snapshot that was set as current
     return SnapshotResponse(
         id=snapshot.id,
+        snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
         created_at=snapshot.created_at.isoformat(),
         parent_id=snapshot.parent_id,
@@ -463,6 +477,7 @@ async def get_snapshot_children_endpoint(
     return [
         SnapshotResponse(
             id=child.id,
+            snapshot_name=snapshot.snapshot_name,
             task_id=child.task_id,
             created_at=child.created_at.isoformat(),
             parent_id=child.parent_id,

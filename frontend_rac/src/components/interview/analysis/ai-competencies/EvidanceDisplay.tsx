@@ -136,20 +136,21 @@ export function EvidanceDisplay() {
   const renderEvidence = useCallback(
     (evidence: EvidenceOfFeedback, isAreaToTarget: boolean = false) => {
       // Extract the feedback text (could be a string or an object with text property)
-      const feedbackText = typeof evidence.feedback === 'string' 
-        ? evidence.feedback 
-        : evidence.feedback.text;
-      
+      const feedbackText =
+        typeof evidence.feedback === "string"
+          ? evidence.feedback
+          : evidence.feedback.text;
+
       return (
         <div
           key={`${evidence.source}-${feedbackText}`}
           className={cn(
             "mb-4 p-4 rounded-lg",
             evidence.is_strong && isAreaToTarget
-              ? "bg-red-50 border-l-4 border-red-500" 
+              ? "bg-red-50 border-l-4 border-red-500"
               : evidence.is_strong && !isAreaToTarget
                 ? "bg-green-50 border-l-4 border-green-500"
-                : "bg-gray-50"
+                : "bg-gray-50",
           )}
         >
           <p className="text-gray-800 mb-2">{feedbackText}</p>
@@ -269,22 +270,42 @@ export function EvidanceDisplay() {
             <div className="space-y-6">
               {analysisAiCompetencies.strengths.order.map((id) => {
                 const item = analysisAiCompetencies.strengths.items[id];
+                let heading = item.heading;
+                let act_as_title = false;
+                if (
+                  item.heading.trim().toLowerCase() === "additional strengths."
+                ) {
+                  heading = "Additional Strengths";
+                  act_as_title = true;
+                  if (!item.evidence.length) {
+                    return null;
+                  }
+                }
+                const Conmponent = act_as_title ? "div" : Card;
+
                 return (
                   <div id={id} key={id}>
-                    <Card
+                    <Conmponent
                       className={cn(
                         "p-4 cursor-pointer",
                         isCardSelected(id) && "border-black",
+                        act_as_title
+                          ? "mt-3 p-0 m-0 border-none border-0 shadow-none"
+                          : "",
                       )}
                       onClick={() => handleCardSelect(id)}
                     >
-                      <h3 className="text-lg font-semibold mb-4">
-                        {item.heading}
-                      </h3>
+                      {act_as_title ? (
+                        <h3 className="text-2xl font-bold mb-0">{heading}</h3>
+                      ) : (
+                        <h3 className="text-lg font-semibold mb-4">
+                          {heading}
+                        </h3>
+                      )}
                       <div className="space-y-4">
                         {item.evidence.map((item) => renderEvidence(item))}
                       </div>
-                    </Card>
+                    </Conmponent>
                   </div>
                 );
               })}
@@ -297,29 +318,52 @@ export function EvidanceDisplay() {
             <div className="space-y-6">
               {analysisAiCompetencies.areas_to_target.order.map((id) => {
                 const item = analysisAiCompetencies.areas_to_target.items[id];
+                let heading = item.heading;
+                let act_as_title = false;
+                if (item.heading.trim().toLowerCase() === "additional areas.") {
+                  heading = "Additional Areas To Target";
+                  act_as_title = true;
+                  if (!item.evidence.length) {
+                    return null;
+                  }
+                }
+                const Component = act_as_title ? "div" : Card;
                 return (
-                  <Card key={id} className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">
-                      {item.heading}
-                    </h3>
+                  <Component
+                    key={id}
+                    className={cn(
+                      "p-4",
+                      act_as_title
+                        ? "p-0 m-0 border-none border-0 shadow-none"
+                        : "",
+                    )}
+                  >
+                    {act_as_title ? (
+                      <h3 className="text-2xl font-bold mb-0">{heading}</h3>
+                    ) : (
+                      <h3 className="text-lg font-semibold mb-4">{heading}</h3>
+                    )}
                     <div className="space-y-4">
                       {item.evidence.map((item) => renderEvidence(item, true))}
                     </div>
-                  </Card>
+                  </Component>
                 );
               })}
             </div>
           </div>
 
           {/* Advice Section */}
-          <div> 
+          <div>
             <h2 className="text-2xl font-bold mb-6">Advice</h2>
             <div className="space-y-6">
               <Card className="p-4">
                 <div className="space-y-4">
                   {analysisAiCompetencies.advices.map((advice) => {
                     return renderEvidence({
-                      feedback: { text: advice.advice.join(". "), is_strong: false },
+                      feedback: {
+                        text: advice.advice.join(". "),
+                        is_strong: false,
+                      },
                       source: advice.name.replace(/_/g, " "),
                       role: advice.role,
                     });
@@ -328,7 +372,7 @@ export function EvidanceDisplay() {
               </Card>
             </div>
           </div>
-        </div> 
+        </div>
       </TabsContent>
     </Tabs>
   );

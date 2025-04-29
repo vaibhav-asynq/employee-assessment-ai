@@ -32,11 +32,24 @@ export function EditableCopetencies() {
     );
   }
 
+  const filteredStrengths = {
+    order: analysisAiCompetencies.strengths.order.filter(
+      (o) => o.toLowerCase().trim() !== "additional strengths.",
+    ),
+    items: analysisAiCompetencies.strengths.items,
+  };
+  const filteredAreas = {
+    order: analysisAiCompetencies.areas_to_target.order.filter(
+      (o) => o.toLowerCase().trim() !== "additional areas.",
+    ),
+    items: analysisAiCompetencies.areas_to_target.items,
+  };
+
   return (
     <div>
       {/* Strengths Section */}
       <EditStrengths
-        strengths={analysisAiCompetencies.strengths}
+        strengths={filteredStrengths}
         templateId={templateId}
         heading="Strengths"
         promptBtnText="Prompt"
@@ -44,7 +57,7 @@ export function EditableCopetencies() {
 
       {/* Areas to Target Section */}
       <EditAreas
-        areas={analysisAiCompetencies.areas_to_target}
+        areas={filteredAreas}
         templateId={templateId}
         promptBtnText="Prompt"
         heading="Areas To Target"

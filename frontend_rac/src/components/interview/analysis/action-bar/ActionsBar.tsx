@@ -6,7 +6,7 @@ import { ResetTemplate } from "./ResetTemplate";
 function ActionsBar() {
   return (
     <div className="flex justify-between items-center">
-      <div className={cn("flex gap-4")}>
+      <div className={cn("flex gap-10")}>
         <GenerateFullReport />
         <GenerateCompetencies />
       </div>

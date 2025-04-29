@@ -21,17 +21,17 @@ export function AnalysisDisplay() {
   const loading = useAnalysisStore((state) => state.loading);
   const templates = useAnalysisStore((state) => state.templates);
   const [initializing, setInitializing] = useState(false);
-  
+
   // Check if templates are initialized
   useEffect(() => {
     // If templates object is empty or missing required templates, show initializing state
-    const hasRequiredTemplates = 
-      templates && 
-      Object.keys(templates).length >= 3 && 
-      templates[templatesIds.base] && 
-      templates[templatesIds.fullReport] && 
+    const hasRequiredTemplates =
+      templates &&
+      Object.keys(templates).length >= 3 &&
+      templates[templatesIds.base] &&
+      templates[templatesIds.fullReport] &&
       templates[templatesIds.aiCompetencies];
-    
+
     setInitializing(!hasRequiredTemplates);
   }, [templates]);
   const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
@@ -80,10 +80,12 @@ export function AnalysisDisplay() {
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="text-lg font-medium text-gray-700">
-              {initializing ? "Initializing report templates..." : "Loading analysis data..."}
+              {initializing
+                ? "Initializing report templates..."
+                : "Loading analysis data..."}
             </p>
             <p className="text-sm text-gray-500 max-w-md text-center">
-              {initializing 
+              {initializing
                 ? "Creating empty templates for this task. This will only take a moment."
                 : "Please wait while we load your analysis data."}
             </p>
@@ -107,6 +109,16 @@ export function AnalysisDisplay() {
             )}
           >
             <ActionsBar />
+            <div className="text-xs flex gap-2">
+              <div className="flex flex-col gap-2">
+                <p className="border-l-4 border-green-500 px-2 bg-green-50">
+                  Green text represents
+                </p>
+                <p className="border-l-4 border-red-500 px-2 bg-red-50">
+                  Red text represents
+                </p>
+              </div>
+            </div>
             <div className={cn("flex items-center justify-between ")}>
               <TabsComponent />
             </div>

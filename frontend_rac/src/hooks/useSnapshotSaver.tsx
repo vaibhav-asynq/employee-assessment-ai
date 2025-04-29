@@ -16,6 +16,7 @@ export const useSnapshotSaver = () => {
   const saveSnapshotToDb = (
     triggerType: "manual" | "auto",
     makeActive: boolean = false,
+    snapshotName?: string,
     parentId?: number,
   ) => {
     if (!fileId || !user?.id) return;
@@ -29,8 +30,10 @@ export const useSnapshotSaver = () => {
       sorted_areas: fullReport?.sorted_competency?.sorted_areas,
     };
 
+    console.log("in saver", snapshotName);
     const snapshotData: SnapshotCreateRequest = {
       file_id: fileId,
+      snapshot_name: snapshotName,
       manual_report: {
         editable: manual_report_data,
         sorted_by: {

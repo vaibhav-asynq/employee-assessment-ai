@@ -79,6 +79,12 @@ function SnapshotHistoryContent() {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
+  const manualSnapshots = snapshots.filter((s) => s.trigger_type !== "auto");
+  const manualSnapshotMap = new Map();
+  manualSnapshots.forEach((snapshot, index) => {
+    manualSnapshotMap.set(snapshot.id, index + 1);
+  });
+
   const handleLoadSnapshot = async (snapshotId: number) => {
     try {
       setLoadingSnapshotId(snapshotId);
@@ -196,7 +202,12 @@ function SnapshotHistoryContent() {
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className="font-medium">Snapshot #{snapshot.id}</h4>
+                  <h4 className="font-medium">
+                    {snapshot.trigger_type === "auto"
+                      ? "Auto snapshot"
+                      : (snapshot.snapshot_name ??
+                        `Snapshot ${manualSnapshotMap.get(snapshot.id) || ""}`)}
+                  </h4>
                   <div className="text-xs text-muted-foreground">
                     <span className="italic">
                       (created{" "}

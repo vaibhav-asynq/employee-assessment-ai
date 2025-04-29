@@ -10,6 +10,7 @@ export interface SnapshotReport {
 
 export interface Snapshot {
   id: number;
+  snapshot_name?: string;
   task_id: number;
   created_at: string;
   parent_id?: number | null;
@@ -21,6 +22,7 @@ export interface Snapshot {
 
 export interface SnapshotCreateRequest {
   file_id: string;
+  snapshot_name?: string;
   manual_report: SnapshotReport;
   full_report: SnapshotReport;
   ai_Competencies: SnapshotReport;

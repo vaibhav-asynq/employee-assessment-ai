@@ -18,6 +18,7 @@ class SnapshotReport(BaseModel):
 
 class SnapshotCreate(BaseModel):
     task_id: int
+    snapshot_name: Optional[str]
     manual_report: SnapshotReport
     full_report: SnapshotReport
     ai_Competencies: SnapshotReport
@@ -30,6 +31,7 @@ def create_snapshot(
 ) -> DBSnapshot:
     snapshot = DBSnapshot(
         task_id=data.task_id,
+        snapshot_name= data.snapshot_name,
         manual_report=data.manual_report.model_dump(),
         full_report=data.full_report.model_dump(),
         ai_Competencies=data.ai_Competencies.model_dump(),

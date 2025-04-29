@@ -28,6 +28,7 @@ typing-extensions
 # db
 psycopg2-binary
 sqlalchemy
+alembic
 pyjwt
 bcrypt
 passlib

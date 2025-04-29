@@ -17,6 +17,7 @@ import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useTaskHistory } from "@/lib/react-query";
 import { format, parseISO, isValid } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Task } from "@/lib/types/types.filetask";
@@ -163,8 +164,20 @@ export function TaskHistory() {
                           </span>
                           <div className="flex items-center gap-1.5">
                             <Calendar size={12} className="text-blue-300" />
+                            {/* <span className="text-xs font-medium text-blue-500"> */}
+                            {/*   {formatInTimeZone( */}
+                            {/*     task.created_at, */}
+                            {/*     "Asia/Kolkata", */}
+                            {/*     "MMM d, yyyy h:mm a", */}
+                            {/*     // "yyyy-MM-dd HH:mm", */}
+                            {/*   )} */}
+                            {/* </span> */}
                             <span className="text-xs font-medium text-blue-500">
-                              {format(task.created_at, "MMM d, yyyy h:mm a")}
+                              {format(
+                                new Date(task.created_at),
+                                "MMM d, yyyy h:mm a",
+                                // "yyyy-MM-dd HH:mm",
+                              )}
                             </span>
                           </div>
                         </span>
@@ -173,6 +186,7 @@ export function TaskHistory() {
                     </TooltipTrigger>
                     <TooltipContent side="right">
                       <p>{task.file_name}</p>
+                      {/* <pre>{task.created_at}</pre> */}
                     </TooltipContent>
                   </Tooltip>
                 </SidebarMenuItem>
@@ -184,7 +198,7 @@ export function TaskHistory() {
               <div>
                 <p className="font-medium text-gray-700">No tasks found</p>
                 <p className="text-muted-foreground mt-1">
-                  Click "New Task" to upload a file and get started.
+                  Click &quot;New Task&quot; to upload a file and get started.
                 </p>
               </div>
             </div>
