@@ -40,7 +40,7 @@ export function SortedEvidenceView({
               if (
                 item.heading.trim().toLowerCase() === "additional strengths"
               ) {
-                heading = "Additional Strengths Evidence";
+                heading = "Additional Strengths";
                 act_as_title = true;
                 if (!item.evidence.length) {
                   return null;
@@ -96,7 +96,7 @@ export function SortedEvidenceView({
               let heading = item.heading;
               let act_as_title = false;
               if (item.heading.trim().toLowerCase() === "additional areas") {
-                heading = "Additional Areas to Target Evidence";
+                heading = "Additional Areas To Target";
                 act_as_title = true;
                 if (!item.evidence.length) {
                   return null;

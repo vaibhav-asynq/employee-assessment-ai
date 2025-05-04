@@ -112,10 +112,10 @@ export function AnalysisDisplay() {
             <div className="text-xs flex gap-2">
               <div className="flex flex-col gap-2">
                 <p className="border-l-4 border-green-500 px-2 bg-green-50">
-                  Green text represents
+                  Green text represents strong verbatims for Strengths.
                 </p>
                 <p className="border-l-4 border-red-500 px-2 bg-red-50">
-                  Red text represents
+                  Red text represents strong verbatims for Areas To Target.
                 </p>
               </div>
             </div>
