@@ -32,29 +32,33 @@ class AssessmentProcessor:
         filename = os.path.basename(pdf_path)
         return os.path.splitext(filename)[0]
 
-    def read_pdf_in_chunks(self, pdf_path: str, chunk_size: int = 10) -> List[str]:
-        """Read PDF in chunks of specified pages."""
+    def read_pdf_in_chunks(self, pdf_path: str, chunk_size: int = 10, overlap: int = 2) -> List[str]:
+        """Read PDF in chunks of specified pages with overlap between chunks."""
         chunks = []
-        current_chunk = []
-        page_count = 0
+        page_texts = []
         
         try:
             reader = PdfReader(pdf_path)
             total_pages = len(reader.pages)
             self.logger.info(f"Processing PDF with {total_pages} pages")
             
-            for page in reader.pages:
-                page_count += 1
-                current_chunk.append(page.extract_text())
-                
-                if page_count % chunk_size == 0:
-                    chunks.append("\n".join(current_chunk))
-                    current_chunk = []
-                    self.logger.info(f"Processed {page_count} of {total_pages} pages")
+            # Extract text from all pages first
+            for page_num, page in enumerate(reader.pages):
+                page_texts.append(page.extract_text())
+                self.logger.info(f"Extracted text from page {page_num + 1} of {total_pages}")
             
-            if current_chunk:  # Add remaining pages
+            # Create chunks with overlap
+            for i in range(0, len(page_texts), chunk_size - overlap):
+                # Ensure we don't go beyond the array bounds
+                end_idx = min(i + chunk_size, len(page_texts))
+                current_chunk = page_texts[i:end_idx]
                 chunks.append("\n".join(current_chunk))
+                self.logger.info(f"Created chunk {len(chunks)} with pages {i+1} to {end_idx}")
                 
+                # If this is the last chunk, break
+                if end_idx == len(page_texts):
+                    break
+                    
             return chunks
         except Exception as e:
             self.logger.error(f"Error reading PDF {pdf_path}: {str(e)}")
@@ -113,20 +117,22 @@ class AssessmentProcessor:
         
         {chunk_text}
         
-        Return the filtered text with:
+        Return ONLY the filtered text with:
         1. All third-party assessments and feedback preserved
         2. All self-reflective content from the candidate removed
         3. Original structure and formatting maintained
         4. Section headers and page numbers intact
+        
+        IMPORTANT: Do not include any explanatory text, meta-commentary, or notes about what you've done. Do not use phrases like "I'll provide" or "Here's the processed version". Do not include explanatory notes in brackets like "[Self-reflective content removed]". Return only the actual filtered content.
         """
 
     def process_chunk(self, prompt: str) -> str:
         """Process chunk using Claude."""
         try:
             message = self.client.messages.create(
-                model="claude-3-5-sonnet-latest",
+                model="claude-3-7-sonnet-latest",
                 max_tokens=4096,
-                system="You are an expert at filtering assessment documents while maintaining their structure and format.",
+                system="You are an expert at filtering assessment documents while maintaining their structure and format. Return ONLY the filtered content without any explanatory text, meta-commentary, notes, or descriptions of what you're doing. Do not include phrases like 'I'll provide' or 'Here's the processed version' or explanatory notes in brackets.",
                 messages=[
                     {
                         "role": "user",
@@ -174,15 +180,17 @@ class AssessmentProcessor:
         {chunk_text}
         
         Return only the executive's direct input and self-reflective content, maintaining original formatting and structure.
+        
+        IMPORTANT: Do not include any explanatory text, meta-commentary, or notes about what you've done. Do not use phrases like "I'll provide" or "Here's the extracted content". Do not include explanatory notes in brackets. Return only the actual extracted content.
         """
 
     def process_chunk_executive(self, prompt: str) -> str:
         """Process chunk using Claude for executive content and clean the output."""
         try:
             message = self.client.messages.create(
-                model="claude-3-5-sonnet-latest",
+                model="claude-3-7-sonnet-latest",
                 max_tokens=4096,
-                system="You are an expert at extracting executive's own words from assessment documents. Return ONLY the extracted content without any explanatory text. If no relevant content is found, return an empty string.",
+                system="You are an expert at extracting executive's own words from assessment documents. Return ONLY the extracted content without any explanatory text, meta-commentary, or notes about what you've done. Do not use phrases like 'I'll provide' or 'Here's the extracted content'. Do not include explanatory notes in brackets. If no relevant content is found, return an empty string.",
                 messages=[
                     {
                         "role": "user",
@@ -239,7 +247,8 @@ class AssessmentProcessor:
             document_name = self.extract_candidate_name(pdf_path)
             self.logger.info(f"Starting assessment processing for: {document_name}")
             
-            chunks = self.read_pdf_in_chunks(pdf_path)
+            # Use the improved chunking method with overlap
+            chunks = self.read_pdf_in_chunks(pdf_path, chunk_size=10, overlap=2)
             stakeholder_chunks = []
             executive_chunks = []
             

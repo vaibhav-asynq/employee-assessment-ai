@@ -1,0 +1,74 @@
+You are analyzing a 360-degree feedback transcript for a professional. Your task is to extract ALL feedback provided by a specific stakeholder.
+
+TASK:
+For stakeholder $name ($role), extract EVERY piece of feedback that was provided by THIS stakeholder, maintaining the original wording and ensuring complete coverage.
+
+CRITICAL INSTRUCTIONS:
+- You MUST use the EXACT name "$name" in your response JSON - do not substitute any other name
+- You MUST use the EXACT role "$role" in your response JSON - do not change it
+- Extract ONLY feedback that can be clearly attributed to $name specifically
+- Do NOT include generic feedback or feedback from other stakeholders
+- If you cannot find feedback specifically from this stakeholder, return an empty feedback array
+- Ignore any "Next Steps" or "Action Items" sections
+- Be EXHAUSTIVE - extract EVERY single piece of feedback, no matter how small
+
+Context Analysis Guidelines:
+1. Analyze the ENTIRE document to find ALL feedback from this stakeholder
+2. Pay special attention to sections that explicitly mention $name as the source
+3. Look for interview sections with this stakeholder
+4. Consider the context window around mentions of the stakeholder's name
+5. Examine paragraph boundaries and section headers for attribution clues
+6. Break down compound feedback into individual points when appropriate
+
+Extraction Guidelines:
+1. Include EVERY bullet point (•) or numbered item that appears to be from this stakeholder
+2. Include EVERY sentence that contains feedback about the subject
+3. Capture complete sentences/thoughts
+4. Preserve the original language exactly
+5. Note the page number or section where each piece of feedback appears
+6. Be thorough - don't miss any feedback items
+
+EXAMPLES OF GOOD EXTRACTION:
+For stakeholder "John Smith (Manager)":
+- If the document says "John Smith noted: 'She is an excellent communicator'", include this
+- If a section is labeled "Feedback from John Smith" or "Manager's Assessment", include items from this section
+- If there's a quote attributed to "John", and he's the only John mentioned, include it
+- If a section begins with "John Smith interview" followed by bullet points, include all relevant bullets
+- If feedback appears in different sections of the document but is clearly from this stakeholder, include all instances
+
+EXAMPLES OF INCORRECT EXTRACTION:
+- Do NOT include feedback from "Jane Smith" when looking for "John Smith"
+- Do NOT include general feedback not specifically attributed to this stakeholder
+- Do NOT include feedback that could be from multiple people
+- Do NOT substitute "Jill" or any other name in place of "$name"
+- Do NOT miss feedback items that are clearly from this stakeholder
+
+IMPORTANT: Your response MUST be a valid JSON object with NO additional text before or after the JSON.
+
+Format your response as a JSON object with these properties:
+- name: The EXACT stakeholder name "$name" (copy this value exactly as provided)
+- role: The EXACT stakeholder role "$role" (copy this value exactly as provided)
+- feedback: An array of feedback items, each with:
+  - text: The verbatim feedback text
+  - location: Page number or section identifier (if available)
+
+Example of valid response format:
+{
+  "name": "$name",
+  "role": "$role",
+  "feedback": [
+    {
+      "text": "Example verbatim feedback text specific to $name",
+      "location": "Page 1"
+    },
+    {
+      "text": "Another example feedback item from $name",
+      "location": "Strengths section"
+    }
+  ]
+}
+
+DO NOT include any explanations, notes, or text outside the JSON object. Your entire response should be parseable as JSON.
+
+TRANSCRIPT:
+$feedback

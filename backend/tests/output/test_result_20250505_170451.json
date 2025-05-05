@@ -1,0 +1,126 @@
+{
+  "strengths": {
+    "Peer 1": {
+      "role": "Peer",
+      "feedback": [
+        {
+          "text": "Excellent at building relationships across the organization. People trust her judgment and seek her input.",
+          "is_strong": true
+        },
+        {
+          "text": "Good technical knowledge that helps in making sound decisions.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Manager": {
+      "role": "Direct Manager",
+      "feedback": [
+        {
+          "text": "Exceptional strategic thinker. Has consistently demonstrated the ability to see the big picture while managing the details.",
+          "is_strong": true
+        },
+        {
+          "text": "Reliable team player who meets deadlines.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Direct Report 2": {
+      "role": "Direct Report",
+      "feedback": [
+        {
+          "text": "Creates a supportive environment where team members feel valued.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Direct Report 1": {
+      "role": "Direct Report",
+      "feedback": [
+        {
+          "text": "Outstanding mentor. Has helped me grow professionally in ways I didn't think possible. The entire team has benefited from her guidance over the past year.",
+          "is_strong": true
+        },
+        {
+          "text": "Makes time for the team despite busy schedule.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Peer 2": {
+      "role": "Peer",
+      "feedback": [
+        {
+          "text": "Collaborative approach to problem-solving.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Skip-Level Manager": {
+      "role": "Senior Leader",
+      "feedback": [
+        {
+          "text": "Has demonstrated remarkable business acumen that has directly contributed to our department exceeding targets for three consecutive quarters.",
+          "is_strong": true
+        }
+      ]
+    }
+  },
+  "areas_to_target": {
+    "Peer 1": {
+      "role": "Peer",
+      "feedback": [
+        {
+          "text": "Sometimes takes on too much work which can impact quality.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Manager": {
+      "role": "Direct Manager",
+      "feedback": [
+        {
+          "text": "Needs to delegate more effectively. This has been a consistent issue that has led to bottlenecks in team workflow and missed opportunities for team development.",
+          "is_strong": true
+        }
+      ]
+    },
+    "Direct Report 2": {
+      "role": "Direct Report",
+      "feedback": [
+        {
+          "text": "Communication during high-stress periods could be more consistent. Team sometimes feels out of the loop on important decisions.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Direct Report 1": {
+      "role": "Direct Report",
+      "feedback": [
+        {
+          "text": "Feedback can sometimes be too gentle when more direct criticism would be helpful.",
+          "is_strong": false
+        }
+      ]
+    },
+    "Peer 2": {
+      "role": "Peer",
+      "feedback": [
+        {
+          "text": "Major concern with meeting facilitation. Meetings often run over time and lack clear outcomes. This has been noted by multiple team members and has impacted cross-functional project timelines repeatedly.",
+          "is_strong": true
+        }
+      ]
+    },
+    "Skip-Level Manager": {
+      "role": "Senior Leader",
+      "feedback": [
+        {
+          "text": "Could be more visible with senior leadership. Missing opportunities to showcase team achievements.",
+          "is_strong": false
+        }
+      ]
+    }
+  }
+}

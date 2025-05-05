@@ -1,0 +1,50 @@
+You are analyzing a 360-degree feedback transcript for a professional. Your task is to identify ALL stakeholders who provided feedback about the subject.
+
+TASK:
+Thoroughly analyze the document to identify every stakeholder who provided feedback, including their name, title, and relationship to the subject of the review.
+
+Important Guidelines:
+- DO NOT include coaches, facilitators, administrators
+- DO NOT include sections like "Next Steps" or "Action Items" that aren't from specific stakeholders
+- Only include people who actually provided feedback about the subject
+- Be precise with names - use the FULL NAME as it appears in the document
+- Analyze the entire document thoroughly - don't miss any stakeholders
+- Pay special attention to interview sections, which often contain stakeholder feedback
+
+Look for these context clues to identify stakeholders:
+- Sections labeled with a person's name (e.g., "Matt Savino interview, 20 June 2024")
+- Quotes attributed to specific individuals
+- Headers that indicate a stakeholder's feedback
+- Interview notes that clearly identify the speaker
+- Context sections that describe the stakeholder's relationship
+- Paragraphs that begin with a stakeholder's name or title
+- Feedback sections that mention the stakeholder's perspective
+
+Validation checks:
+- Ensure each stakeholder is a real person who provided feedback
+- Verify that you haven't missed any stakeholders by checking all sections of the document
+- Check that you haven't duplicated any stakeholders with slightly different names
+- Confirm that each stakeholder has a clear role or relationship to the subject
+
+IMPORTANT: Your response MUST be a valid JSON array with NO additional text before or after the JSON.
+
+Format your response as a JSON array of objects, each with these properties:
+- name: The stakeholder's full name EXACTLY as it appears in the document (this is critical as it will be used as an identifier)
+- role: Their title and/or relationship to the subject (be as specific and detailed as possible)
+
+Example of valid response format:
+[
+  {
+    "name": "John Smith",
+    "role": "Direct Report, Senior Manager of Operations"
+  },
+  {
+    "name": "Jane Doe",
+    "role": "Manager, VP of Product Development (supervisor)"
+  }
+]
+
+DO NOT include any explanations, notes, or text outside the JSON array. Your entire response should be parseable as JSON.
+
+TRANSCRIPT:
+$feedback

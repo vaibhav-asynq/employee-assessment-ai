@@ -358,7 +358,7 @@ async def generate_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+#Not being used anywhere
 @app.get("/api/get_raw_data/{file_id}")
 async def get_raw_data_endpoint(
     file_id: str,
@@ -533,7 +533,7 @@ async def upload_updated_report(
         prompt = load_prompt("upload_updated_report.txt").format(text=text)
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=4000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -593,7 +593,7 @@ async def generate_reflection_points(
         )
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -693,7 +693,7 @@ async def generate_next_steps(
         prompt = format_next_steps_prompt(name, areas_text, feedback_transcript)
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -778,7 +778,7 @@ async def generate_area_content(
         )
         print(prompt)
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -869,7 +869,7 @@ async def sort_strengths_evidence(
 
         # Get sorted evidence from Claude
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -1012,7 +1012,7 @@ async def get_strength_evidences(
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -1085,7 +1085,7 @@ async def get_advice(
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -1208,7 +1208,7 @@ async def get_feedback(
 
         # Get strengths analysis
         strengths_response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[
@@ -1221,7 +1221,7 @@ async def get_feedback(
 
         # Get areas analysis
         areas_response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[
@@ -1406,7 +1406,7 @@ async def get_development_areas(
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -1510,7 +1510,7 @@ async def sort_areas_evidence(
 
         # Get sorted evidence from Claude
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=2000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -1604,7 +1604,7 @@ async def generate_strength_content(
         )
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],

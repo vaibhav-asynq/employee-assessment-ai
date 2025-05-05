@@ -42,7 +42,7 @@ Please analyze this transcript and provide the evidence in the specified JSON fo
 """
 
     response = client.messages.create(
-        model="claude-3-5-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         max_tokens=4000,
         temperature=0,
         messages=[{
@@ -107,7 +107,7 @@ Please analyze this transcript and provide the evidence in the specified JSON fo
 """
 
     response = client.messages.create(
-        model="claude-3-5-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         max_tokens=4000,
         temperature=0,
         messages=[{
@@ -185,7 +185,7 @@ Please analyze this transcript and provide the evidence in the specified JSON fo
 {transcript}
 """
     response = client.messages.create(
-        model="claude-3-5-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         max_tokens=4000,
         temperature=0,
         messages=[{

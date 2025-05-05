@@ -1,0 +1,112 @@
+You are analyzing feedback from a 360-degree review for a professional. Your task is to accurately categorize ALL feedback using advanced sentiment analysis and contextual clues.
+
+Below is feedback organized by stakeholder:
+$input_data
+
+TASK:
+Important:
+- DO NOT include feedback from coaches or facilitators
+- Only categorize feedback from actual colleagues, managers, direct reports, peers, and other stakeholders
+- Ignore any "Next Steps" or "Action Items" sections that aren't from specific stakeholders
+- PRESERVE the exact stakeholder names and roles as provided in the input - do not modify them
+- Be EXHAUSTIVE - ensure EVERY piece of feedback is categorized correctly
+
+CATEGORIZATION GUIDELINES:
+
+1. Use these sentiment analysis techniques to categorize each piece of feedback:
+
+   A. STRENGTHS - Look for these language patterns:
+      * Positive descriptors: "excellent," "great," "strong," "impressive," "exceptional," etc.
+      * Achievement language: "accomplishes," "succeeds," "achieves," "excels," etc.
+      * Positive impact statements: "improves," "enhances," "builds," "develops," etc.
+      * Positive character traits: "integrity," "thoughtful," "strategic," "smart," etc.
+      * Statements of value: "asset to the team," "critical to success," etc.
+
+   B. AREAS TO TARGET - Look for these language patterns:
+      * Improvement language: "could improve," "needs to," "should consider," etc.
+      * Gap descriptors: "lacks," "missing," "insufficient," "inadequate," etc.
+      * Cautionary language: "be careful about," "watch out for," "tendency to," etc.
+      * Comparative statements: "less than," "not as," "too much," etc.
+      * Negative impact statements: "causes problems," "creates issues," etc.
+
+   C. ADVICE - Look for these language patterns:
+      * Recommendation language: "recommend," "suggest," "advise," "would benefit from," etc.
+      * Action-oriented statements: "should do," "needs to start," "begin to," etc.
+      * Future-focused guidance: "going forward," "next steps," "in the future," etc.
+      * Conditional statements: "if...then," "when...should," etc.
+      * Specific suggestions: "specifically, he should..." "I would recommend that she..." etc.
+
+2. Use contextual clues to refine categorization:
+   * Consider the overall tone of the feedback
+   * Look at surrounding sentences for context
+   * Consider the stakeholder's relationship to the subject
+   * Pay attention to section headers or formatting that might indicate category
+   * Note if the feedback appears in a specific section of the document
+
+3. For strengths, evaluate if it's a "strong" strength by setting "is_strong" to true or false:
+   - Be HIGHLY SELECTIVE - only mark 20-30% of feedback items as "strong" at most
+   - Set "is_strong" to true ONLY if the feedback meets AT LEAST TWO of these criteria:
+     * Contains strong superlative language (e.g., "exceptional," "outstanding," "excellent," "extraordinary")
+     * Describes unique or rare qualities that clearly differentiate the person
+     * Explicitly mentions consistent and repeated demonstration of the strength over time
+     * Provides specific examples of how the strength has had significant positive impact on the business, team, or organization
+     * Is emphasized by multiple stakeholders independently
+   - Set "is_strong" to false for all other positive feedback, including:
+     * Feedback with mild positive language (e.g., "good," "solid," "effective")
+     * General statements without specific examples or impact
+     * Qualified praise (e.g., "usually good at...")
+     * Feedback that mentions a skill without emphasizing excellence
+
+4. For areas to target, evaluate if it's a "strong" area to target by setting "is_strong" to true or false:
+   - Be HIGHLY SELECTIVE - only mark 20-30% of feedback items as "strong" at most
+   - Set "is_strong" to true ONLY if the feedback meets AT LEAST TWO of these criteria:
+     * Uses explicitly strong critical language (e.g., "significant concern," "major issue," "critical gap")
+     * Identifies a clear and substantial performance gap with specific examples
+     * Is mentioned by multiple stakeholders independently as a concern
+     * Provides concrete examples of how the behavior has substantial negative impact on business outcomes, team dynamics, or organizational effectiveness
+     * Describes a consistent and repeated pattern of behavior rather than isolated incidents
+   - Set "is_strong" to false for all other constructive feedback, including:
+     * Mild or moderate suggestions for improvement
+     * General development areas without specific examples
+     * Qualified criticism (e.g., "sometimes struggles with...")
+     * Feedback that mentions an area for growth without emphasizing urgency or severity
+
+5. For advice, categorize feedback that:
+   - Provides specific recommendations or suggestions for improvement
+   - Offers guidance on how to address areas for development
+   - Suggests specific actions, strategies, or approaches
+   - Includes forward-looking recommendations
+   - All advice items should have "is_strong" set to false
+
+6. CRITICAL: Maintain the EXACT stakeholder names and roles as provided in the input data. Do not rename, reformat, or otherwise modify the stakeholder identifiers.
+
+7. VALIDATION: Before finalizing your categorization, check:
+   - Have you categorized EVERY piece of feedback?
+   - Is each piece of feedback in the most appropriate category?
+   - Have you maintained the exact stakeholder names and roles?
+   - Have you been appropriately selective with "is_strong" designations?
+
+IMPORTANT: Your response MUST be a valid JSON object with NO additional text before or after the JSON.
+
+Format your response as a JSON object with this structure:
+{
+  "strengths": {
+    "[Exact Stakeholder Name as in Input]": {
+      "role": "[Exact Role as in Input]",
+      "feedback": [
+        {
+          "text": "Verbatim feedback text",
+          "is_strong": true/false
+        }
+      ]
+    }
+  },
+  "areas_to_target": {
+    // Same structure as strengths
+  },
+  "advice": {
+    // Same structure as strengths, but all items should have is_strong: false
+  }
+}
+
+DO NOT include any explanations, notes, or text outside the JSON object. Your entire response should be parseable as JSON.

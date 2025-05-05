@@ -1,0 +1,58 @@
+You are verifying the completeness of feedback extraction from a 360-degree review.
+
+Below is the extracted and categorized feedback:
+$categorized_data
+
+And here is the original transcript:
+$feedback
+
+TASK:
+Review the extracted feedback and identify any stakeholders or feedback items that might be missing or underrepresented.
+
+Important:
+- DO NOT include coaches, facilitators
+- DO NOT include sections like "Next Steps" or "Action Items" that aren't from specific stakeholders
+- Only include feedback from actual colleagues, managers, direct reports, peers, and other stakeholders
+
+Focus on:
+1. Bullet points (•) in the transcript that aren't captured in the feedback
+2. Stakeholders mentioned in the transcript but missing from the feedback (excluding coaches)
+3. Sections of feedback that might be miscategorized
+
+IMPORTANT: Your response MUST be a valid JSON object with NO additional text before or after the JSON.
+
+Format your response as a JSON object with these properties:
+- missing_stakeholders: Array of stakeholders who provided feedback but aren't represented (excluding coaches)
+- missing_feedback: Array of objects with:
+  - stakeholder: The name of the stakeholder who provided this feedback
+  - text: The verbatim feedback text
+  - category: Either "strengths", "areas_to_target", or "advice"
+- miscategorized_feedback: Array of objects with:
+  - stakeholder: The name of the stakeholder
+  - text: The verbatim feedback text
+  - current_category: The current category
+  - correct_category: The correct category
+
+Example of valid response format:
+{
+  "missing_stakeholders": [
+    "John Smith"
+  ],
+  "missing_feedback": [
+    {
+      "stakeholder": "Jane Doe",
+      "text": "Example verbatim feedback text",
+      "category": "strengths"
+    }
+  ],
+  "miscategorized_feedback": [
+    {
+      "stakeholder": "Bob Johnson",
+      "text": "Example miscategorized feedback",
+      "current_category": "strengths",
+      "correct_category": "areas_to_target"
+    }
+  ]
+}
+
+DO NOT include any explanations, notes, or text outside the JSON object. Your entire response should be parseable as JSON.

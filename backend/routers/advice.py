@@ -55,7 +55,7 @@ async def get_advice(
         # Generate analysis using Claude
         client = anthropic.Anthropic(api_key=env_variables.ANTHROPIC_API_KEY)
         response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             max_tokens=3000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
