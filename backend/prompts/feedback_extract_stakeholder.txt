@@ -1,7 +1,7 @@
-You are analyzing a 360-degree feedback transcript for a professional. Your task is to extract ALL feedback provided by a specific stakeholder.
+You are analyzing a 360-degree feedback transcript for a professional. Your task is to extract ALL feedback provided by a specific stakeholder, ensuring you capture EVERY single statement, observation, or comment.
 
 TASK:
-For stakeholder $name ($role), extract EVERY piece of feedback that was provided by THIS stakeholder, maintaining the original wording and ensuring complete coverage.
+For stakeholder $name ($role), extract EVERY piece of feedback that was provided by THIS stakeholder, maintaining the original wording and ensuring complete coverage. Your goal is to be EXHAUSTIVE - aim to extract at least 15-25 feedback items per stakeholder.
 
 CRITICAL INSTRUCTIONS:
 - You MUST use the EXACT name "$name" in your response JSON - do not substitute any other name
@@ -11,6 +11,7 @@ CRITICAL INSTRUCTIONS:
 - If you cannot find feedback specifically from this stakeholder, return an empty feedback array
 - Ignore any "Next Steps" or "Action Items" sections
 - Be EXHAUSTIVE - extract EVERY single piece of feedback, no matter how small
+- Treat EVERY SENTENCE as a potential feedback item, even if it seems like a simple factual statement
 
 Context Analysis Guidelines:
 1. Analyze the ENTIRE document to find ALL feedback from this stakeholder
@@ -19,6 +20,28 @@ Context Analysis Guidelines:
 4. Consider the context window around mentions of the stakeholder's name
 5. Examine paragraph boundaries and section headers for attribution clues
 6. Break down compound feedback into individual points when appropriate
+7. Look for subcategory headers like "Deal Flow," "Building the team," "Getting things done," "People skills/read," and "Represent Carlyle"
+
+Sentence-Level Extraction:
+1. Treat EVERY SENTENCE as a potential feedback item, even if it doesn't contain obvious evaluative language
+2. Simple factual statements like "He has been here for 10 years" or "She leads the marketing team" ARE feedback and should be extracted
+3. Statements about the subject's actions, behaviors, qualities, or impact are ALL feedback
+4. Extract statements that describe what the subject does, how they do it, or the results they achieve
+5. Include statements about the subject's relationships, interactions, or reputation
+
+List Structure Recognition:
+1. Pay special attention to ALL list formats:
+   - Bullet points (•)
+   - Numbered lists (1., 2., etc.)
+   - Dash-prefixed items (-)
+   - Items separated by semicolons (;)
+   - Items separated by commas in a list-like structure
+   - Items under section headers or subcategories
+   - Paragraphs that contain multiple distinct points
+2. Each item in a list should be extracted as a separate feedback item
+3. When a paragraph contains multiple points, split it into individual feedback items
+4. Look for section headers that might indicate categories of feedback (e.g., "Deal Flow," "Building the team")
+5. Extract ALL items under each section header, even if they seem minor
 
 Extraction Guidelines:
 1. Include EVERY bullet point (•) or numbered item that appears to be from this stakeholder
@@ -27,6 +50,7 @@ Extraction Guidelines:
 4. Preserve the original language exactly
 5. Note the page number or section where each piece of feedback appears
 6. Be thorough - don't miss any feedback items
+7. When in doubt, include it - it's better to extract too much than too little
 
 EXAMPLES OF GOOD EXTRACTION:
 For stakeholder "John Smith (Manager)":
