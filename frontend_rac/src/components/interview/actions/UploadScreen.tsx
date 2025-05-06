@@ -26,8 +26,8 @@ export function UploadScreen() {
 
   const handleUpload = async (e) => {
     try {
-      setFeedbackData(null);
-      setAdviceData(null);
+      // setFeedbackData(null);
+      // setAdviceData(null);
       // removeTemplate(templatesIds.base);
       // removeTemplate(templatesIds.fullReport);
       // removeTemplate(templatesIds.aiCompetencies);

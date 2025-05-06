@@ -1,9 +1,9 @@
+import difflib
 import json
 import os
 import re
-import difflib
 from string import Template
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import anthropic
 import env_variables

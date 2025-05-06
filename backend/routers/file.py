@@ -50,12 +50,6 @@ async def upload_file(
                         }
                     return {"file_id": cached_file_id}
         file_id, file_path = await save_uploaded_file(file)
-        # Process the file
-        (
-            stakeholder_feedback,
-            executive_interview,
-        ) = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
-
         task_item = {
             "user_id": user_id,
             "name": file_id,
@@ -65,6 +59,15 @@ async def upload_file(
         task = create_db_task(TaskCreate(**task_item) ,db)
         files_store[file_id] = {"file_path": file_path, "original_name": file.filename}
         add_to_filename_map(file.filename, file_id)
+
+        # Process the file
+        (
+            stakeholder_feedback,
+            executive_interview,
+        # ) = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
+        ) = await assessment_processor.process_assessment_with_executive(file_path, task.id, db)
+
+        
         # TODO: return the task
         return {"file_id": task.file_id}
     except Exception as e:

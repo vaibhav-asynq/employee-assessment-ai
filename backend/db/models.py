@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Text, func
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -13,7 +13,7 @@ class DBTask(Base):
     __tablename__ = "task"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    created_at: Mapped[datetime.datetime] = mapped_column(default= func.now())
     user_id: Mapped[str]
     name: Mapped[str] 
     file_id: Mapped[str]
@@ -23,6 +23,7 @@ class DBTask(Base):
     feedbacks = relationship("DBFeedBack", back_populates="task")
     advices = relationship("DBAdvice", back_populates="task")
     snapshots = relationship("DBSnapshot", back_populates="task")
+    processed_assessments = relationship("DBProcessedAssessment", back_populates="task")
 
 
 class DBFeedBack(Base):
@@ -72,3 +73,14 @@ class DBSnapshot(Base):
 
     # Self-referencing relationship for undo tree
     parent = relationship("DBSnapshot", remote_side=[id], backref="children")
+
+
+class DBProcessedAssessment(Base):
+    __tablename__ = "processed_assessment"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("task.id"))
+    filtered_data: Mapped[str] = mapped_column(Text, nullable=True)
+    executive_data: Mapped[str] = mapped_column(Text, nullable=True)
+
+    task = relationship("DBTask", back_populates="processed_assessments")
