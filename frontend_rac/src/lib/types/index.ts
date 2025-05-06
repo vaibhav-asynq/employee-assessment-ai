@@ -1,5 +1,3 @@
-// src/lib/types.ts
-
 export interface SubheadingSection {
   [key: string]: string;
 }
@@ -58,17 +56,6 @@ export interface OrderedInterviewAnalysis {
   strengths: OrderedSection;
   areas_to_target: OrderedSection;
   next_steps: NextStep[];
-}
-
-type FeedbackItem = string | { text: string; is_strong?: boolean };
-type StregthsFeedback = Record<string, { role: string; feedback: FeedbackItem[] }>;
-type AreasToTargetFeedback = Record<
-  string,
-  { role: string; feedback: FeedbackItem[] }
->;
-export interface FeedbackData {
-  strengths: StregthsFeedback;
-  areas_to_target: AreasToTargetFeedback;
 }
 
 export type AnalysisPath = "base-edit" | "sorted-evidence" | "ai-competencies";

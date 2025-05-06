@@ -12,12 +12,13 @@ import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 export function GenerateFullReport() {
-  const fileId = useInterviewDataStore((state) => state.fileId);
-  const templates = useAnalysisStore((state) => state.templates);
-  const addTemplate = useAnalysisStore((state) => state.addTemplate);
-  const addTab = useUserPreferencesStore((state) => state.addPath);
-  const addChildTab = useUserPreferencesStore((state) => state.addChildTab);
-  const selectTab = useUserPreferencesStore((state) => state.setSelectedPath);
+  const { fileId } = useInterviewDataStore();
+  const { addTemplate } = useAnalysisStore();
+  const {
+    addPath: addTab,
+    addChildTab,
+    setSelectedPath: selectTab,
+  } = useUserPreferencesStore();
 
   //TODO: use react-query for data fetching
 
@@ -35,16 +36,19 @@ export function GenerateFullReport() {
 
       addTemplate(templateId, templatedData, false, true);
 
-      addTab("ai-agent-full-report", ANALYSIS_TAB_NAMES.aiGeneratedFullReport);
+      addTab(
+        "ai-agent-full-report",
+        ANALYSIS_TAB_NAMES.aiGeneratedFullReport.text,
+      );
       addChildTab(
         "ai-agent-full-report",
         "interview-feedback",
-        ANALYSIS_TAB_NAMES.interviewFeedback,
+        ANALYSIS_TAB_NAMES.manualReport.sortedStakeholder,
       );
       addChildTab(
         "ai-agent-full-report",
         "sorted-evidence",
-        ANALYSIS_TAB_NAMES.sortedEvidences,
+        ANALYSIS_TAB_NAMES.aiGeneratedFullReport.sortedCompetency,
       );
       saveSnapshotToDb("auto", true);
 

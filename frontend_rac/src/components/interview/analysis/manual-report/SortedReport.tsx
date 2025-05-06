@@ -2,7 +2,6 @@ import { SortedEvidenceView } from "../sorted-evidence/SortedEvidenceView";
 import { SortedEvidence } from "@/lib/api";
 import { EditableReport } from "./EditableReport";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
-import { AdviceData } from "@/lib/types/types.interview-data";
 
 interface Props {
   sortedStrengths: SortedEvidence[] | undefined;
@@ -11,9 +10,10 @@ interface Props {
 
 export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
   //TODO: find better sorting implementation
-  
+
   // Get advice data from store
-  const adviceData = useInterviewDataStore((state) => state.adviceData) as AdviceData | null;
+  const { manualReport } = useInterviewDataStore();
+  const adviceData = manualReport.sorted_by?.stakeholders?.adviceData;
 
   // Transform advice data
   const transformedAdvice = adviceData

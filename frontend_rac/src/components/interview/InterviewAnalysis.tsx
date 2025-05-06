@@ -1,6 +1,5 @@
 import { AuthStatus } from "../auth/AuthStatus";
 import { AppSidebar } from "../sidebar/AppSidebar";
-import { SidebarTrigger } from "../ui/sidebar";
 import { StepperProvider } from "../ui/stepper";
 import { StepperControls } from "./controls/StepperControls";
 import InterviewAnalysisContent from "./InterviewAnalysisContent";

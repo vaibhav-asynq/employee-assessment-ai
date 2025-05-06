@@ -49,14 +49,11 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 export function GenerateCompetencies() {
-  const fileId = useInterviewDataStore((state) => state.fileId);
-  const templates = useAnalysisStore((state) => state.templates);
-  const addTemplate = useAnalysisStore((state) => state.addTemplate);
-  const handleAnalysisUpdate = useAnalysisStore(
-    (state) => state.handleAnalysisUpdate,
-  );
-  const addTab = useUserPreferencesStore((state) => state.addPath);
-  const selectTab = useUserPreferencesStore((state) => state.setSelectedPath);
+  const { fileId, updateAiCompetencySortedCompetency } =
+    useInterviewDataStore();
+  const { addTemplate } = useAnalysisStore();
+  const { addPath: addTab, setSelectedPath: selectTab } =
+    useUserPreferencesStore();
   const { saveSnapshotToDb } = useSnapshotSaver();
 
   const form = useForm<FormSchema>({
@@ -104,7 +101,6 @@ export function GenerateCompetencies() {
           >,
         ),
       };
-
       // Create strengths with proper typing
       const strengths: Strengths = {
         order: Object.keys(strengthData.leadershipQualities),
@@ -129,7 +125,6 @@ export function GenerateCompetencies() {
           >,
         ),
       };
-
       const templatedData: TemplatedData = {
         name: "",
         date: new Date().toISOString(),
@@ -144,9 +139,10 @@ export function GenerateCompetencies() {
         ],
         advices: orderedAdviceData,
       };
+      updateAiCompetencySortedCompetency({ data: templatedData });
       addTemplate(templateId, templatedData, false, true);
       saveSnapshotToDb("auto", true);
-      addTab("ai-competencies", ANALYSIS_TAB_NAMES.aiCompetencies);
+      addTab("ai-competencies", ANALYSIS_TAB_NAMES.aiCompetencies.text);
       selectTab("ai-competencies");
     } catch (err) {
       console.error("Error fetching data:", err);

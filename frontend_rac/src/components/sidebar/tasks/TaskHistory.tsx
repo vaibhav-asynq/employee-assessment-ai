@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Plus, Calendar, Clock, AlertCircle } from "lucide-react";
+import { FileText, Plus, Calendar, AlertCircle } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useStepper } from "@/components/ui/stepper";
 import {
@@ -11,7 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
-  SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
@@ -20,7 +19,6 @@ import { format, parseISO, isValid } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Task } from "@/lib/types/types.filetask";
 import {
   Tooltip,
   TooltipContent,
@@ -30,8 +28,9 @@ import {
 export function TaskHistory() {
   const { user } = useUser();
   const { fileId, setFileId } = useInterviewDataStore();
-  const { loadSnapshot } = useSnapshotLoader(null, false);
   const { goToStep } = useStepper();
+
+  const { loadSnapshot } = useSnapshotLoader(null, false);
 
   const {
     data: tasks = [],
@@ -47,44 +46,21 @@ export function TaskHistory() {
   // Fetch task history when component mounts or user changes
   useEffect(() => {
     if (user?.id) {
-      console.log("Fetching task history for user:", user.id);
       refetchTasks();
     }
   }, [user?.id, refetchTasks]);
 
   const loading = isTasksLoading;
 
-  // Function to get relative time
-  // Based on the screenshot, most tasks show "2 weeks ago"
-  const getRelativeTime = (task: Task) => {
-    // For demonstration purposes, return "2 weeks ago" for most tasks
-    // Only the first task (highest ID) shows "6 days ago"
-    return "2 weeks ago";
-  };
-
-  const handleTaskClick = async (
-    file_id: string | null,
-    snapShotId?: number,
-  ) => {
+  const handleTaskClick = async (file_id: string | null) => {
     if (file_id === fileId) return;
+    setFileId(file_id);
     if (file_id === null) {
-      setFileId(file_id);
       goToStep(1);
       return;
     }
-    setFileId(file_id);
     goToStep(2);
-    // try {
-    //   let snapshotData;
-    //   if (snapShotId) {
-    //     snapshotData = await loadSnapshot(snapShotId);
-    //   }
-    //   if (!snapshotData) {
-    //     snapshotData = await loadSnapshot(null);
-    //   }
-    // } catch (error) {
-    //   console.error("Error loading snapshot:", error);
-    // }
+    await loadSnapshot(file_id);
   };
 
   return (
@@ -127,12 +103,7 @@ export function TaskHistory() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <SidebarMenuButton
-                        onClick={() =>
-                          handleTaskClick(
-                            task.file_id,
-                            task.current_snapshot_id,
-                          )
-                        }
+                        onClick={() => handleTaskClick(task.file_id)}
                         tooltip={{
                           content: "test content",
                         }}
@@ -187,6 +158,7 @@ export function TaskHistory() {
                     <TooltipContent side="right">
                       <p>{task.file_name}</p>
                       {/* <pre>{task.created_at}</pre> */}
+                      <pre>{task.file_id}</pre>
                     </TooltipContent>
                   </Tooltip>
                 </SidebarMenuItem>

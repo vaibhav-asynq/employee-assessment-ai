@@ -30,13 +30,13 @@ type UserPreferencesState = {
 
 const child_feedback: ChildPath[] = [
   {
-    name: ANALYSIS_TAB_NAMES.interviewFeedback,
+    name: ANALYSIS_TAB_NAMES.manualReport.sortedStakeholder,
     id: "interview-feedback",
   },
 ];
 const startingTabs: AvailablePaths = [
   {
-    name: ANALYSIS_TAB_NAMES.manualReport,
+    name: ANALYSIS_TAB_NAMES.manualReport.text,
     id: "manual-report",
     child: child_feedback,
   },
@@ -261,3 +261,4 @@ export const useUserPreferencesStore = create<UserPreferencesState>(
     },
   }),
 );
+

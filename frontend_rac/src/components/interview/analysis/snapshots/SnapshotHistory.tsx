@@ -91,7 +91,7 @@ function SnapshotHistoryContent() {
       setLoadingStage("loading");
 
       // First load the snapshot data into the UI
-      await loadSnapshot(snapshotId);
+      await loadSnapshot(null, snapshotId);
 
       // Then set it as the current snapshot in the database
       if (fileId) {

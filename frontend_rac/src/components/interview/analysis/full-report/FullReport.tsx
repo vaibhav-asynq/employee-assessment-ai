@@ -70,16 +70,16 @@ export function FullReport() {
       setTimeout(async () => {
         try {
           // Get the template data
-          const analysisWithAiCoach = templates[templatesIds.fullReport];
-          if (!fileId || !analysisWithAiCoach) return;
+          const analysisFullReport = templates[templatesIds.fullReport];
+          if (!fileId || !analysisFullReport) return;
 
           // Get headings for sorting
-          const strengthsHeadings = analysisWithAiCoach.strengths.order.map(
-            (id) => analysisWithAiCoach.strengths.items[id].heading,
+          const strengthsHeadings = analysisFullReport.strengths.order.map(
+            (id) => analysisFullReport.strengths.items[id].heading,
           );
 
-          const areasHeadings = analysisWithAiCoach.areas_to_target.order.map(
-            (id) => analysisWithAiCoach.areas_to_target.items[id].heading,
+          const areasHeadings = analysisFullReport.areas_to_target.order.map(
+            (id) => analysisFullReport.areas_to_target.items[id].heading,
           );
 
           // Sort the evidence
@@ -131,10 +131,8 @@ export function FullReport() {
       return (
         <TabsContent value={tabPathId} key={key}>
           <SortedReport
-            // sortedAreas={sortedAreas}
-            sortedAreas={fullReport?.sorted_competency?.sorted_areas}
-            // sortedStrengths={sortedStrengths}
-            sortedStrengths={fullReport?.sorted_competency?.sorted_strength}
+            sortedAreas={fullReport?.sorted_by_competency?.sorted_areas}
+            sortedStrengths={fullReport?.sorted_by_competency?.sorted_strength}
           />
         </TabsContent>
       );

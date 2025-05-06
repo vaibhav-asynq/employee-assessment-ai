@@ -3,7 +3,7 @@ import {
   SortedEvidence,
   sortStrengthsEvidence,
 } from "@/lib/api";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown, CheckCircle2, Loader2 } from "lucide-react";
@@ -71,7 +71,7 @@ export function Sortings(props: Props) {
     addChildTab(
       parentTabId,
       "sorted-evidence",
-      ANALYSIS_TAB_NAMES.sortedEvidences,
+      ANALYSIS_TAB_NAMES.aiGeneratedFullReport.sortedCompetency,
     );
     setSelectedPath(parentTabId, "sorted-evidence");
   };

@@ -16,10 +16,15 @@ class SnapshotReport(BaseModel):
     editable: Dict[str, Any] = {}
     sorted_by: SortedBy = SortedBy()
 
+class SnapshotReportWithMisc(BaseModel):
+    selectedPath: Optional[str] = None
+    editable: Dict[str, Any] = {}
+    sorted_by: SortedBy = SortedBy()
+
 class SnapshotCreate(BaseModel):
     task_id: int
     snapshot_name: Optional[str]
-    manual_report: SnapshotReport
+    manual_report: SnapshotReportWithMisc
     full_report: SnapshotReport
     ai_Competencies: SnapshotReport
 

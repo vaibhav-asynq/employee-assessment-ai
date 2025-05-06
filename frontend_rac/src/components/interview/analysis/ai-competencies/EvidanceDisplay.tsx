@@ -9,22 +9,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FeedbackDisplay } from "../FeedbackDisplay";
-import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { templatesIds } from "@/lib/types/types.analysis";
 import { EvidenceOfFeedback } from "@/lib/types/types.interview-data";
 import { cn } from "@/lib/utils";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useCallback, useEffect, useState, useRef } from "react";
+import { ManualReportStakeholderDisplay } from "../manual-report/ManualReportStakeholderDisplay";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
+import { ANALYSIS_TAB_NAMES } from "@/lib/constants";
 
 export function EvidanceDisplay() {
-  const feedbackData = useInterviewDataStore((state) => state.feedbackData);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [newHeading, setNewHeading] = useState("");
   const [lastMergedId, setLastMergedId] = useState<string | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeTemplateId = useAnalysisStore((state) => state.activeTemplateId);
   const templates = useAnalysisStore((state) => state.templates);
+
+  const { aiCompetencies } = useInterviewDataStore();
   const setActiveTemplate = useAnalysisStore(
     (state) => state.setActiveTemplate,
   );
@@ -40,7 +42,7 @@ export function EvidanceDisplay() {
     }
   }, [activeTemplateId, setActiveTemplate, templateId]);
 
-  const analysisAiCompetencies = templates[templateId];
+  const analysisAiCompetencies = aiCompetencies?.sorted_by_competency?.data;
   const [selectedEvidanceFeedback, setSelectedEvidanceFeedback] = useState<
     string[]
   >([]);
@@ -210,20 +212,15 @@ export function EvidanceDisplay() {
             Sorted by stakeholder
           </TabsTrigger>
           <TabsTrigger value="sorted-evidence" className="flex-1">
-            Sorted Evidence
+            {/* TODO: make it dynamic */}
+            {ANALYSIS_TAB_NAMES.aiCompetencies.sortedCompetency}
           </TabsTrigger>
         </TabsList>
       </div>
 
       <TabsContent value="interview-feedback" className="mt-0">
         <div className="h-full space-y-8">
-          {feedbackData ? (
-            <FeedbackDisplay data={feedbackData} />
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No feedback data available</p>
-            </div>
-          )}
+          <ManualReportStakeholderDisplay />
         </div>
       </TabsContent>
 
@@ -268,7 +265,7 @@ export function EvidanceDisplay() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Strengths</h2>
             <div className="space-y-6">
-              {analysisAiCompetencies.strengths.order.map((id) => {
+              {analysisAiCompetencies?.strengths.order.map((id) => {
                 const item = analysisAiCompetencies.strengths.items[id];
                 let heading = item.heading;
                 let act_as_title = false;
@@ -316,7 +313,7 @@ export function EvidanceDisplay() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Areas To Target</h2>
             <div className="space-y-6">
-              {analysisAiCompetencies.areas_to_target.order.map((id) => {
+              {analysisAiCompetencies?.areas_to_target.order.map((id) => {
                 const item = analysisAiCompetencies.areas_to_target.items[id];
                 let heading = item.heading;
                 let act_as_title = false;
@@ -358,7 +355,7 @@ export function EvidanceDisplay() {
             <div className="space-y-6">
               <Card className="p-4">
                 <div className="space-y-4">
-                  {analysisAiCompetencies.advices.map((advice) => {
+                  {analysisAiCompetencies?.advices.map((advice) => {
                     return renderEvidence({
                       feedback: {
                         text: advice.advice.join(". "),

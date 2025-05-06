@@ -4,6 +4,7 @@ import * as api from "@/lib/api";
 import { queryKeys } from "./queryKeys";
 import { Task } from "@/lib/types/types.filetask";
 import { Snapshot } from "@/lib/types/types.snapshot";
+import { AdviceData, FeedbackData } from "../types/types.interview-data";
 
 // Utility type to allow options without queryKey/queryFn
 type QueryOptions<T> = Omit<
@@ -162,7 +163,7 @@ export const useReport = (
 export const useFeedback = (
   fileId: string | null,
   useCache: boolean = true,
-  options?: QueryOptions<any>,
+  options?: QueryOptions<FeedbackData | null>,
 ) => {
   return useQuery({
     queryKey: fileId
@@ -181,7 +182,7 @@ export const useFeedback = (
 export const useAdvice = (
   fileId: string | null,
   useCache: boolean = true,
-  options?: QueryOptions<any>,
+  options?: QueryOptions<AdviceData | null>,
 ) => {
   return useQuery({
     queryKey: fileId
@@ -189,6 +190,27 @@ export const useAdvice = (
       : ["no-fileid"],
     queryFn: () =>
       fileId ? api.getAdvice(fileId, useCache) : Promise.resolve(null),
+    enabled: !!fileId,
+    // Default cache settings if not provided in options
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // 5 minutes
+    ...options,
+  });
+};
+
+export const useManulReportStakeholderData = (
+  fileId: string | null,
+  options?: QueryOptions<{
+    feedbackData: FeedbackData;
+    adviceData: AdviceData;
+  } | null>,
+) => {
+  return useQuery({
+    queryKey: fileId
+      ? [...queryKeys.manualReport.stakeholder()]
+      : ["no-fileid"],
+    queryFn: () =>
+      fileId ? api.manualReportStakeholderData(fileId) : Promise.resolve(null),
     enabled: !!fileId,
     // Default cache settings if not provided in options
     gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours

@@ -3,7 +3,7 @@ import {
   SortedEvidence,
   sortStrengthsEvidence,
 } from "@/lib/api";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown, CheckCircle2, Loader2 } from "lucide-react";
@@ -24,8 +24,8 @@ const sortIndicatorIcons = {
 type SortSection = "strengths" | "areas" | "all" | null;
 
 interface Props {
-  setSortedStrengths: Dispatch<SetStateAction<SortedEvidence[] | undefined>>;
-  setSortedAreas: Dispatch<SetStateAction<SortedEvidence[] | undefined>>;
+  setSortedStrengths: (value: SortedEvidence[]) => void;
+  setSortedAreas: (value: SortedEvidence[]) => void;
   parentTabId: SelectPathIds;
 }
 
@@ -34,7 +34,9 @@ export function Sortings(props: Props) {
   const parentTabId = props.parentTabId;
 
   const fileId = useInterviewDataStore((state) => state.fileId);
-  const autoSortInProgress = useAnalysisStore((state) => state.autoSortInProgress);
+  const autoSortInProgress = useAnalysisStore(
+    (state) => state.autoSortInProgress,
+  );
   const setSelectedPath = useUserPreferencesStore(
     (state) => state.setSelectedPath,
   );
@@ -69,7 +71,7 @@ export function Sortings(props: Props) {
     addChildTab(
       parentTabId,
       "sorted-evidence",
-      ANALYSIS_TAB_NAMES.sortedEvidences,
+      ANALYSIS_TAB_NAMES.manualReport.sortedCompetency,
     );
     setSelectedPath(parentTabId, "sorted-evidence");
   };
@@ -219,7 +221,12 @@ export function Sortings(props: Props) {
             strengthsSorted && areasSorted && "text-blue-600",
           )}
           onClick={() => handleSortAll()}
-          disabled={!!sortLoading || !validAreas || !validStrengths || autoSortInProgress}
+          disabled={
+            !!sortLoading ||
+            !validAreas ||
+            !validStrengths ||
+            autoSortInProgress
+          }
         >
           {sortLoading === "all" || autoSortInProgress
             ? sortIndicatorIcons.loading

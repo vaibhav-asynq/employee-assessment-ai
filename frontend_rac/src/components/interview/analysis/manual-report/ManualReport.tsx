@@ -1,5 +1,5 @@
 "use client";
-import { JSX, useEffect, useState } from "react";
+import { JSX, useCallback, useEffect, useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   ChildPath,
@@ -13,22 +13,33 @@ import { ManualReportView } from "./ManualReportView";
 import { SortedReport } from "./SortedReport";
 import { SortedEvidence } from "@/lib/api";
 import { Sortings } from "./Sortings";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 
 export function ManualReport() {
   const parentTabId: SelectPathIds = "manual-report";
-  const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
-  const getChildTabs = useUserPreferencesStore((state) => state.getChildTabs);
+  const { selectedPath, getChildTabs } = useUserPreferencesStore();
+  const { updateManualReportSortedCompetency, manualReport } =
+    useInterviewDataStore();
+  const { saveSnapshotToDb } = useSnapshotSaver();
 
   const [currentTab, setCurrentTab] = useState<ChildPathIds>();
   const [availableTabs, setAvailableTabs] = useState<ChildPath[]>([]);
 
-  //TODO: implement better sort
-  const [sortedStrengths, setSortedStrengths] = useState<
-    SortedEvidence[] | undefined
-  >();
-  const [sortedAreas, setSortedAreas] = useState<
-    SortedEvidence[] | undefined
-  >();
+  const setSortedAreas = useCallback(
+    (value: SortedEvidence[]) => {
+      updateManualReportSortedCompetency({ sorted_areas: value });
+      saveSnapshotToDb("auto", true);
+    },
+    [saveSnapshotToDb, updateManualReportSortedCompetency],
+  );
+  const setSortedStrengths = useCallback(
+    (value: SortedEvidence[]) => {
+      updateManualReportSortedCompetency({ sorted_strength: value });
+      saveSnapshotToDb("auto", true);
+    },
+    [saveSnapshotToDb, updateManualReportSortedCompetency],
+  );
 
   const tabComponentsMap: Record<ChildPathIds, JSX.ElementType> = {
     "interview-feedback": ManualReportView,
@@ -49,8 +60,8 @@ export function ManualReport() {
       return (
         <TabsContent value={tabPathId} key={key}>
           <SortedReport
-            sortedAreas={sortedAreas}
-            sortedStrengths={sortedStrengths}
+            sortedAreas={manualReport.sorted_by_competency?.sorted_areas}
+            sortedStrengths={manualReport.sorted_by_competency?.sorted_strength}
           />
         </TabsContent>
       );

@@ -5,6 +5,7 @@ import React from "react";
 import { Download } from "lucide-react";
 import { SaveSnapshotBtn } from "../analysis/snapshots/SaveSnapshotBtn";
 import SnapshotHistory from "../analysis/snapshots/SnapshotHistory";
+import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 
 export function StepperControls() {
   const handleDownload = () => {
@@ -17,6 +18,8 @@ export function StepperControls() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const { loadingSnapshot } = useInterviewDataStore();
 
   const { nextStep, prevStep, isLastStep, isFirstStep } = useStepper();
   return (
@@ -34,14 +37,14 @@ export function StepperControls() {
       <Button
         variant="outline"
         onClick={() => prevStep()}
-        disabled={isFirstStep}
+        disabled={isFirstStep || loadingSnapshot}
       >
         Previous
       </Button>
       <Button
         onClick={() => nextStep()}
         // disabled={activeStep === getTotalSteps() || !analysisData}
-        disabled={isLastStep}
+        disabled={isLastStep || loadingSnapshot}
       >
         {isLastStep ? "Finish" : "Next"}
       </Button>

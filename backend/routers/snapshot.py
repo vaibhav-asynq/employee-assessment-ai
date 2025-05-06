@@ -3,7 +3,8 @@ from typing import List, Optional
 from auth.user import User, get_current_user
 from db.core import get_db
 from db.file import get_db_task, get_task_by_user_and_fileId
-from db.snapshot import (SnapshotCreate, SnapshotReport, count_snapshots,
+from db.snapshot import (SnapshotCreate, SnapshotReport,
+                         SnapshotReportWithMisc, count_snapshots,
                          create_snapshot, delete_snapshot,
                          get_current_snapshot, get_last_auto_snapshot,
                          get_latest_snapshot, get_manual_snapshots,
@@ -54,7 +55,7 @@ async def create_snapshot_endpoint(
     snapshot_data = SnapshotCreate(
         task_id=task.id,
         snapshot_name= request.snapshot_name,
-        manual_report=SnapshotReport(**request.manual_report),
+        manual_report=SnapshotReportWithMisc(**request.manual_report),
         full_report=SnapshotReport(**request.full_report),
         ai_Competencies=SnapshotReport(**request.ai_Competencies)
     )

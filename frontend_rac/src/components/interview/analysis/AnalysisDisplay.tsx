@@ -5,7 +5,6 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { AiCompetencies } from "./ai-competencies/AiCompetencies";
 import ActionsBar from "./action-bar/ActionsBar";
-import { SortedEvidence } from "@/lib/api";
 import { useAnalysisStore } from "@/zustand/store/analysisStore";
 import { useUserPreferencesStore } from "@/zustand/store/userPreferencesStore";
 import {
@@ -18,10 +17,15 @@ import { FullReport } from "./full-report/FullReport";
 import { TabsComponent } from "./Tabs";
 
 export function AnalysisDisplay() {
-  const loading = useAnalysisStore((state) => state.loading);
-  const templates = useAnalysisStore((state) => state.templates);
-  const [initializing, setInitializing] = useState(false);
+  const { loading, templates } = useAnalysisStore();
+  const { selectedPath, availablePaths, getChildTabs } =
+    useUserPreferencesStore();
 
+  const [initializing, setInitializing] = useState(false);
+  const [currentTab, setCurrentTab] = useState<SelectPathIds>();
+  const [haveSubTab, setHaveSubTab] = useState(false);
+
+  // TODO: check if this useEffect is needed
   // Check if templates are initialized
   useEffect(() => {
     // If templates object is empty or missing required templates, show initializing state
@@ -34,14 +38,6 @@ export function AnalysisDisplay() {
 
     setInitializing(!hasRequiredTemplates);
   }, [templates]);
-  const selectedPath = useUserPreferencesStore((state) => state.selectedPath);
-  const getChildTabs = useUserPreferencesStore((state) => state.getChildTabs);
-  const availablePaths = useUserPreferencesStore(
-    (state) => state.availablePaths,
-  );
-
-  const [currentTab, setCurrentTab] = useState<SelectPathIds>();
-  const [haveSubTab, setHaveSubTab] = useState(false);
 
   useEffect(() => {
     const tab = parseHierarchicalPath(selectedPath).parentId;

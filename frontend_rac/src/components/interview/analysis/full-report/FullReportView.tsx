@@ -1,12 +1,11 @@
 "use client";
-import { FeedbackDisplay } from "../FeedbackDisplay";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { EditableReport } from "./EditableReport";
 import { Loader2 } from "lucide-react";
+import { ManualReportStakeholderDisplay } from "../manual-report/ManualReportStakeholderDisplay";
 
 export function FullReportView() {
   const loading = useInterviewDataStore((state) => state.loading);
-  const feedbackData = useInterviewDataStore((state) => state.feedbackData);
 
   if (loading) {
     return (
@@ -24,17 +23,7 @@ export function FullReportView() {
         <div className="mt-4 mb-6">
           <h2 className="text-2xl font-bold">Sorted by stakeholder</h2>
         </div>
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Loading feedback data...</p>
-          </div>
-        ) : feedbackData ? (
-          <FeedbackDisplay data={feedbackData} />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-600">No feedback data available</p>
-          </div>
-        )}
+        <ManualReportStakeholderDisplay />
       </div>
       <div className="border-l pl-8 overflow-y-auto p-6">
         <EditableReport />

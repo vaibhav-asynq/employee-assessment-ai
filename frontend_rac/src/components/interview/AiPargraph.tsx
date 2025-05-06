@@ -1,6 +1,5 @@
 "use client";
 import { useInterviewAnalysis } from "@/components/providers/InterviewAnalysisContext";
-import { FeedbackDisplay } from "../FeedbackDisplay";
 import { useState } from "react";
 import { SortedEvidence } from "@/lib/api";
 import { Loader2 } from "lucide-react";
@@ -18,7 +17,6 @@ export type Tab = "edit" | "sorted" | "ai-competencies";
 export function AiPargraph() {
   const {
     loading,
-    feedbackData,
     setActiveTemplate,
     selectedPath,
     setSelectedPath,
@@ -101,19 +99,7 @@ export function AiPargraph() {
                 <div className="mt-4 mb-6">
                   <h2 className="text-2xl font-bold">Sorted by stakeholder</h2>
                 </div>
-                {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Loading feedback data...</p>
-                  </div>
-                ) : feedbackData ? (
-                  <>
-                    <FeedbackDisplay data={feedbackData} />
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">No feedback data available</p>
-                  </div>
-                )}
+                {/* //here was feedback display */}
               </div>
               <div className="border-l pl-8">
                 <EditableTemplateAnalysis />

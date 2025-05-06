@@ -3,6 +3,8 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { NextStep } from "./types";
 import { useAuthStore } from "@/zustand/store/authStore";
 import { Task } from "./types/types.filetask";
+import { AdviceData, FeedbackData } from "./types/types.interview-data";
+import { Snapshot } from "./types/types.snapshot";
 
 if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
   throw new Error("❌ Missing required env: NEXT_PUBLIC_API_BASE_URL");
@@ -226,18 +228,51 @@ export const generateReport = async (
   return response.data;
 };
 
-export const getFeedback = async (fileId: string, useCache: boolean = true) => {
+export const getFeedback = async (
+  fileId: string,
+  useCache: boolean = true,
+): Promise<FeedbackData> => {
   const response = await api.get(
     `/api/get_feedback/${fileId}?use_cache=${useCache}`,
   );
   return response.data;
 };
 
-export const getAdvice = async (fileId: string, useCache: boolean = true) => {
+export const getAdvice = async (
+  fileId: string,
+  useCache: boolean = true,
+): Promise<AdviceData> => {
   const response = await api.get(
     `/api/get_advice/${fileId}?use_cache=${useCache}`,
   );
   return response.data;
+};
+
+export const manualReportStakeholderData = async (
+  fileId: string,
+  useCache: boolean = true,
+): Promise<{
+  feedbackData: FeedbackData;
+  adviceData: AdviceData;
+}> => {
+  try {
+    const [feedbackData, adviceData] = await Promise.all([
+      getFeedback(fileId, useCache),
+      getAdvice(fileId, useCache),
+    ]);
+
+    if (!feedbackData) {
+      console.error("No feedback data received from API");
+    }
+    if (!adviceData) {
+      console.error("No adviceData data received from API");
+    }
+    const data = { feedbackData, adviceData };
+    return data;
+  } catch (err) {
+    console.log("can not fetch manualReportStakeholderData");
+    throw err;
+  }
 };
 
 export const getRawData = async (fileId: string, useCache: boolean = true) => {
@@ -385,7 +420,10 @@ export const saveSnapshot = async (
   }
 };
 
-export const getLatestSnapshot = async (fileId: string, userId: string) => {
+export const getLatestSnapshot = async (
+  fileId: string,
+  userId: string,
+): Promise<Snapshot> => {
   try {
     const response = await api.get(
       `/api/snapshots/latest/${fileId}?user_id=${userId}`,
