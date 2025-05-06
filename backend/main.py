@@ -10,6 +10,7 @@ import anthropic
 import aspose.words as aw
 import env_variables
 import uvicorn
+import special_name_processor
 from cache_manager import (add_to_filename_map, get_cached_data,
                            get_cached_file_id, save_cached_data)
 from docx import Document
@@ -346,6 +347,12 @@ async def generate_report(
         formatted_data = transform_content_to_report_format(
             results, employee_name, report_date
         )
+        
+        # Add special name processing here
+        if employee_name:
+            formatted_data = await special_name_processor.check_and_process_special_names(
+                formatted_data, api_key, system_prompt
+            )
 
         # Save the formatted data to a file
         report_file_path = os.path.join(REPORT_DIR, f"{file_id}_report.json")

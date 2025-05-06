@@ -741,6 +741,3 @@ def format_date_for_display(date_str: str) -> str:
         
     except Exception as e:
         return date_str
-
-
-    
