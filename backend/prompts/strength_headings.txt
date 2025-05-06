@@ -1,0 +1,50 @@
+Please analyze leadership qualities and identify {num_competencies} most prominent leadership quality categories. Your task is to create meaningful category headings only.
+
+Leadership Quality Categories to consider (but not limited to):
+- Selfless style
+- People and partnership skills
+- Depth of expertise
+- Drive for excellence
+- Building capability
+- Strategic leadership
+- Transparent communication
+- Supporting their team
+- Thoughtful depth
+- Business leadership
+- High standards
+- Supportive leader
+- Decisive courage
+- Creative expert
+- Strong relationships
+- Inspirational leadership
+- Big picture clarity
+- Technical acumen
+- Emotional intelligence
+- Change leadership
+
+Return ONLY the headings in this JSON format:
+{{
+  "headings": [
+    "Strategic leadership.",
+    "People development.",
+    "Technical expertise.",
+    "Additional strengths."
+  ]
+}}
+
+Guidelines for creating headings:
+1. Create categories that reflect enduring leadership qualities
+2. Use professional, positive terminology
+3. Focus on demonstrated strengths
+4. Consider both technical and behavioral strengths
+5. Identify unique differentiators
+6. Add the full stop at the end of each heading (e.g., "Selfless style." "Business leadership.")
+7. Do not use underscore in headings
+8. IMPORTANT: Always include "Additional strengths." as the last heading
+
+Special Instructions:
+- Create exactly {num_competencies} headings (plus "Additional strengths.")
+- Ensure headings are concise (2-3 words) but descriptive
+- Use professional business terminology
+- Make headings specific enough to be meaningful
+- Return ONLY the JSON with headings, no additional text

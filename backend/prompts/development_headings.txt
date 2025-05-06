@@ -1,0 +1,56 @@
+Please identify exactly {num_competencies} most significant development areas. Your task is to create meaningful category headings only.
+
+Reference these competencies when creating titles:
+- Problem solving
+- Strategic thinking
+- Business acumen
+- Functional expertise
+- Innovation
+- Influence
+- Inspiring the team
+- Collaboration
+- Develops the team
+- Communication
+- Positive relationships
+- Inclusion
+- Org savvy
+- Planning
+- Execution
+- Driving results
+- Change and improvement
+- Integrity and trust
+- Adaptability
+- Learning agility
+- Courage
+
+Return ONLY the headings in this JSON format:
+{{
+  "headings": [
+    "Directive leadership.",
+    "Team advancement.",
+    "Strategic planning.",
+    "Additional areas."
+  ]
+}}
+
+Guidelines for creating headings:
+1. Create professional 2-3 word titles that:
+   - Align with competency language style
+   - Use professional business terminology
+   - Capture specific development focus
+2. Make titles forward-looking and development-oriented
+3. Add the full stop at the end of each heading (e.g., "Problem solving." "Business leadership.")
+4. Do not use underscore in headings
+5. IMPORTANT: Always include "Additional areas." as the last heading
+
+Examples of professional titles:
+- Instead of "Execution" → "Providing direction."
+- Instead of "Communication" → "Directive leadership."
+- Instead of "Develops the team" → "Team advancement."
+
+Special Instructions:
+- Create exactly {num_competencies} headings (plus "Additional areas.")
+- Ensure headings are concise (2-3 words) but descriptive
+- Use professional business terminology
+- Make headings specific enough to be meaningful
+- Return ONLY the JSON with headings, no additional text

@@ -1206,6 +1206,89 @@ def transform_headings(data):
     return result
 
 
+def transform_strength_evidence(sorted_result):
+    """
+    Transform sorted strength evidence from flat array to the expected frontend format.
+    
+    Args:
+        sorted_result (list): The sorted evidence in flat array format
+        
+    Returns:
+        dict: The transformed evidence in nested object format
+    """
+    transformed = {"leadershipQualities": {}}
+    
+    for item in sorted_result:
+        heading = item["heading"]
+        evidence = item["evidence"]
+        
+        # Map field names from new format to old format
+        mapped_evidence = []
+        for e in evidence:
+            mapped_evidence.append({
+                "feedback": e["quote"],
+                "source": e["name"],
+                "role": e["position"],
+                "is_strong": e["isStrong"]
+            })
+        
+        transformed["leadershipQualities"][heading] = {
+            "evidence": mapped_evidence
+        }
+    
+    return transformed
+
+
+def transform_area_evidence(sorted_result):
+    """
+    Transform sorted area evidence from flat array to the expected frontend format.
+    
+    Args:
+        sorted_result (list): The sorted evidence in flat array format
+        
+    Returns:
+        dict: The transformed evidence in nested object format
+    """
+    transformed = {"developmentAreas": {}}
+    
+    # Default competency mappings based on heading
+    competency_mappings = {
+        "Strategic thinking.": ["Strategic thinking", "Business acumen", "Problem solving"],
+        "Collaborative influence.": ["Influence", "Communication", "Positive relationships"],
+        "Directive leadership.": ["Communication", "Influence", "Driving results"],
+        "Team development.": ["Develops the team", "Inspiring the team", "Positive relationships"],
+        "External presence.": ["Business acumen", "Influence", "Org savvy"],
+        "Results orientation.": ["Driving results", "Execution", "Planning"],
+        "Organizational presence.": ["Org savvy", "Influence", "Positive relationships"],
+        "Talent acceleration.": ["Develops the team", "Learning agility", "Inspiring the team"],
+        "Additional areas.": ["Other"]
+    }
+    
+    for item in sorted_result:
+        heading = item["heading"]
+        evidence = item["evidence"]
+        
+        # Map field names from new format to old format
+        mapped_evidence = []
+        for e in evidence:
+            mapped_evidence.append({
+                "feedback": e["quote"],
+                "source": e["name"],
+                "role": e["position"],
+                "is_strong": e["isStrong"]
+            })
+        
+        # Get competency alignment from mapping or use defaults
+        competencies = competency_mappings.get(heading, ["Communication", "Influence"])
+        
+        transformed["developmentAreas"][heading] = {
+            "competencyAlignment": competencies,
+            "evidence": mapped_evidence
+        }
+    
+    return transformed
+
+
 @app.get("/api/get_strength_evidences/{file_id}")
 async def get_strength_evidences(
     file_id: str,
@@ -1217,22 +1300,26 @@ async def get_strength_evidences(
     db: Session = Depends(get_db)
 ):
     try:
-    #     # Check cache first with parameters
-    #     if use_cache:
-    #         cached_data = get_cached_data(
-    #             "strength_evidences", file_id, {"num_competencies": numCompetencies}
-    #         )
-    #         if cached_data:
-    #             print(
-    #                 f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
-    #             )
-    #             return cached_data
+        # Check cache first with parameters
+        if use_cache:
+            cached_data = get_cached_data(
+                "strength_evidences", file_id, {"num_competencies": numCompetencies}
+            )
+            if cached_data:
+                print(
+                    f"Using cached strength evidences for file ID {file_id} with {numCompetencies} competencies"
+                )
+                return cached_data
 
         # Get previously generated strengths from the database
-        user_id = current_user.user_id
-        feedback_data = get_cached_feedback(user_id, file_id, db)
-        print(user_id)
-        print(feedback_data)
+        user_id = current_user.user_id if current_user else None
+        feedback_data = None
+        
+        if user_id:
+            try:
+                feedback_data = get_cached_feedback(user_id, file_id, db)
+            except Exception as e:
+                print(f"Error getting cached feedback: {str(e)}")
         
         if not feedback_data:
             # If not in database, we need to generate it first
@@ -1241,78 +1328,52 @@ async def get_strength_evidences(
                 detail="Feedback data not found. Please generate feedback data first."
             )
             
-        # Use the previously generated strengths from the database
-        strengths_data = feedback_data.get("strengths", {})
+        print(f"Step 1: Generating competency headings for strengths")
         
-        # Process the strengths data to ensure it has the is_strong flag
-        processed_strengths = {}
-        for person, data in strengths_data.items():
-            processed_feedback = []
-            for feedback_item in data.get("feedback", []):
-                if isinstance(feedback_item, dict):
-                    # New format with is_strong flag
-                    processed_feedback.append({
-                        "text": feedback_item.get("text", ""),
-                        "is_strong": feedback_item.get("is_strong", False)
-                    })
-                else:
-                    # Handle legacy format (plain string)
-                    processed_feedback.append({
-                        "text": feedback_item,
-                        "is_strong": False
-                    })
-            
-            processed_strengths[person] = {
-                "role": data.get("role", ""),
-                "feedback": processed_feedback
-            }
+        # Step 1: Generate competency headings using the new simplified prompt
+        strength_prompt = load_prompt("strength_headings.txt")
+        prompt = strength_prompt.format(num_competencies=numCompetencies)
         
-        # Convert strengths data to JSON string for the prompt
-        strengths_json = json.dumps(processed_strengths, indent=2)
-
-        # Load and format prompt
-        strength_prompt = load_prompt("strength_evidences_categorized.txt")
-        prompt = strength_prompt.format(
-            strengths=strengths_json, num_competencies=numCompetencies
-        )
-
-        # Generate analysis using Claude
+        # Generate headings using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-7-sonnet-latest",
-            max_tokens=3000,
+            max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
         )
-
+        
         # Parse JSON response
         response_text = response.content[0].text
         try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
-            try:
-                # Find JSON-like content between curly braces
-                start = response_text.find("{")
-                end = response_text.rfind("}") + 1
-                if start >= 0 and end > 0:
-                    json_str = response_text[start:end]
-                    result = json.loads(json_str)
-                else:
-                    raise ValueError("No JSON content found in response")
-            except Exception as e:
-                print(f"Error parsing response: {str(e)}")
-                print(f"Raw response: {response_text}")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to parse AI response into valid JSON",
-                )
-        result = transform_headings(result)
+            headings_result = parse_claude_response(response_text)
+        except Exception as e:
+            print(f"Error parsing headings response: {str(e)}")
+            print(f"Raw response: {response_text}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to parse AI response into valid JSON",
+            )
+        
+        # Extract headings as a simple list
+        headings = headings_result.get("headings", [])
+        print(f"Generated {len(headings)} headings: {headings}")
+        
+        # Step 2: Use sort_strengths_evidence to organize evidence under these headings
+        print(f"Step 2: Sorting evidence under generated headings")
+        sort_request = SortEvidenceRequest(file_id=file_id, headings=headings)
+        sorted_result = await sort_strengths_evidence(sort_request, current_user, db)
+        
+        # Step 3: Transform the result to match the expected frontend format
+        print(f"Step 3: Transforming result to match expected frontend format")
+        transformed_result = transform_strength_evidence(sorted_result)
+        
         # Save to cache with parameters
         save_cached_data(
-            "strength_evidences", file_id, result, {"num_competencies": numCompetencies}
+            "strength_evidences", file_id, transformed_result, {"num_competencies": numCompetencies}
         )
-
-        return result
+        
+        return transformed_result
     except Exception as e:
         print(f"Error in get_strength_evidences: {str(e)}")
         print(traceback.format_exc())
@@ -1602,22 +1663,22 @@ async def get_development_areas(
     file_id: str,
     numCompetencies: int,
     use_cache: bool = Query(
-        False, description="Whether to use cached results if available"
+        True, description="Whether to use cached results if available"
     ),
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
         # Check cache first with parameters
-        # if use_cache:
-        #     cached_data = get_cached_data(
-        #         "development_areas", file_id, {"num_competencies": numCompetencies}
-        #     )
-        #     if cached_data:
-        #         print(
-        #             f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies"
-        #         )
-        #         return cached_data
+        if use_cache:
+            cached_data = get_cached_data(
+                "development_areas", file_id, {"num_competencies": numCompetencies}
+            )
+            if cached_data:
+                print(
+                    f"Using cached development areas for file ID {file_id} with {numCompetencies} competencies"
+                )
+                return cached_data
 
         # Get previously generated areas to target from the database
         user_id = current_user.user_id if current_user else None
@@ -1630,84 +1691,58 @@ async def get_development_areas(
                 print(f"Error getting cached feedback: {str(e)}")
         
         if not feedback_data:
+            # If not in database, we need to generate it first
             raise HTTPException(
                 status_code=400,
                 detail="Feedback data not found. Please generate feedback data first."
             )
             
-        # Use the previously generated areas to target from the database
-        areas_data = feedback_data.get("areas_to_target", {})
+        print(f"Step 1: Generating competency headings for development areas")
         
-        # Process the areas data to ensure it has the is_strong flag
-        processed_areas = {}
-        for person, data in areas_data.items():
-            processed_feedback = []
-            for feedback_item in data.get("feedback", []):
-                if isinstance(feedback_item, dict):
-                    # New format with is_strong flag
-                    processed_feedback.append({
-                        "text": feedback_item.get("text", ""),
-                        "is_strong": feedback_item.get("is_strong", False)
-                    })
-                else:
-                    # Handle legacy format (plain string)
-                    processed_feedback.append({
-                        "text": feedback_item,
-                        "is_strong": False
-                    })
-            
-            processed_areas[person] = {
-                "role": data.get("role", ""),
-                "feedback": processed_feedback
-            }
+        # Step 1: Generate competency headings using the new simplified prompt
+        development_prompt = load_prompt("development_headings.txt")
+        prompt = development_prompt.format(num_competencies=numCompetencies)
         
-        # Convert areas data to JSON string for the prompt
-        areas_json = json.dumps(processed_areas, indent=2)
-        
-        # Load and format prompt
-        development_prompt = load_prompt("development_areas_categorized.txt")
-        prompt = development_prompt.format(
-            feedback=areas_json, num_competencies=numCompetencies
-        )
-
-        # Generate analysis using Claude
+        # Generate headings using Claude
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-7-sonnet-latest",
-            max_tokens=3000,
+            max_tokens=1000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
         )
-
+        
         # Parse JSON response
         response_text = response.content[0].text
         try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
-            try:
-                # Find JSON-like content between curly braces
-                start = response_text.find("{")
-                end = response_text.rfind("}") + 1
-                if start >= 0 and end > 0:
-                    json_str = response_text[start:end]
-                    result = json.loads(json_str)
-                else:
-                    raise ValueError("No JSON content found in response")
-            except Exception as e:
-                print(f"Error parsing response: {str(e)}")
-                print(f"Raw response: {response_text}")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to parse AI response into valid JSON",
-                )
-        result = transform_headings(result)
-
+            headings_result = parse_claude_response(response_text)
+        except Exception as e:
+            print(f"Error parsing headings response: {str(e)}")
+            print(f"Raw response: {response_text}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to parse AI response into valid JSON",
+            )
+        
+        # Extract headings as a simple list
+        headings = headings_result.get("headings", [])
+        print(f"Generated {len(headings)} headings: {headings}")
+        
+        # Step 2: Use sort_areas_evidence to organize evidence under these headings
+        print(f"Step 2: Sorting evidence under generated headings")
+        sort_request = SortEvidenceRequest(file_id=file_id, headings=headings)
+        sorted_result = await sort_areas_evidence(sort_request, current_user, db)
+        
+        # Step 3: Transform the result to match the expected frontend format
+        print(f"Step 3: Transforming result to match expected frontend format")
+        transformed_result = transform_area_evidence(sorted_result)
+        
         # Save to cache with parameters
         save_cached_data(
-            "development_areas", file_id, result, {"num_competencies": numCompetencies}
+            "development_areas", file_id, transformed_result, {"num_competencies": numCompetencies}
         )
-
-        return result
+        
+        return transformed_result
     except Exception as e:
         print(f"Error in get_development_areas: {str(e)}")
         print(traceback.format_exc())
