@@ -44,10 +44,11 @@ from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
-from auth.user import get_current_user
+from auth.user import User, get_current_user
 from sqlalchemy.orm import Session
 from db.core import get_db
 from db.feedback import get_cached_feedback
+
 
 
 import json
@@ -98,9 +99,9 @@ assessment_processor = AssessmentProcessor(api_key)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # User model
-class User(BaseModel):
-    username: str
-    hashed_password: str
+# class User(BaseModel):
+#     username: str
+#     hashed_password: str
 
 
 # Simple authentication response
@@ -791,15 +792,215 @@ async def generate_area_content(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def repair_json(json_str):
+    """
+    Advanced JSON repair algorithm that can handle nested structures.
+    
+    Args:
+        json_str: The JSON string to repair
+        
+    Returns:
+        Repaired JSON string
+    """
+    # Track nesting levels and string context
+    in_string = False
+    escape_next = False
+    brace_stack = []
+    bracket_stack = []
+    
+    # Process character by character
+    repaired = []
+    for i, char in enumerate(json_str):
+        repaired.append(char)
+        
+        # Handle string context
+        if char == '"' and not escape_next:
+            in_string = not in_string
+        
+        # Track escape sequences
+        if char == '\\' and not escape_next:
+            escape_next = True
+        else:
+            escape_next = False
+            
+        # Only track structure outside of strings
+        if not in_string:
+            # Track array nesting
+            if char == '[':
+                bracket_stack.append(i)
+            elif char == ']' and bracket_stack:
+                bracket_stack.pop()
+                
+            # Track object nesting
+            if char == '{':
+                brace_stack.append(i)
+            elif char == '}' and brace_stack:
+                brace_stack.pop()
+    
+    # Fix unterminated strings
+    if in_string:
+        repaired.append('"')
+    
+    # Close any unclosed arrays
+    while bracket_stack:
+        bracket_stack.pop()
+        repaired.append(']')
+    
+    # Close any unclosed objects
+    while brace_stack:
+        brace_stack.pop()
+        repaired.append('}')
+    
+    return ''.join(repaired)
+
+
+def parse_claude_response(response_text):
+    """
+    Enhanced JSON parsing with repair capability for Claude API responses.
+    
+    Args:
+        response_text: The raw response text from Claude API
+        
+    Returns:
+        Parsed JSON object
+        
+    Raises:
+        Exception: If parsing fails after repair attempts
+    """
+    try:
+        # First try direct parsing
+        return json.loads(response_text)
+    except json.JSONDecodeError as e:
+        print(f"Initial JSON parsing failed: {str(e)}")
+        try:
+            # Find JSON array
+            if response_text.strip().startswith('['):
+                start = response_text.find("[")
+                end = response_text.rfind("]") + 1
+                if start >= 0 and end > 0:
+                    json_str = response_text[start:end]
+                    
+                    # Basic repair for unterminated strings and other common issues
+                    lines = json_str.split('\n')
+                    repaired_lines = []
+                    
+                    for i, line in enumerate(lines):
+                        # Check for unterminated strings in name field
+                        if '"name": "' in line and not (line.strip().endswith('",') or line.strip().endswith('"')):
+                            line = line.rstrip() + '",'
+                        
+                        # Check for unterminated strings in position field
+                        if '"position": "' in line and not (line.strip().endswith('",') or line.strip().endswith('"')):
+                            line = line.rstrip() + '",'
+                        
+                        # Check for unterminated strings in quote field
+                        if '"quote": "' in line and not (line.strip().endswith('",') or line.strip().endswith('"')):
+                            line = line.rstrip() + '",'
+                        
+                        # Handle unterminated isStrong field
+                        if '"isStrong": ' in line and not any(line.strip().endswith(x) for x in ['true', 'false', 'true,', 'false,']):
+                            if 'true' in line.lower():
+                                line = line.rstrip() + 'true,'
+                            else:
+                                line = line.rstrip() + 'false,'
+                        
+                        # Check for missing commas between objects
+                        if i < len(lines) - 1:
+                            next_line = lines[i+1].strip()
+                            if line.strip().endswith('}') and next_line.startswith('{'):
+                                line = line.rstrip() + ','
+                            elif line.strip().endswith(']') and next_line.startswith('['):
+                                line = line.rstrip() + ','
+                        
+                        repaired_lines.append(line)
+                    
+                    repaired_json = '\n'.join(repaired_lines)
+                    
+                    try:
+                        return json.loads(repaired_json)
+                    except json.JSONDecodeError:
+                        # If still failing, try a more aggressive approach
+                        print("First repair attempt failed, trying more aggressive repair")
+                        repaired_json = repaired_json.replace('}\n  {', '},\n  {')
+                        repaired_json = repaired_json.replace(']\n  [', '],\n  [')
+                        
+                        try:
+                            return json.loads(repaired_json)
+                        except json.JSONDecodeError:
+                            # If still failing, try the advanced repair algorithm
+                            print("Second repair attempt failed, trying advanced repair")
+                            repaired_json = repair_json(json_str)
+                            return json.loads(repaired_json)
+            
+            # Find JSON object if not an array
+            start = response_text.find("{")
+            end = response_text.rfind("}") + 1
+            if start >= 0 and end > 0:
+                json_str = response_text[start:end]
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                    # Try advanced repair
+                    repaired_json = repair_json(json_str)
+                    return json.loads(repaired_json)
+                
+            raise ValueError("No JSON content found in response")
+        except Exception as nested_e:
+            print(f"Error in JSON repair: {str(nested_e)}")
+            print(f"Original error: {str(e)}")
+            print(f"Raw response: {response_text}")
+            raise Exception(f"Failed to parse AI response into valid JSON: {str(e)}")
+
+
+def merge_sorted_evidence(batch_results):
+    """
+    Merge multiple batches of sorted evidence into a single result.
+    
+    Args:
+        batch_results: List of results from different batches
+        
+    Returns:
+        Merged result with all evidence
+    """
+    if not batch_results:
+        return []
+        
+    # Initialize with the structure from the first batch
+    merged_result = []
+    heading_map = {}  # To track headings we've already seen
+    
+    # Process each batch
+    for batch in batch_results:
+        for item in batch:
+            heading = item["heading"]
+            
+            # If we've seen this heading before, append evidence
+            if heading in heading_map:
+                existing_item = merged_result[heading_map[heading]]
+                
+                # Add new evidence, avoiding duplicates
+                existing_quotes = {e["quote"] for e in existing_item["evidence"]}
+                for evidence in item["evidence"]:
+                    if evidence["quote"] not in existing_quotes:
+                        existing_item["evidence"].append(evidence)
+                        existing_quotes.add(evidence["quote"])
+            else:
+                # New heading, add to result
+                heading_map[heading] = len(merged_result)
+                merged_result.append(item)
+    
+    return merged_result
+
+
 @app.post("/api/sort-strengths-evidence")
 async def sort_strengths_evidence(
     request: SortEvidenceRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
         # Get previously generated strengths from the database
-        user_id = current_user.user_id if current_user else None
+        user_id = current_user.user_id
         feedback_data = None
         
         if user_id:
@@ -855,18 +1056,84 @@ async def sort_strengths_evidence(
                     "feedback": processed_feedback
                 }
             
-            # Convert strengths data to JSON string for the prompt
-            strengths_json = json.dumps(processed_strengths, indent=2)
+            # Process in batches
+            all_results = []
+            stakeholders = list(processed_strengths.keys())
+            batch_size = 1  # Process 1 stakeholder at a time for maximum reliability
+            
+            # Count total feedback items for verification
+            total_feedback_items = sum(len(data.get("feedback", [])) for data in processed_strengths.values())
+            print(f"Total feedback items to process: {total_feedback_items}")
             
             # Initialize Claude client
             client = anthropic.Anthropic(api_key=api_key)
             
-            # Load and format prompt
+            # Load prompt template
             sort_prompt = load_prompt("sort_evidence_strenght.txt")
-            prompt = sort_prompt.format(
-                strengths=strengths_json, headings="\n".join(request.headings)
-            )
+            
+            # Process in batches
+            for i in range(0, len(stakeholders), batch_size):
+                batch_stakeholders = stakeholders[i:i+batch_size]
+                batch_strengths = {k: processed_strengths[k] for k in batch_stakeholders if k in processed_strengths}
+                
+                # Count items in this batch
+                batch_items = sum(len(data.get("feedback", [])) for data in batch_strengths.values())
+                print(f"Processing batch {i//batch_size + 1} with {len(batch_stakeholders)} stakeholders and {batch_items} feedback items")
+                
+                # Convert batch data to JSON
+                batch_json = json.dumps(batch_strengths, indent=2)
+                
+                # Format prompt for this batch
+                prompt = sort_prompt.format(
+                    strengths=batch_json, 
+                    headings="\n".join(request.headings)
+                )
+                
+                # Get sorted evidence from Claude for this batch
+                response = client.messages.create(
+                    model="claude-3-7-sonnet-latest",
+                    max_tokens=2000,
+                    temperature=0,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                
+                # Parse JSON response using our enhanced parser
+                response_text = response.content[0].text
+                
+                try:
+                    # Use our enhanced parser that can handle common JSON issues
+                    batch_result = parse_claude_response(response_text)
+                except Exception as e:
+                    print(f"Error parsing response: {str(e)}")
+                    print(f"Raw response: {response_text}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to parse AI response into valid JSON",
+                    )
+                
+                # Count evidence items in the result
+                evidence_count = sum(len(item.get("evidence", [])) for item in batch_result)
+                print(f"Batch {i//batch_size + 1} returned {evidence_count} evidence items")
+                
+                # Verify all items were included
+                if evidence_count < batch_items:
+                    print(f"WARNING: Batch {i//batch_size + 1} is missing items. Expected {batch_items}, got {evidence_count}")
+                
+                all_results.append(batch_result)
+            
+            # Merge results from all batches
+            result = merge_sorted_evidence(all_results)
+            
+            # Verify total evidence count
+            total_evidence = sum(len(item.get("evidence", [])) for item in result)
+            print(f"Total evidence items after merging: {total_evidence}")
+            
+            if total_evidence < total_feedback_items:
+                print(f"WARNING: Final result is missing items. Expected {total_feedback_items}, got {total_evidence}")
+            
+            return result
 
+        # If we're here, we're processing the entire dataset at once (not in batches)
         # Get sorted evidence from Claude
         response = client.messages.create(
             model="claude-3-7-sonnet-latest",
@@ -1450,12 +1717,12 @@ async def get_development_areas(
 @app.post("/api/sort-areas-evidence")
 async def sort_areas_evidence(
     request: SortEvidenceRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
         # Get previously generated areas to target from the database
-        user_id = current_user.user_id if current_user else None
+        user_id = current_user.user_id
         feedback_data = None
         
         if user_id:
@@ -1496,39 +1763,53 @@ async def sort_areas_evidence(
                 "feedback": processed_feedback
             }
         
-        # Convert areas data to JSON string for the prompt
-        areas_json = json.dumps(processed_areas, indent=2)
+        # Process in batches
+        all_results = []
+        stakeholders = list(processed_areas.keys())
+        batch_size = 2  # Process 2 stakeholders at a time (reduced from 3 for better reliability)
+        
+        # Count total feedback items for verification
+        total_feedback_items = sum(len(data.get("feedback", [])) for data in processed_areas.values())
+        print(f"Total feedback items to process: {total_feedback_items}")
         
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
         
-        # Load and format prompt
+        # Load prompt template
         sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
-        prompt = sort_prompt.format(
-            areas=areas_json, headings="\n".join(request.headings)
-        )
-
-        # Get sorted evidence from Claude
-        response = client.messages.create(
-            model="claude-3-7-sonnet-latest",
-            max_tokens=2000,
-            temperature=0,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        # Parse JSON response
-        response_text = response.content[0].text
-        try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
+        
+        # Process in batches
+        for i in range(0, len(stakeholders), batch_size):
+            batch_stakeholders = stakeholders[i:i+batch_size]
+            batch_areas = {k: processed_areas[k] for k in batch_stakeholders if k in processed_areas}
+            
+            # Count items in this batch
+            batch_items = sum(len(data.get("feedback", [])) for data in batch_areas.values())
+            print(f"Processing batch {i//batch_size + 1} with {len(batch_stakeholders)} stakeholders and {batch_items} feedback items")
+            
+            # Convert batch data to JSON
+            batch_json = json.dumps(batch_areas, indent=2)
+            
+            # Format prompt for this batch
+            prompt = sort_prompt.format(
+                areas=batch_json, 
+                headings="\n".join(request.headings)
+            )
+            
+            # Get sorted evidence from Claude for this batch
+            response = client.messages.create(
+                model="claude-3-7-sonnet-latest",
+                max_tokens=2000,
+                temperature=0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            
+            # Parse JSON response using our enhanced parser
+            response_text = response.content[0].text
+            
             try:
-                start = response_text.find("[")
-                end = response_text.rfind("]") + 1
-                if start >= 0 and end > 0:
-                    json_str = response_text[start:end]
-                    result = json.loads(json_str)
-                else:
-                    raise ValueError("No JSON content found in response")
+                # Use our enhanced parser that can handle common JSON issues
+                batch_result = parse_claude_response(response_text)
             except Exception as e:
                 print(f"Error parsing response: {str(e)}")
                 print(f"Raw response: {response_text}")
@@ -1536,7 +1817,27 @@ async def sort_areas_evidence(
                     status_code=500,
                     detail="Failed to parse AI response into valid JSON",
                 )
-
+            
+            # Count evidence items in the result
+            evidence_count = sum(len(item.get("evidence", [])) for item in batch_result)
+            print(f"Batch {i//batch_size + 1} returned {evidence_count} evidence items")
+            
+            # Verify all items were included
+            if evidence_count < batch_items:
+                print(f"WARNING: Batch {i//batch_size + 1} is missing items. Expected {batch_items}, got {evidence_count}")
+            
+            all_results.append(batch_result)
+        
+        # Merge results from all batches
+        result = merge_sorted_evidence(all_results)
+        
+        # Verify total evidence count
+        total_evidence = sum(len(item.get("evidence", [])) for item in result)
+        print(f"Total evidence items after merging: {total_evidence}")
+        
+        if total_evidence < total_feedback_items:
+            print(f"WARNING: Final result is missing items. Expected {total_feedback_items}, got {total_evidence}")
+        
         return result
     except Exception as e:
         print(f"Error in sort_areas_evidence: {str(e)}")

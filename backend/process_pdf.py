@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from anthropic import Anthropic
-from PyPDF2 import PdfReader
+import aspose.words as aw
 
 
 class AssessmentProcessor:
@@ -32,33 +32,60 @@ class AssessmentProcessor:
         filename = os.path.basename(pdf_path)
         return os.path.splitext(filename)[0]
 
-    def read_pdf_in_chunks(self, pdf_path: str, chunk_size: int = 10, overlap: int = 2) -> List[str]:
-        """Read PDF in chunks of specified pages with overlap between chunks."""
+    def read_pdf_in_chunks(self, pdf_path: str, chunk_size: int = 1500, overlap: int = 200) -> List[str]:
+        """
+        Read PDF using Aspose.Words and split into chunks based on word count.
+        
+        Args:
+            pdf_path: Path to the PDF file
+            chunk_size: Number of words per chunk (default: 1500)
+            overlap: Number of words to overlap between chunks (default: 200)
+            
+        Returns:
+            List of text chunks from the PDF
+        """
         chunks = []
-        page_texts = []
         
         try:
-            reader = PdfReader(pdf_path)
-            total_pages = len(reader.pages)
-            self.logger.info(f"Processing PDF with {total_pages} pages")
+            self.logger.info(f"Loading PDF with Aspose.Words: {pdf_path}")
             
-            # Extract text from all pages first
-            for page_num, page in enumerate(reader.pages):
-                page_texts.append(page.extract_text())
-                self.logger.info(f"Extracted text from page {page_num + 1} of {total_pages}")
+            # Set Aspose license
+            license_path = os.path.join(os.path.dirname(__file__), "Aspose.WordsforPythonvia.NET.lic")
+            if os.path.exists(license_path):
+                license = aw.License()
+                license.set_license(license_path)
+                self.logger.info("Aspose license set successfully")
+            else:
+                self.logger.warning(f"Aspose license file not found at {license_path}")
+            
+            # Load PDF document using Aspose.Words
+            doc = aw.Document(pdf_path)
+            
+            # Extract all text from the document
+            full_text = ""
+            for node in doc.get_child_nodes(aw.NodeType.PARAGRAPH, True):
+                paragraph = node.as_paragraph()
+                if paragraph.get_text().strip():
+                    full_text += paragraph.get_text() + "\n"
+            
+            self.logger.info(f"Extracted {len(full_text.split())} words from PDF")
+            
+            # Split text into words
+            words = full_text.split()
             
             # Create chunks with overlap
-            for i in range(0, len(page_texts), chunk_size - overlap):
+            for i in range(0, len(words), chunk_size - overlap):
                 # Ensure we don't go beyond the array bounds
-                end_idx = min(i + chunk_size, len(page_texts))
-                current_chunk = page_texts[i:end_idx]
-                chunks.append("\n".join(current_chunk))
-                self.logger.info(f"Created chunk {len(chunks)} with pages {i+1} to {end_idx}")
+                end_idx = min(i + chunk_size, len(words))
+                current_chunk = words[i:end_idx]
+                chunk_text = " ".join(current_chunk)
+                chunks.append(chunk_text)
+                self.logger.info(f"Created chunk {len(chunks)} with words {i+1} to {end_idx}")
                 
                 # If this is the last chunk, break
-                if end_idx == len(page_texts):
+                if end_idx == len(words):
                     break
-                    
+            
             return chunks
         except Exception as e:
             self.logger.error(f"Error reading PDF {pdf_path}: {str(e)}")
@@ -142,6 +169,7 @@ class AssessmentProcessor:
             )
             return message.content[0].text.strip()
         except Exception as e:
+            breakpoint()
             self.logger.error(f"Error processing chunk with Claude: {str(e)}")
             raise
 
@@ -238,6 +266,9 @@ class AssessmentProcessor:
             return "\n".join(cleaned_lines).strip()
             
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            breakpoint()
             self.logger.error(f"Error processing chunk with Claude: {str(e)}")
             raise
 
@@ -247,8 +278,8 @@ class AssessmentProcessor:
             document_name = self.extract_candidate_name(pdf_path)
             self.logger.info(f"Starting assessment processing for: {document_name}")
             
-            # Use the improved chunking method with overlap
-            chunks = self.read_pdf_in_chunks(pdf_path, chunk_size=10, overlap=2)
+            # Use the improved chunking method with word-based overlap
+            chunks = self.read_pdf_in_chunks(pdf_path, chunk_size=1500, overlap=200)
             stakeholder_chunks = []
             executive_chunks = []
             

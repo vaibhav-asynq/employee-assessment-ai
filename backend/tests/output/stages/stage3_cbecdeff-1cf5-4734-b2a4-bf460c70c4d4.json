@@ -1,0 +1,864 @@
+{
+  "strengths": {
+    "Matt Savino": {
+      "role": "MD Head of U.S. Capital Markets (upward peer/partner), NY based",
+      "feedback": [
+        {
+          "text": "So even keeled it's scary: measured",
+          "is_strong": true
+        },
+        {
+          "text": "Nice guy, thoughtful",
+          "is_strong": false
+        },
+        {
+          "text": "Sees all the playing fields before, knows what the right next move is through experience",
+          "is_strong": true
+        },
+        {
+          "text": "Super smart",
+          "is_strong": true
+        },
+        {
+          "text": "It's our best vertical",
+          "is_strong": true
+        },
+        {
+          "text": "All good investments and the team are great investors",
+          "is_strong": false
+        },
+        {
+          "text": "Two great MD partners who work for him",
+          "is_strong": false
+        },
+        {
+          "text": "Junior people on the team are great",
+          "is_strong": false
+        },
+        {
+          "text": "Has made tough decisions around \"optimization\" and so he manages the talent on his team",
+          "is_strong": false
+        },
+        {
+          "text": "At a high level he's very decisive, chooses quickly on a course of action",
+          "is_strong": false
+        },
+        {
+          "text": "Pleasure to work with",
+          "is_strong": false
+        },
+        {
+          "text": "Poised and polished and polite, used to dancing in conversations",
+          "is_strong": false
+        },
+        {
+          "text": "Great soft skills, but I think our whole organization feels being direct",
+          "is_strong": false
+        },
+        {
+          "text": "Reputation outside of the firm is that he's a super good guy",
+          "is_strong": false
+        }
+      ]
+    },
+    "Mark Marengo": {
+      "role": "JP Morgan, MD co-head of North America Diversified Industries Securities, NY based",
+      "feedback": [
+        {
+          "text": "Tough person and a tough negotiator who has gotten more balance over the years",
+          "is_strong": false
+        },
+        {
+          "text": "How he's matured, grown into the role, and become a leader from the deal partner",
+          "is_strong": false
+        },
+        {
+          "text": "Super smart",
+          "is_strong": true
+        },
+        {
+          "text": "Very creative",
+          "is_strong": false
+        },
+        {
+          "text": "He's very direct, so I trust him; he's not telling me what I want to hear, he's very candid and transparent (and this has rubbed off on his team as well)",
+          "is_strong": true
+        },
+        {
+          "text": "Knows how to put deals together expertly",
+          "is_strong": true
+        },
+        {
+          "text": "He was the lead but now empowers his team to do this, so run their respective areas",
+          "is_strong": false
+        },
+        {
+          "text": "Stretches them and puts them in leadership role",
+          "is_strong": false
+        },
+        {
+          "text": "Next level down from Ian I have know for over 15 years; I've witnessed him build that next generation of leadership: he has two people leading verticals who are both fantastic, client oriented, detail focused, well coached, and super talented",
+          "is_strong": true
+        },
+        {
+          "text": "They seem to know when to involved Ian, when they need his unique support",
+          "is_strong": false
+        },
+        {
+          "text": "His ability to read the room is great and he has the ability to be charming",
+          "is_strong": false
+        },
+        {
+          "text": "He's fine, he's receptive and accepts it without getting unduly defensive",
+          "is_strong": false
+        },
+        {
+          "text": "He is mister A&D, the sector that put Carlyle on the map",
+          "is_strong": true
+        },
+        {
+          "text": "Every client knows he is the person to call",
+          "is_strong": true
+        }
+      ]
+    },
+    "Matt Tait": {
+      "role": "CEO ManTech (CEO), VA based",
+      "feedback": [
+        {
+          "text": "Came across as high character, high integrity guy (like golfing with Ian, learn how he focuses on the accuracy of his golf scores)",
+          "is_strong": true
+        },
+        {
+          "text": "Strategic thinker with a breadth of experience on company boards, good insights into what to focus on to make the journey a success",
+          "is_strong": true
+        },
+        {
+          "text": "Doesn't get distracted, focuses on us and our success",
+          "is_strong": false
+        },
+        {
+          "text": "Very patient",
+          "is_strong": false
+        },
+        {
+          "text": "Very balanced, not a lot of up and down person",
+          "is_strong": false
+        },
+        {
+          "text": "He's our best board member, just because of his thinking",
+          "is_strong": true
+        }
+      ]
+    },
+    "Doug Brandely": {
+      "role": "MD for ADG (direct report), Stakeholder for CSI 3, DC based",
+      "feedback": [
+        {
+          "text": "Extremely smart (but doesn't let you know it)",
+          "is_strong": true
+        },
+        {
+          "text": "Outstanding investment judgment: quick read, able to zero in on the critical factors",
+          "is_strong": true
+        },
+        {
+          "text": "Efficient: kills bad opportunities quickly, doesn't waste people time, makes decisions fast",
+          "is_strong": true
+        },
+        {
+          "text": "High degree of business acumen, a strategic thinker: outstanding at providing guidance for our portfolio companies",
+          "is_strong": true
+        },
+        {
+          "text": "Industry expert",
+          "is_strong": false
+        },
+        {
+          "text": "Leadership style: hands off, operates at a high level, gives the team room to operate",
+          "is_strong": false
+        },
+        {
+          "text": "Thinks about how we are structured, how we operate as a team",
+          "is_strong": false
+        },
+        {
+          "text": "Gives them space to develop, lets us have the stage",
+          "is_strong": false
+        },
+        {
+          "text": "Good at spotting and evaluating talent",
+          "is_strong": false
+        },
+        {
+          "text": "Good EQ, solid sense for reading people's emotions and angles",
+          "is_strong": false
+        },
+        {
+          "text": "Receptive",
+          "is_strong": false
+        },
+        {
+          "text": "He was given feedback on his communication skills so he got a comms coach and has improved enormously",
+          "is_strong": false
+        },
+        {
+          "text": "Good at collaborating with CEOs",
+          "is_strong": false
+        },
+        {
+          "text": "100% results focused: he doesn't care at all about face time or non value added stuff, process, it's all points on the board",
+          "is_strong": false
+        },
+        {
+          "text": "Champion for people's careers here, celebrates the performance of people on the team, gets the word out, which generates a lot of loyalty",
+          "is_strong": false
+        }
+      ]
+    },
+    "Martin Sumner": {
+      "role": "Sector Head Industrials (peer)",
+      "feedback": [
+        {
+          "text": "Highly analytical, wicked smart",
+          "is_strong": true
+        },
+        {
+          "text": "Outwardly has no political ambitions, an independent balanced voice who is trustworthy",
+          "is_strong": true
+        },
+        {
+          "text": "Seamless when we partner on deals that overlap",
+          "is_strong": false
+        },
+        {
+          "text": "Sector head plus, he operates a half a step above the sector head",
+          "is_strong": true
+        },
+        {
+          "text": "Developing deep relationships with people and management",
+          "is_strong": false
+        },
+        {
+          "text": "Strategic thoughts without making you feel like he's smarter than you",
+          "is_strong": false
+        },
+        {
+          "text": "Brian had to ask him to play roles, he does not try to gain anything",
+          "is_strong": false
+        },
+        {
+          "text": "He focuses heavily on negotiations and the 10 ways he can get screwed, very much a chess player and thinks through the landscape; shrewd negotiator",
+          "is_strong": true
+        },
+        {
+          "text": "Identifies where there is opportunity",
+          "is_strong": false
+        },
+        {
+          "text": "World class team at working with the government sector",
+          "is_strong": true
+        },
+        {
+          "text": "That team is Carlyle's heritage; Ian joined 10 years and gave them the room to develop, the team is very deep",
+          "is_strong": false
+        },
+        {
+          "text": "Tons of credibility, but he's more impressive in a smaller group environment where you hear his questions and interactions",
+          "is_strong": false
+        }
+      ]
+    },
+    "Joe Logue": {
+      "role": "CEO Two Six Technologies, Alexandria based",
+      "feedback": [
+        {
+          "text": "Brilliant",
+          "is_strong": true
+        },
+        {
+          "text": "Knows the market exceptionally well, impressive how he understands it",
+          "is_strong": true
+        },
+        {
+          "text": "Spends a lot of time building relationships",
+          "is_strong": false
+        },
+        {
+          "text": "Carlyle works hard to avoid conflict, calm and analytical and thoughtful (the good guy)",
+          "is_strong": false
+        },
+        {
+          "text": "Respectful of the day to day contact but will come in with the idea",
+          "is_strong": false
+        },
+        {
+          "text": "He's a workhorse, may be taken for granted there",
+          "is_strong": false
+        },
+        {
+          "text": "Known as extremely knowledgeable, very smart",
+          "is_strong": true
+        },
+        {
+          "text": "Good relationships, everyone knows who Ian is",
+          "is_strong": false
+        },
+        {
+          "text": "Presents well, credible",
+          "is_strong": false
+        },
+        {
+          "text": "Really understands the market",
+          "is_strong": false
+        },
+        {
+          "text": "All six companies we bought feel privileged to be bought",
+          "is_strong": false
+        },
+        {
+          "text": "He is more capable than both of his bosses, so I don't know how hard he is pushing his own career (his portfolio does exceptionally well, better than Sandra's)",
+          "is_strong": true
+        }
+      ]
+    },
+    "Anna Mire": {
+      "role": "VP (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Tone setter, keeping the group cohesive and united",
+          "is_strong": true
+        },
+        {
+          "text": "Developing people, really works though the programs I needed to improve something I wanted to work on",
+          "is_strong": true
+        },
+        {
+          "text": "People see him as a visionary on new deals",
+          "is_strong": true
+        },
+        {
+          "text": "Very accommodating of my maternity leave, flexibility",
+          "is_strong": false
+        },
+        {
+          "text": "Impressive track record, highly respected investor",
+          "is_strong": true
+        },
+        {
+          "text": "I know he gives feedback",
+          "is_strong": false
+        },
+        {
+          "text": "Thoughtful about themes and priorities",
+          "is_strong": false
+        },
+        {
+          "text": "In a sale process, he comes off as very calm and stable, keeps his cool",
+          "is_strong": false
+        },
+        {
+          "text": "He more than most build relationships across sectors, willing to work across and learn from them (which is especially hard since we are almost all US based)",
+          "is_strong": true
+        }
+      ]
+    },
+    "Dayne Baird": {
+      "role": "Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Available when we have questions but I get to run something",
+          "is_strong": false
+        },
+        {
+          "text": "The smartest person I know, really quickly gets things and processes information",
+          "is_strong": true
+        },
+        {
+          "text": "He was my mentor, the only one I ever had at Carlyle: good at listening, letting people vent, provide recommendations",
+          "is_strong": true
+        },
+        {
+          "text": "Collaborative approach to this, more of a mind meld",
+          "is_strong": false
+        },
+        {
+          "text": "90% accurate, makes the right call",
+          "is_strong": true
+        },
+        {
+          "text": "Solid at exiting, no conflicts there",
+          "is_strong": false
+        },
+        {
+          "text": "Not sure he is mentoring anymore but he has the skill",
+          "is_strong": false
+        },
+        {
+          "text": "He's sharp here, good at reading people",
+          "is_strong": false
+        },
+        {
+          "text": "Can provide situational awareness around other people, constituents, factors in a decision",
+          "is_strong": false
+        },
+        {
+          "text": "Good at managing up",
+          "is_strong": false
+        },
+        {
+          "text": "Even in disagreements he manages what people are truly focused on",
+          "is_strong": false
+        }
+      ]
+    },
+    "Aaron Hurwitz": {
+      "role": "Principal, DC based",
+      "feedback": [
+        {
+          "text": "Cerebral",
+          "is_strong": false
+        },
+        {
+          "text": "An astute investor",
+          "is_strong": true
+        },
+        {
+          "text": "Listener, he wants to hear out the situation",
+          "is_strong": false
+        },
+        {
+          "text": "I like having runway, the opportunity to run with investment leads or run meetings, loops me into discussions that I need to be involved in",
+          "is_strong": false
+        },
+        {
+          "text": "Supportive of me when I need to have conversations and advice",
+          "is_strong": false
+        },
+        {
+          "text": "Good track record",
+          "is_strong": false
+        },
+        {
+          "text": "Plays the game and knows when to give and when to stand firm, good insights and guidance",
+          "is_strong": false
+        },
+        {
+          "text": "Wisdom to know how things will play out",
+          "is_strong": false
+        },
+        {
+          "text": "He cares about the team's capabilities and does more coaching than Adam",
+          "is_strong": false
+        },
+        {
+          "text": "Listens to feedback in the offsite",
+          "is_strong": false
+        },
+        {
+          "text": "When he decides its a deal that he wants to get done, he pushes",
+          "is_strong": false
+        },
+        {
+          "text": "Strong listener",
+          "is_strong": false
+        },
+        {
+          "text": "Moves to the front when needed, at the right time",
+          "is_strong": false
+        },
+        {
+          "text": "Comes across as comfortable and to the point",
+          "is_strong": false
+        }
+      ]
+    },
+    "Wil Langenstein": {
+      "role": "Principal focused on U.S. Buyout & Growth (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Investing acumen: an incredible investor and a brilliant mind, what's a good deal and we should be investing in.",
+          "is_strong": true
+        },
+        {
+          "text": "Strategy and tactics on a deal, sees forest in spite of trees.",
+          "is_strong": false
+        },
+        {
+          "text": "Excellent negotiator.",
+          "is_strong": true
+        },
+        {
+          "text": "Super thoughtful and strong as a leader in giving room to run, concerted effort to let others elevate themselves.",
+          "is_strong": true
+        },
+        {
+          "text": "Collaborating across different groups and sectors (e.g., improvement efforts on how we manage portfolios, cross-sector effort); important since anything involving government touches us.",
+          "is_strong": false
+        },
+        {
+          "text": "Great presenter and has worked hard on it.",
+          "is_strong": false
+        },
+        {
+          "text": "Good at communicating goals, priorities, updates from other sectors and leadership.",
+          "is_strong": false
+        },
+        {
+          "text": "Empowers and elevates them.",
+          "is_strong": false
+        },
+        {
+          "text": "He has a ton of experience and is excellent at spotting and growing talent.",
+          "is_strong": true
+        },
+        {
+          "text": "Good at coaching others.",
+          "is_strong": false
+        },
+        {
+          "text": "Annual offsite where we check in, take a pulse, brainstorm improvements, teaching.",
+          "is_strong": false
+        },
+        {
+          "text": "He's particularly good when things get elevated to him, but he does let others handle day to day.",
+          "is_strong": false
+        },
+        {
+          "text": "Excellent investor.",
+          "is_strong": true
+        },
+        {
+          "text": "Incredible on deal negotiations, one of his specialties is reading the room and figuring out how to approach things, understanding and predict responses.",
+          "is_strong": true
+        },
+        {
+          "text": "Great at taking feedback, asks us how he can improve (process as well as himself as a leader).",
+          "is_strong": false
+        },
+        {
+          "text": "Used engagement survey data to actively improve experience for the lowest rated groups.",
+          "is_strong": false
+        },
+        {
+          "text": "Super thoughtful on knowing his role with portcos: psychologist for some execs, but also knowing he's not the one who is closest to the company.",
+          "is_strong": false
+        },
+        {
+          "text": "Asks the right questions but doesn't pontificate.",
+          "is_strong": false
+        },
+        {
+          "text": "Strong role with bankers and external advisor but more removed than he had been.",
+          "is_strong": false
+        },
+        {
+          "text": "He's super open to and wants feedback.",
+          "is_strong": false
+        },
+        {
+          "text": "He's a phenomenal leader.",
+          "is_strong": true
+        }
+      ]
+    }
+  },
+  "areas_to_target": {
+    "Matt Savino": {
+      "role": "MD Head of U.S. Capital Markets (upward peer/partner), NY based",
+      "feedback": [
+        {
+          "text": "Being more direct more frequently, not so polished and savvy all the time",
+          "is_strong": true
+        }
+      ]
+    },
+    "Mark Marengo": {
+      "role": "JP Morgan, MD co-head of North America Diversified Industries Securities, NY based",
+      "feedback": [
+        {
+          "text": "Can spend more time ingratiating himself with management teams; he has a good read of people but can better figure out the connections and spending more time and attention building trust with them",
+          "is_strong": true
+        }
+      ]
+    },
+    "Matt Tait": {
+      "role": "CEO ManTech (CEO), VA based",
+      "feedback": [
+        {
+          "text": "Almost too humble but it always works for him, I wonder if he fully appreciates the strengths that he has",
+          "is_strong": false
+        }
+      ]
+    },
+    "Doug Brandely": {
+      "role": "MD for ADG (direct report), Stakeholder for CSI 3, DC based",
+      "feedback": [
+        {
+          "text": "Think about what he as a sector head he is uniquely positioned to do: source deals, build industry relationships...can be more on the front line developing those relationships and winning business (he skews more towards letting the team do this)",
+          "is_strong": false
+        },
+        {
+          "text": "Less direct coaching and teaching, could be more involved and engaged in active coaching during the day to day work, teaching others how he thinks (especially more junior people)",
+          "is_strong": true
+        },
+        {
+          "text": "Delegates a lot here, does not ride people but he benefits from team members who are very organized so he doesn't have to crack the whip",
+          "is_strong": false
+        },
+        {
+          "text": "Does not convey much emotion, he's harder to read and even",
+          "is_strong": false
+        },
+        {
+          "text": "Can work on his industry network",
+          "is_strong": false
+        }
+      ]
+    },
+    "Martin Sumner": {
+      "role": "Sector Head Industrials (peer)",
+      "feedback": [
+        {
+          "text": "More confidence in communication (he's clear but shies away a bit from the spotlight and that takes away from his content)",
+          "is_strong": false
+        },
+        {
+          "text": "Not the rah rah public figure",
+          "is_strong": false
+        },
+        {
+          "text": "He doesn't command the room (not bad, a great ambassador but not the onstage guy)",
+          "is_strong": false
+        },
+        {
+          "text": "Their team has had more turnover than other teams, and we had to give him a person; not sure what is driving that (is it the culture, the pace?) so is he managing the group in a way that people want to be there? Is he digging in and actively managing that?",
+          "is_strong": true
+        }
+      ]
+    },
+    "Joe Logue": {
+      "role": "CEO Two Six Technologies, Alexandria based",
+      "feedback": [
+        {
+          "text": "Don't see him applying a ton of pressure",
+          "is_strong": false
+        },
+        {
+          "text": "More proactive, always see him thinking and analyzing, gently guides those around him to the right answer, could save time with a more direct style",
+          "is_strong": false
+        },
+        {
+          "text": "Cautious around deeper relationships (great at lighter relationships that networking requires)",
+          "is_strong": false
+        }
+      ]
+    },
+    "Anna Mire": {
+      "role": "VP (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Like a lot of people at Carlyle, he avoids tough conversations and pulling the trigger on poor performers",
+          "is_strong": true
+        },
+        {
+          "text": "People are in the office less nowadays, so I bump into him less (but I appreciate the flexibility), make himself more available when he is in the office",
+          "is_strong": false
+        },
+        {
+          "text": "More involved in the new deal and sale process, less so with portcos",
+          "is_strong": false
+        },
+        {
+          "text": "Tends to come off as elder statesman and lets his team run most of the day to day",
+          "is_strong": false
+        }
+      ]
+    },
+    "Dayne Baird": {
+      "role": "Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Can jump to conclusions too quickly",
+          "is_strong": false
+        },
+        {
+          "text": "Quirky and private: lots of conferences and panels in the DC area for our business but he explicitly avoids those",
+          "is_strong": false
+        },
+        {
+          "text": "Relied on a #2 to drive progress on things",
+          "is_strong": false
+        },
+        {
+          "text": "Somewhat reactive (aware of things and gets involved when he needs to)",
+          "is_strong": false
+        },
+        {
+          "text": "Needs to get out there more and represent Carlyle, he just doesn't do it but need more external leadership",
+          "is_strong": true
+        },
+        {
+          "text": "We have a glaring hole in our team at the mid-level, due to departures (voluntary and involuntary) and we're all feeling it",
+          "is_strong": true
+        },
+        {
+          "text": "How do we fix it? He's going with the flow a little too much and needs to be the squeaky wheel and find another VP",
+          "is_strong": true
+        }
+      ]
+    },
+    "Aaron Hurwitz": {
+      "role": "Principal, DC based",
+      "feedback": [
+        {
+          "text": "I might want him more involved earlier as I sift through the 12-15 possible deals so he can accelerate the decision, what's the right time, but I'm not sure where that line is, a little better idea of when to keep or toss an opportunity",
+          "is_strong": false
+        },
+        {
+          "text": "But I haven't seen him have to make big changes",
+          "is_strong": false
+        },
+        {
+          "text": "His mentoring and pushing are his direct reports, not the overall team",
+          "is_strong": false
+        },
+        {
+          "text": "But he is not a take over kind of leader, he's more behind the scenes and supportive",
+          "is_strong": false
+        }
+      ]
+    },
+    "Wil Langenstein": {
+      "role": "Principal focused on U.S. Buyout & Growth (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Email communication: can look apathetic because he will send a quick, brief response even though he has read through and looked at things deeply (can send that message).",
+          "is_strong": false
+        },
+        {
+          "text": "Communication in general around direction, deadlines and expectations (because he tries not to be overly involved).",
+          "is_strong": true
+        },
+        {
+          "text": "We need more frequent feedback on how we're doing, especially the informal stuff.",
+          "is_strong": true
+        },
+        {
+          "text": "He could facilitate and be more involved with others' development because he has a lot of resources, like an incredible network that can help us in our own careers.",
+          "is_strong": false
+        }
+      ]
+    }
+  },
+  "advice": {
+    "Mark Marengo": {
+      "role": "JP Morgan, MD co-head of North America Diversified Industries Securities, NY based",
+      "feedback": [
+        {
+          "text": "Take advantage of the capacity he has freed up by building a talented team",
+          "is_strong": false
+        },
+        {
+          "text": "He can take on even more, broader opportunities at Carlyle (which he's doing)",
+          "is_strong": false
+        },
+        {
+          "text": "Help his team with the networking and support them",
+          "is_strong": false
+        },
+        {
+          "text": "More and more relationship building and networking, within Carlyle and with CEOs",
+          "is_strong": false
+        }
+      ]
+    },
+    "Matt Tait": {
+      "role": "CEO ManTech (CEO), VA based",
+      "feedback": [
+        {
+          "text": "His capability: he should be doing everything he can to embrace that and train up his team to have similar conversations",
+          "is_strong": false
+        },
+        {
+          "text": "I don't know what he wants to do in his career, but he's been there and done everything, but he would need to plan out the next level, what are his plans and does he have a successor?",
+          "is_strong": false
+        }
+      ]
+    },
+    "Doug Brandely": {
+      "role": "MD for ADG (direct report), Stakeholder for CSI 3, DC based",
+      "feedback": [
+        {
+          "text": "Even more team building activities (he's done a great job creating cohesiveness but can do even more, being with the team physically in person)",
+          "is_strong": false
+        }
+      ]
+    },
+    "Martin Sumner": {
+      "role": "Sector Head Industrials (peer)",
+      "feedback": [
+        {
+          "text": "Realize that when he talks, people listen: embrace it and use it for good, he has enormous credibility and does not have to defer or wait for others, he can lead with his voice and ideas",
+          "is_strong": false
+        },
+        {
+          "text": "Be the main act when he's the main act",
+          "is_strong": false
+        }
+      ]
+    },
+    "Joe Logue": {
+      "role": "CEO Two Six Technologies, Alexandria based",
+      "feedback": [
+        {
+          "text": "He can push his brand more on the inside, politics not the results win the day",
+          "is_strong": false
+        },
+        {
+          "text": "He seems to want to be asked to do instead of positioning himself to do it",
+          "is_strong": false
+        }
+      ]
+    },
+    "Anna Mire": {
+      "role": "VP (direct report), DC based",
+      "feedback": [
+        {
+          "text": "Continue driving the culture piece, particularly diversity which is a constant effort",
+          "is_strong": false
+        }
+      ]
+    },
+    "Dayne Baird": {
+      "role": "Managing Director with U.S. Buyout, aerospace, defense and government services sectors (direct report), DC based",
+      "feedback": [
+        {
+          "text": "One of my peers needs mentorship, new in defense vertical lead role",
+          "is_strong": false
+        },
+        {
+          "text": "We need to do some brand building in aerospace, for example",
+          "is_strong": false
+        },
+        {
+          "text": "Recently an empty nester, but he needs to be deliberate about being present (more Zoom when he's in NY)",
+          "is_strong": false
+        }
+      ]
+    },
+    "Aaron Hurwitz": {
+      "role": "Principal, DC based",
+      "feedback": [
+        {
+          "text": "Proactively check in with me more, what I need and what's going on, or a regular 1:1 to check in",
+          "is_strong": false
+        }
+      ]
+    },
+    "Wil Langenstein": {
+      "role": "Principal focused on U.S. Buyout & Growth (direct report), DC based",
+      "feedback": []
+    }
+  }
+}

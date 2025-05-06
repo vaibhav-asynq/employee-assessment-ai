@@ -56,20 +56,54 @@ For each heading, find the most relevant negative evidences from the pre-extract
   }}
 ]
 
+CRITICAL INSTRUCTIONS:
+1. You MUST include EVERY SINGLE piece of evidence from the input data
+2. If a piece of evidence doesn't clearly fit under any of the provided headings, place it under "Additional areas"
+3. DO NOT skip or omit any evidence - 100% of the input evidence must appear in your output
+4. IMPORTANT: Preserve the "isStrong" flag from the input data exactly as provided
+5. IMPORTANT: Only place directly matching evidences under a specific heading. If evidence is not a strong and clear match with the heading, place it under "Additional areas". Be strict about what constitutes a good match - the evidence should explicitly demonstrate the competency described in the heading.
+
+CRITICAL INSTRUCTIONS FOR JSON FORMATTING:
+1. You MUST return valid, well-formatted JSON that strictly follows the specified structure
+2. Ensure all strings are properly terminated with double quotes
+3. Ensure all objects and arrays have matching closing brackets
+4. Ensure all properties except the last one in an object have a comma after them
+5. Do not include any explanatory text outside the JSON structure
+6. The response should be ONLY the JSON array with no additional text
+
+EXAMPLE OF CORRECT JSON FORMATTING:
+[
+  {{
+    "heading": "Example Heading",
+    "evidence": [
+      {{
+        "quote": "This is a properly formatted quote.",
+        "name": "John Smith",
+        "position": "CEO",
+        "isStrong": true
+      }},
+      {{
+        "quote": "Another properly formatted quote.",
+        "name": "Jane Doe",
+        "position": "CFO",
+        "isStrong": false
+      }}
+    ]
+  }}
+]
+
 Guidelines:
-1. Each piece of evidence should be a direct quote or close paraphrase from the pre-extracted areas to target
+1. Each piece of evidence should be a direct quote from the pre-extracted areas to target
 2. Include all possible evidences for each heading
 3. Only include negative evidences for each heading. There should be no positive headings present at all
 4. IMPORTANT: Include an "Additional areas" category at the end of your response for any evidence that doesn't clearly fit under the provided headings
 5. Evidence should be clear and specific, not vague
-6. Focus on evidence that strongly demonstrates or supports the heading
-7. Include full sentences always not just part of a sentence
-8. Ensure the evidence actually matches and supports the heading
-9. Use exact quotes
-10. Do not make up or infer evidence - only use what's directly stated in the pre-extracted areas to target
-11. Always include the full name of the person providing the feedback when available
-12. Include their role/position when mentioned in the transcript
-13. If name or position is not explicitly stated for a quote, use "Anonymous" for name and "Stakeholder" for position
-14. IMPORTANT: Preserve the "isStrong" flag from the input data. If a piece of evidence is marked as "isStrong": true in the input, make sure it has "isStrong": true in the output
+6. Include full sentences always not just part of a sentence
+7. Ensure the evidence actually matches and supports the heading
+8. Use exact quotes - do not paraphrase or modify the text
+9. Do not make up or infer evidence - only use what's directly stated in the pre-extracted areas to target
+10. Always include the full name of the person providing the feedback when available
+11. Include their role/position when mentioned in the transcript
+12. If name or position is not explicitly stated for a quote, use "Anonymous" for name and "Stakeholder" for position
 
 Return only the JSON array with no additional text or explanation.

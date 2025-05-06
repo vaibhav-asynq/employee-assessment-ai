@@ -15,6 +15,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         )
 
     token = authorization.split("Bearer ")[1]
+    
     user_claims = verify_clerk_token(token)
     user_id = user_claims.get("sub")
     if not user_id:
