@@ -35,6 +35,7 @@ async def upload_file(
     db: Session = Depends(get_db)
 ) :
     user_id = current_user.user_id
+    use_cache=False
     try:
         if use_cache:
             cached_file_id =  get_cached_file_id(user_id, file.filename,db )

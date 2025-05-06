@@ -226,8 +226,13 @@ class AssessmentProcessor:
                     }
                 ]
             )
-            
-            content = message.content[0].text.strip()
+            try:
+                content = message.content[0].text.strip()
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                content = ""
+
             
             # Remove common explanation patterns
             content = re.sub(r"I'm sorry, but.*?\n", "", content)
@@ -268,7 +273,7 @@ class AssessmentProcessor:
         except Exception as e:
             import traceback
             traceback.print_exc()
-            breakpoint()
+            # breakpoint()
             self.logger.error(f"Error processing chunk with Claude: {str(e)}")
             raise
 

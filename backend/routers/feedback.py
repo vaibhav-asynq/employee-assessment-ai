@@ -472,7 +472,12 @@ def validate_stakeholder_attribution(stakeholder_feedback: List[Dict[str, Any]])
     for stakeholder_data in stakeholder_feedback:
         name = stakeholder_data.get("name", "Unknown")
         for item in stakeholder_data.get("feedback", []):
-            text = item.get("text", "").strip()
+            # Check if item is a dictionary or a string
+            if isinstance(item, dict):
+                text = item.get("text", "").strip()
+            else:
+                # Handle case where item is a string
+                text = str(item).strip()
             if text:
                 if text not in feedback_by_text:
                     feedback_by_text[text] = []
