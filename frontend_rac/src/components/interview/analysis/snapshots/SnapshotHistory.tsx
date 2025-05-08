@@ -292,9 +292,14 @@ function SnapshotHistoryContent() {
                     <div className="text-xs text-muted-foreground">
                       <span className="italic">
                         (created{" "}
-                        {formatDistanceToNow(new Date(snapshot.created_at), {
-                          addSuffix: true,
-                        })}
+                        {formatDistanceToNow(
+                          getToLocalTime(
+                            new Date(snapshot.created_at),
+                          ) as string,
+                          {
+                            addSuffix: true,
+                          },
+                        )}
                         )
                       </span>
                     </div>
