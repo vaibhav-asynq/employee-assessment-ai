@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useManulReportStakeholderData } from "@/lib/react-query";
 import { Advice, AdviceInfo } from "@/lib/types/types.interview-data";
 import { Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
+import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
 
 export function ManualReportStakeholderDisplay() {
   const {
@@ -15,6 +16,9 @@ export function ManualReportStakeholderDisplay() {
     error,
   } = useInterviewDataStore();
   const { latestFetching, latestRefetching } = useSnapshotLoader();
+  const { saveSnapshotToDb, isSaving: savingSnapshot } = useSnapshotSaver();
+
+  const dataFetchedRef = useRef(false);
 
   const { refetch, isFetching, isLoading, isRefetching, isError } =
     useManulReportStakeholderData(fileId, {
@@ -49,14 +53,29 @@ export function ManualReportStakeholderDisplay() {
 
   const refetchData = useCallback(async () => {
     const d = await refetch();
-    updateManualReportStakeHolderData(d.data?.feedbackData, d.data?.adviceData);
-  }, [refetch, updateManualReportStakeHolderData]);
+    if (d.data?.feedbackData && d.data?.adviceData) {
+      updateManualReportStakeHolderData(d.data.feedbackData, d.data.adviceData);
+
+      // Save snapshot only if this is the first successful fetch in this component instance
+      if (!dataFetchedRef.current) {
+        dataFetchedRef.current = true;
+        // Small delay to ensure store is updated before saving snapshot
+        setTimeout(() => {
+          saveSnapshotToDb("auto", false, "Stakeholder Data Loaded");
+        }, 500);
+      }
+    }
+  }, [refetch, updateManualReportStakeHolderData, saveSnapshotToDb]);
 
   useEffect(() => {
     // THIS LOADS DATA: if not found in snapshot or initial file loading
     if (loadingSnapshot) return;
     if (latestFetching || latestRefetching || isFetching || isLoading) return;
-    if (manualReport.sorted_by?.stakeholders?.feedbackData) return;
+    if (manualReport.sorted_by?.stakeholders?.feedbackData) {
+      // Data already exists, mark as fetched to prevent duplicate snapshots
+      dataFetchedRef.current = true;
+      return;
+    }
     refetchData();
   }, [
     isFetching,
