@@ -59,9 +59,8 @@ export function ManualReportStakeholderDisplay() {
       // Save snapshot only if this is the first successful fetch in this component instance
       if (!dataFetchedRef.current) {
         dataFetchedRef.current = true;
-        // Small delay to ensure store is updated before saving snapshot
         setTimeout(() => {
-          saveSnapshotToDb("auto", false, "Stakeholder Data Loaded");
+          saveSnapshotToDb("auto", true);
         }, 500);
       }
     }
@@ -72,8 +71,6 @@ export function ManualReportStakeholderDisplay() {
     if (loadingSnapshot) return;
     if (latestFetching || latestRefetching || isFetching || isLoading) return;
     if (manualReport.sorted_by?.stakeholders?.feedbackData) {
-      // Data already exists, mark as fetched to prevent duplicate snapshots
-      dataFetchedRef.current = true;
       return;
     }
     refetchData();
