@@ -50,12 +50,15 @@ export function GenerateFullReport() {
         "sorted-evidence",
         ANALYSIS_TAB_NAMES.aiGeneratedFullReport.sortedCompetency,
       );
-      saveSnapshotToDb("auto", true);
 
       // Set a flag in localStorage to indicate auto-sorting should happen
       localStorage.setItem("autoSortFullReport", "true");
 
       selectTab("ai-agent-full-report", "interview-feedback");
+
+      setTimeout(() => {
+        saveSnapshotToDb("auto", true);
+      }, 1000);
     } catch (error) {
       console.error("Upload failed:", error);
       // setError(error instanceof Error ? error.message : "Failed to generate report.");

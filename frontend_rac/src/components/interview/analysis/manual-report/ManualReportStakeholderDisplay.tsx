@@ -61,7 +61,7 @@ export function ManualReportStakeholderDisplay() {
         dataFetchedRef.current = true;
         setTimeout(() => {
           saveSnapshotToDb("auto", true);
-        }, 500);
+        }, 1000);
       }
     }
   }, [refetch, updateManualReportStakeHolderData, saveSnapshotToDb]);
