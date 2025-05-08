@@ -6,6 +6,27 @@ import { EditableSubheading } from "./shared/EditableSubheading";
 import { SectionHeading } from "./shared/SectionHeading";
 import { EditableText } from "./shared/EditableText";
 import { GenerateAreasAi } from "./GenerateAreasAi";
+import { DraggableItem } from "./shared/DraggableItem";
+import { useCallback, useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
 
 interface EditAreasProps {
   areas: AreasToTarget;
@@ -27,8 +48,60 @@ export function EditAreas({
   addBtnText = "Add Subheading",
   promptBtnText = "Prompt with AI",
 }: EditAreasProps) {
-  const { addArea, updateAreaHeading, deleteArea, updateAreaContent } =
-    useTemplateUpdater();
+  const {
+    addArea,
+    updateAreaHeading,
+    deleteArea,
+    updateAreaContent,
+    updateTemplate,
+  } = useTemplateUpdater();
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Handle drag end event
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setIsDragging(false);
+
+      if (over && active.id !== over.id) {
+        // Update the order in the store
+        updateTemplate((prev) => {
+          const oldIndex = prev.areas_to_target.order.indexOf(
+            active.id as string,
+          );
+          const newIndex = prev.areas_to_target.order.indexOf(
+            over.id as string,
+          );
+
+          return {
+            ...prev,
+            areas_to_target: {
+              ...prev.areas_to_target,
+              order: arrayMove(prev.areas_to_target.order, oldIndex, newIndex),
+            },
+          };
+        });
+      }
+    },
+    [updateTemplate],
+  );
+
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
 
   return (
     <section className="mb-8">
@@ -40,51 +113,67 @@ export function EditAreas({
           <Plus className="h-4 w-4 mr-1" /> {addBtnText}
         </Button>
       </SectionHeading>
-      <div className="flex flex-col gap-6">
-        {areas.order.map((id) => {
-          const item = areas.items[id];
-          return (
-            <div key={id} className="">
-              <div className="flex items-center gap-x-2 mb-2">
-                <div className="flex-1">
-                  <EditableSubheading
-                    value={item.heading.trim()}
-                    placeholder={placeholderSubheading}
-                    onChange={(newHeading) => {
-                      updateAreaHeading(id, newHeading);
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+      >
+        <SortableContext
+          items={areas.order}
+          strategy={verticalListSortingStrategy}
+        >
+          <div
+            className={`flex flex-col ${isDragging ? "cursor-grabbing" : ""}`}
+          >
+            {areas.order.map((id) => {
+              const item = areas.items[id];
+              return (
+                <DraggableItem key={id} id={id}>
+                  <div className="flex items-center gap-x-2 mb-2">
+                    <div className="flex-1">
+                      <EditableSubheading
+                        value={item.heading.trim()}
+                        placeholder={placeholderSubheading}
+                        onChange={(newHeading) => {
+                          updateAreaHeading(id, newHeading);
+                        }}
+                      />
+                    </div>
+                    {aiPropmt && (
+                      <GenerateAreasAi
+                        btnText={promptBtnText}
+                        templateId={templateId}
+                        strenghtItemId={id}
+                      />
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        deleteArea(id);
+                      }}
+                      className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <EditableText
+                    value={item.content}
+                    onChange={(newContent) => {
+                      updateAreaContent(id, newContent);
                     }}
+                    minHeight="180px"
+                    placeholder={placeholderContent}
                   />
-                </div>
-                {aiPropmt && (
-                  <GenerateAreasAi
-                    btnText={promptBtnText}
-                    templateId={templateId}
-                    strenghtItemId={id}
-                  />
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    deleteArea(id);
-                  }}
-                  className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <EditableText
-                value={item.content}
-                onChange={(newContent) => {
-                  updateAreaContent(id, newContent);
-                }}
-                minHeight="180px"
-                placeholder={placeholderContent}
-              />
-            </div>
-          );
-        })}
-      </div>
+                </DraggableItem>
+              );
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
     </section>
   );
 }

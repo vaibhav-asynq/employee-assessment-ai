@@ -6,6 +6,27 @@ import { EditableSubheading } from "./shared/EditableSubheading";
 import { SectionHeading } from "./shared/SectionHeading";
 import { EditableText } from "./shared/EditableText";
 import { useTemplateUpdater } from "@/hooks/useTemplateUpdater";
+import { DraggableItem } from "./shared/DraggableItem";
+import { useCallback, useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
 
 interface EditableStrengthsProps {
   strengths: Strengths;
@@ -32,7 +53,51 @@ export function EditStrengths({
     deleteStrength,
     updateStrengthContent,
     updateStrengthHeading,
+    updateTemplate,
   } = useTemplateUpdater();
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Handle drag end event
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setIsDragging(false);
+
+      if (over && active.id !== over.id) {
+        // Update the order in the store
+        updateTemplate((prev) => {
+          const oldIndex = prev.strengths.order.indexOf(active.id as string);
+          const newIndex = prev.strengths.order.indexOf(over.id as string);
+
+          return {
+            ...prev,
+            strengths: {
+              ...prev.strengths,
+              order: arrayMove(prev.strengths.order, oldIndex, newIndex),
+            },
+          };
+        });
+      }
+    },
+    [updateTemplate],
+  );
+
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
 
   return (
     <section className="mb-8">
@@ -44,51 +109,67 @@ export function EditStrengths({
           <Plus className="h-4 w-4 mr-1" /> {addBtnText}
         </Button>
       </SectionHeading>
-      <div className="flex flex-col gap-6">
-        {strengths.order.map((id) => {
-          const item = strengths.items[id];
-          return (
-            <div key={id} className="">
-              <div className="flex items-center gap-x-2 mb-2">
-                <div className="flex-1">
-                  <EditableSubheading
-                    value={item.heading.trim()}
-                    placeholder={placeholderSubheading}
-                    onChange={(newHeading) => {
-                      updateStrengthHeading(id, newHeading);
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+      >
+        <SortableContext
+          items={strengths.order}
+          strategy={verticalListSortingStrategy}
+        >
+          <div
+            className={`flex flex-col ${isDragging ? "cursor-grabbing" : ""}`}
+          >
+            {strengths.order.map((id) => {
+              const item = strengths.items[id];
+              return (
+                <DraggableItem key={id} id={id}>
+                  <div className="flex items-center gap-x-2 mb-2">
+                    <div className="flex-1">
+                      <EditableSubheading
+                        value={item.heading.trim()}
+                        placeholder={placeholderSubheading}
+                        onChange={(newHeading) => {
+                          updateStrengthHeading(id, newHeading);
+                        }}
+                      />
+                    </div>
+                    {aiPrompt && (
+                      <GenerateStrengthsAi
+                        btnText={promptBtnText}
+                        templateId={templateId}
+                        strenghtItemId={id}
+                      />
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        deleteStrength(id);
+                      }}
+                      className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <EditableText
+                    value={item.content}
+                    onChange={(newContent) => {
+                      updateStrengthContent(id, newContent);
                     }}
+                    minHeight="180px"
+                    placeholder={placeholderContent}
                   />
-                </div>
-                {aiPrompt && (
-                  <GenerateStrengthsAi
-                    btnText={promptBtnText}
-                    templateId={templateId}
-                    strenghtItemId={id}
-                  />
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    deleteStrength(id);
-                  }}
-                  className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <EditableText
-                value={item.content}
-                onChange={(newContent) => {
-                  updateStrengthContent(id, newContent);
-                }}
-                minHeight="180px"
-                placeholder={placeholderContent}
-              />
-            </div>
-          );
-        })}
-      </div>
+                </DraggableItem>
+              );
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
     </section>
   );
 }
