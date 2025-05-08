@@ -27,7 +27,8 @@ def upgrade() -> None:
         sa.Column('filtered_data', sa.Text(), nullable=True),
         sa.Column('executive_data', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['task_id'], ['task.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        if_not_exists=True,
     )
     # ### end Alembic commands ###
 

@@ -59,38 +59,5 @@ export function ClerkAuthSync() {
     };
   }, [syncToken, setRefreshToken]);
 
-  // TODO: remove this after implementing debounce save
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     console.log("Saving snapshot via 15-second interval...");
-  //     saveSnapshotToDb("auto", true);
-  //   }, 15000); // 15 seconds
-  //
-  //   return () => {
-  //     clearInterval(intervalId);
-  //   };
-  // }, [saveSnapshotToDb]);
-
-  // TODO: remove this function as it is not needed [as registering syncToken in the store and accessing it.]
-  // useEffect(() => {
-  //   // Initial token sync
-  //   syncToken().catch((err) => {
-  //     console.error("Initial token sync failed:", err);
-  //   });
-  //
-  //   // Set up periodic token refresh (every 1 minute instead of 5)
-  //   refreshTimerRef.current = setInterval(() => {
-  //     syncToken().catch((err) => {
-  //       console.error("Periodic token refresh failed:", err);
-  //     });
-  //   }, 1000 * 60);
-  //
-  //   return () => {
-  //     if (refreshTimerRef.current) {
-  //       clearInterval(refreshTimerRef.current);
-  //     }
-  //   };
-  // }, [syncToken]);
-
   return null;
 }

@@ -2,6 +2,7 @@ import difflib
 import json
 import os
 import re
+import time
 from string import Template
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -17,6 +18,9 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.params import Depends
 from prompt_loader import load_prompt
 from sqlalchemy.orm import Session
+from utils.loggers.db_logger import logger as dbLogger
+from utils.loggers.endPoint_logger import logger as apiLogger
+from utils.loggers.feedback_logger import feedbackLogger
 
 router = APIRouter(
     prefix="",
@@ -34,54 +38,63 @@ def identify_stakeholders(transcript: str, client: anthropic.Anthropic) -> List[
     Returns:
         A list of dictionaries containing stakeholder information, excluding coaches and facilitators
     """
+    feedbackLogger.info("Starting Stage 1: Identifying stakeholders")
+    start_time = time.time()
+    
     # Load the prompt
     prompt_text = load_prompt("feedback_identify_stakeholders.txt")
+    feedbackLogger.debug("Loaded stakeholder identification prompt")
     
     # Use Template instead of format to avoid issues with curly braces in JSON examples
     template = Template(prompt_text)
     updated_prompt = template.substitute(feedback=transcript)
     
     # Call Claude API
-    response = client.messages.create(
-        model="claude-3-7-sonnet-latest",
-        max_tokens=2000,
-        temperature=0,
-        messages=[
-            {
-                "role": "user",
-                "content": updated_prompt
-            }
-        ]
-    )
-    response_text = response.content[0].text
-    
-    print(f"[DEBUG] Raw response from identify_stakeholders: {response_text}")
+    feedbackLogger.info("Calling Claude API to identify stakeholders")
+    try:
+        response = client.messages.create(
+            model="claude-3-7-sonnet-latest",
+            max_tokens=2000,
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": updated_prompt
+                }
+            ]
+        )
+        response_text = response.content[0].text
+        feedbackLogger.debug(f"Raw response from identify_stakeholders: {response_text[:200]}...")
+    except Exception as e:
+        feedbackLogger.error(f"Error calling Claude API: {str(e)}")
+        raise
     
     # Default structure in case parsing fails
     stakeholders = [{"name": "Unknown", "role": ""}]
     
     # Try to extract JSON array using our enhanced function
+    feedbackLogger.info("Attempting to parse stakeholders from Claude response")
     result = extract_json_from_text(response_text)
     if result and isinstance(result, list):
         stakeholders = result
-        print("[DEBUG] Successfully parsed stakeholders JSON using enhanced extraction")
+        feedbackLogger.info(f"Successfully parsed {len(stakeholders)} stakeholders using enhanced extraction")
     elif result and isinstance(result, dict) and "name" in result and "role" in result:
         # Handle case where we got a single stakeholder as a dict instead of a list
         stakeholders = [result]
-        print("[DEBUG] Successfully parsed single stakeholder JSON using enhanced extraction")
+        feedbackLogger.info("Successfully parsed single stakeholder as dict using enhanced extraction")
     else:
-        print("[DEBUG] Enhanced JSON extraction failed or returned non-list, trying special cases")
+        feedbackLogger.warning("Enhanced JSON extraction failed or returned non-list, trying special cases")
         
         # Special case handling for the specific error we're seeing
         if response_text.strip().startswith('"name"') or response_text.strip().startswith('"name"'):
-            print("[DEBUG] Detected response starting with 'name', attempting to fix...")
+            feedbackLogger.info("Detected response starting with 'name', attempting to fix...")
             try:
                 # Try to wrap the response in square brackets
                 fixed_text = "[{" + response_text.strip() + "}]"
                 stakeholders = json.loads(fixed_text)
-                print("[DEBUG] Successfully fixed and parsed JSON with name prefix")
+                feedbackLogger.info("Successfully fixed and parsed JSON with name prefix")
             except json.JSONDecodeError as e:
-                print(f"[DEBUG] Failed to fix name prefix: {str(e)}")
+                feedbackLogger.warning(f"Failed to fix name prefix: {str(e)}")
                 
                 # Try to manually construct the JSON as a last resort
                 try:
@@ -97,17 +110,18 @@ def identify_stakeholders(transcript: str, client: anthropic.Anthropic) -> List[
                                 "role": role_matches[i]
                             })
                         stakeholders = manual_stakeholders
-                        print(f"[DEBUG] Successfully constructed {len(stakeholders)} stakeholders manually")
+                        feedbackLogger.info(f"Successfully constructed {len(stakeholders)} stakeholders manually")
                     else:
-                        print("[DEBUG] Using default stakeholders structure")
+                        feedbackLogger.warning("Using default stakeholders structure")
                 except Exception as e4:
-                    print(f"[DEBUG] Manual stakeholders construction failed: {str(e4)}")
-                    print("[DEBUG] Using default stakeholders structure")
+                    feedbackLogger.error(f"Manual stakeholders construction failed: {str(e4)}")
+                    feedbackLogger.warning("Using default stakeholders structure")
     
     # The prompt now excludes coaches, but we'll do a basic check just in case
     filtered_stakeholders = []
     coach_keywords = ["coach", "facilitator", "administrator", "feedback provider", "consultant", "advisor"]
     
+    feedbackLogger.info("Filtering stakeholders to exclude coaches and meta sections")
     for stakeholder in stakeholders:
         role = stakeholder.get("role", "").lower()
         name = stakeholder.get("name", "").lower()
@@ -121,9 +135,10 @@ def identify_stakeholders(transcript: str, client: anthropic.Anthropic) -> List[
         if not (is_coach or is_meta_section):
             filtered_stakeholders.append(stakeholder)
         else:
-            print(f"Additional filtering - excluding: {stakeholder.get('name', 'Unknown')} - {stakeholder.get('role', 'Unknown role')}")
+            feedbackLogger.info(f"Filtering - excluding: {stakeholder.get('name', 'Unknown')} - {stakeholder.get('role', 'Unknown role')}")
     
-    print(f"After filtering: {len(filtered_stakeholders)} stakeholders remain")
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Stage 1 complete: {len(filtered_stakeholders)} stakeholders identified in {elapsed_time:.2f} seconds")
     return filtered_stakeholders
 
 
@@ -139,8 +154,11 @@ def extract_stakeholder_feedback(stakeholder: Dict[str, str], transcript: str, c
     Returns:
         A dictionary with the stakeholder's feedback
     """
+    start_time = time.time()
     name = stakeholder["name"]
     role = stakeholder["role"]
+    
+    feedbackLogger.info(f"Stage 2: Extracting feedback for stakeholder '{name}' ({role})")
     
     # Load the prompt
     prompt_text = load_prompt("feedback_extract_stakeholder.txt")
@@ -154,21 +172,25 @@ def extract_stakeholder_feedback(stakeholder: Dict[str, str], transcript: str, c
     )
     
     # Call Claude API
-    response = client.messages.create(
-        model="claude-3-7-sonnet-latest",
-        max_tokens=3000,
-        temperature=0,
-        messages=[
-            {
-                "role": "user",
-                "content": formatted_prompt
-            }
-        ]
-    )
-    
-    response_text = response.content[0].text
-    
-    print(f"[DEBUG] Raw response from extract_stakeholder_feedback for {name}: {response_text}")
+    feedbackLogger.info(f"Calling Claude API to extract feedback for '{name}'")
+    try:
+        response = client.messages.create(
+            model="claude-3-7-sonnet-latest",
+            max_tokens=3000,
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": formatted_prompt
+                }
+            ]
+        )
+        
+        response_text = response.content[0].text
+        feedbackLogger.debug(f"Raw response from extract_stakeholder_feedback for {name}: {response_text[:200]}...")
+    except Exception as e:
+        feedbackLogger.error(f"Error calling Claude API for stakeholder '{name}': {str(e)}")
+        raise
     
     # Default structure in case parsing fails
     feedback_data = {
@@ -178,26 +200,36 @@ def extract_stakeholder_feedback(stakeholder: Dict[str, str], transcript: str, c
     }
     
     # Use our enhanced JSON extraction and repair function
+    feedbackLogger.info(f"Parsing feedback data for '{name}'")
     result = extract_json_from_text(response_text)
     if result:
         feedback_data = result
-        print(f"[DEBUG] Successfully parsed JSON using enhanced extraction for {name}")
+        feedbackLogger.info(f"Successfully parsed JSON using enhanced extraction for '{name}'")
     else:
-        print(f"[DEBUG] Enhanced JSON extraction failed for {name}, using default structure")
+        feedbackLogger.warning(f"Enhanced JSON extraction failed for '{name}', using default structure")
     
     # Replace any placeholder values with actual values
     if feedback_data.get("name") == "{name}":
         feedback_data["name"] = name
+        feedbackLogger.debug(f"Replaced placeholder name for '{name}'")
     if feedback_data.get("role") == "{role}":
         feedback_data["role"] = role
+        feedbackLogger.debug(f"Replaced placeholder role for '{name}'")
     
     # Ensure required fields exist
     if "name" not in feedback_data:
         feedback_data["name"] = name
+        feedbackLogger.debug(f"Added missing name field for '{name}'")
     if "role" not in feedback_data:
         feedback_data["role"] = role
+        feedbackLogger.debug(f"Added missing role field for '{name}'")
     if "feedback" not in feedback_data:
         feedback_data["feedback"] = []
+        feedbackLogger.debug(f"Added missing feedback field for '{name}'")
+    
+    feedback_count = len(feedback_data.get("feedback", []))
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Extracted {feedback_count} feedback items for '{name}' in {elapsed_time:.2f} seconds")
     
     return feedback_data
 
@@ -213,6 +245,9 @@ def categorize_with_strength_assessment(stakeholder_feedback: List[Dict[str, Any
     Returns:
         A dictionary with categorized feedback
     """
+    start_time = time.time()
+    feedbackLogger.info("Starting Stage 3: Categorizing feedback and assessing strength")
+    
     # Initialize the result structure
     categorized_data = {
         "strengths": {},
@@ -224,28 +259,44 @@ def categorize_with_strength_assessment(stakeholder_feedback: List[Dict[str, Any
     batch_size = 2
     total_stakeholders = len(stakeholder_feedback)
     
-    print(f"[DEBUG] Processing {total_stakeholders} stakeholders in batches of {batch_size}")
+    feedbackLogger.info(f"Processing {total_stakeholders} stakeholders in batches of {batch_size}")
     
     # Process stakeholders in batches
     for i in range(0, total_stakeholders, batch_size):
+        batch_start_time = time.time()
         batch_end = min(i + batch_size, total_stakeholders)
         current_batch = stakeholder_feedback[i:batch_end]
         
-        print(f"[DEBUG] Processing batch {i//batch_size + 1}: stakeholders {i+1} to {batch_end} of {total_stakeholders}")
+        batch_num = i//batch_size + 1
+        feedbackLogger.info(f"Processing batch {batch_num}: stakeholders {i+1} to {batch_end} of {total_stakeholders}")
         
         # Process this batch
         batch_result = categorize_stakeholder_batch(current_batch, client)
         
         # Merge the batch result into the overall result
         merge_categorized_data(categorized_data, batch_result)
+        
+        batch_elapsed_time = time.time() - batch_start_time
+        feedbackLogger.info(f"Batch {batch_num} processed in {batch_elapsed_time:.2f} seconds")
     
     # Ensure all required categories exist
     if "strengths" not in categorized_data:
         categorized_data["strengths"] = {}
+        feedbackLogger.debug("Added missing strengths category")
     if "areas_to_target" not in categorized_data:
         categorized_data["areas_to_target"] = {}
+        feedbackLogger.debug("Added missing areas_to_target category")
     if "advice" not in categorized_data:
         categorized_data["advice"] = {}
+        feedbackLogger.debug("Added missing advice category")
+    
+    # Count items in each category
+    strengths_count = sum(len(data.get("feedback", [])) for data in categorized_data.get("strengths", {}).values())
+    areas_count = sum(len(data.get("feedback", [])) for data in categorized_data.get("areas_to_target", {}).values())
+    advice_count = sum(len(data.get("feedback", [])) for data in categorized_data.get("advice", {}).values())
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Stage 3 complete: Categorized {strengths_count} strengths, {areas_count} areas to target, {advice_count} advice items in {elapsed_time:.2f} seconds")
     
     return categorized_data
 
@@ -260,6 +311,10 @@ def categorize_stakeholder_batch(stakeholder_batch: List[Dict[str, Any]], client
     Returns:
         A dictionary with categorized feedback for this batch
     """
+    start_time = time.time()
+    batch_stakeholders = [s.get("name", "Unknown") for s in stakeholder_batch]
+    feedbackLogger.info(f"Categorizing batch with stakeholders: {', '.join(batch_stakeholders)}")
+    
     # Prepare the input for Claude
     input_data = json.dumps(stakeholder_batch, indent=2)
     
@@ -271,22 +326,27 @@ def categorize_stakeholder_batch(stakeholder_batch: List[Dict[str, Any]], client
     formatted_prompt = template.substitute(input_data=input_data)
     
     # Call Claude API
-    response = client.messages.create(
-        model="claude-3-7-sonnet-latest",
-        max_tokens=4000,
-        temperature=0,
-        messages=[
-            {
-                "role": "user",
-                "content": formatted_prompt
-            }
-        ]
-    )
-    
-    response_text = response.content[0].text
-    
-    print(f"[DEBUG] Raw response from batch categorization: {response_text[:100]}...")
-    print(f"[DEBUG] Response length: {len(response_text)} characters")
+    feedbackLogger.info("Calling Claude API for batch categorization")
+    try:
+        response = client.messages.create(
+            model="claude-3-7-sonnet-latest",
+            max_tokens=4000,
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": formatted_prompt
+                }
+            ]
+        )
+        
+        response_text = response.content[0].text
+        response_length = len(response_text)
+        feedbackLogger.debug(f"Raw response from batch categorization: {response_text[:100]}...")
+        feedbackLogger.debug(f"Response length: {response_length} characters")
+    except Exception as e:
+        feedbackLogger.error(f"Error calling Claude API for batch categorization: {str(e)}")
+        raise
     
     # Default structure in case parsing fails
     batch_result = {
@@ -296,27 +356,28 @@ def categorize_stakeholder_batch(stakeholder_batch: List[Dict[str, Any]], client
     }
     
     # Use our enhanced JSON extraction and repair function
+    feedbackLogger.info("Parsing batch categorization response")
     result = extract_json_from_text(response_text)
     if result:
         # Ensure the result is a dictionary
         if isinstance(result, dict):
             batch_result = result
-            print("[DEBUG] Successfully parsed batch JSON using enhanced extraction")
+            feedbackLogger.info("Successfully parsed batch JSON using enhanced extraction")
         else:
-            print(f"[DEBUG] Extracted result is not a dictionary, but a {type(result)}")
+            feedbackLogger.warning(f"Extracted result is not a dictionary, but a {type(result)}")
     else:
-        print("[DEBUG] Enhanced JSON extraction failed for batch, using default structure")
+        feedbackLogger.warning("Enhanced JSON extraction failed for batch, using default structure")
         
         # Special case handling for the specific error we're seeing
         if response_text.strip().startswith('"strengths"') or response_text.strip().startswith('"strengths"'):
-            print("[DEBUG] Detected response starting with 'strengths', attempting to fix...")
+            feedbackLogger.info("Detected response starting with 'strengths', attempting to fix...")
             try:
                 # Try to wrap the response in curly braces
                 fixed_text = "{" + response_text.strip() + "}"
                 batch_result = json.loads(fixed_text)
-                print("[DEBUG] Successfully fixed and parsed JSON with strengths prefix")
+                feedbackLogger.info("Successfully fixed and parsed JSON with strengths prefix")
             except json.JSONDecodeError as e:
-                print(f"[DEBUG] Failed to fix strengths prefix: {str(e)}")
+                feedbackLogger.warning(f"Failed to fix strengths prefix: {str(e)}")
                 
                 # Try to manually construct the JSON as a last resort
                 try:
@@ -341,17 +402,28 @@ def categorize_stakeholder_batch(stakeholder_batch: List[Dict[str, Any]], client
                     # Apply our JSON syntax fixer to the manually constructed JSON
                     fixed_manual_json = fix_json_syntax(manual_json)
                     batch_result = json.loads(fixed_manual_json)
-                    print("[DEBUG] Successfully constructed and parsed manual JSON")
+                    feedbackLogger.info("Successfully constructed and parsed manual JSON")
                 except Exception as e4:
-                    print(f"[DEBUG] Manual JSON construction failed: {str(e4)}")
+                    feedbackLogger.error(f"Manual JSON construction failed: {str(e4)}")
     
     # Ensure all required categories exist
     if "strengths" not in batch_result:
         batch_result["strengths"] = {}
+        feedbackLogger.debug("Added missing strengths category to batch result")
     if "areas_to_target" not in batch_result:
         batch_result["areas_to_target"] = {}
+        feedbackLogger.debug("Added missing areas_to_target category to batch result")
     if "advice" not in batch_result:
         batch_result["advice"] = {}
+        feedbackLogger.debug("Added missing advice category to batch result")
+    
+    # Count items in each category
+    strengths_count = sum(len(data.get("feedback", [])) for data in batch_result.get("strengths", {}).values())
+    areas_count = sum(len(data.get("feedback", [])) for data in batch_result.get("areas_to_target", {}).values())
+    advice_count = sum(len(data.get("feedback", [])) for data in batch_result.get("advice", {}).values())
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Batch categorization complete: {strengths_count} strengths, {areas_count} areas, {advice_count} advice in {elapsed_time:.2f} seconds")
     
     return batch_result
 
@@ -365,10 +437,14 @@ def deduplicate_feedback(stakeholder_feedback: List[Dict[str, Any]]) -> List[Dic
     Returns:
         Deduplicated stakeholder feedback
     """
+    start_time = time.time()
+    feedbackLogger.info("Starting feedback deduplication process")
+    
     # Create a dictionary to track all feedback items
     all_feedback = {}
     
     # First pass: collect all feedback items with their stakeholders
+    feedbackLogger.info("Collecting all feedback items for comparison")
     for stakeholder_data in stakeholder_feedback:
         stakeholder_name = stakeholder_data.get("name", "Unknown")
         for item in stakeholder_data.get("feedback", []):
@@ -378,7 +454,10 @@ def deduplicate_feedback(stakeholder_feedback: List[Dict[str, Any]]) -> List[Dic
                     all_feedback[text] = []
                 all_feedback[text].append((stakeholder_name, item))
     
+    feedbackLogger.info(f"Collected {len(all_feedback)} unique feedback items for deduplication")
+    
     # Second pass: identify potential duplicates using string similarity
+    feedbackLogger.info("Identifying potential duplicates using string similarity")
     duplicates = []
     processed = set()
     
@@ -400,22 +479,32 @@ def deduplicate_feedback(stakeholder_feedback: List[Dict[str, Any]]) -> List[Dic
             if similarity > 0.85:  # 85% similarity threshold
                 group.append(text2)
                 processed.add(text2)
+                feedbackLogger.debug(f"Found duplicate with {similarity:.2f} similarity")
         
         if len(group) > 1:
             duplicates.append(group)
     
     # If no duplicates found, return original data
     if not duplicates:
+        feedbackLogger.info("No duplicates found, returning original data")
         return stakeholder_feedback
     
+    feedbackLogger.info(f"Found {len(duplicates)} duplicate groups")
+    
     # Create a copy of the original data to modify
+    feedbackLogger.info("Creating deduplicated feedback data")
     result = []
+    total_removed = 0
+    
     for stakeholder_data in stakeholder_feedback:
+        stakeholder_name = stakeholder_data.get("name", "Unknown")
         new_stakeholder_data = {
-            "name": stakeholder_data.get("name", "Unknown"),
+            "name": stakeholder_name,
             "role": stakeholder_data.get("role", ""),
             "feedback": []
         }
+        
+        original_count = len(stakeholder_data.get("feedback", []))
         
         # Only include non-duplicate feedback or the canonical version of duplicates
         for item in stakeholder_data.get("feedback", []):
@@ -430,8 +519,17 @@ def deduplicate_feedback(stakeholder_feedback: List[Dict[str, Any]]) -> List[Dic
             
             if not is_duplicate:
                 new_stakeholder_data["feedback"].append(item)
+            else:
+                total_removed += 1
+        
+        new_count = len(new_stakeholder_data["feedback"])
+        if original_count != new_count:
+            feedbackLogger.info(f"Removed {original_count - new_count} duplicates from stakeholder '{stakeholder_name}'")
         
         result.append(new_stakeholder_data)
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Deduplication complete: removed {total_removed} duplicate items in {elapsed_time:.2f} seconds")
     
     return result
 
@@ -445,9 +543,14 @@ def validate_stakeholder_attribution(stakeholder_feedback: List[Dict[str, Any]])
     Returns:
         Validated stakeholder feedback with warnings
     """
+    start_time = time.time()
+    feedbackLogger.info("Starting stakeholder attribution validation")
+    
     # Calculate average feedback items per stakeholder
     total_items = sum(len(s.get("feedback", [])) for s in stakeholder_feedback)
     avg_items = total_items / len(stakeholder_feedback) if stakeholder_feedback else 0
+    
+    feedbackLogger.info(f"Average feedback items per stakeholder: {avg_items:.2f} ({total_items} total items across {len(stakeholder_feedback)} stakeholders)")
     
     # Track stakeholders with unusual feedback counts
     unusual_counts = []
@@ -459,13 +562,13 @@ def validate_stakeholder_attribution(stakeholder_feedback: List[Dict[str, Any]])
         
         # Flag stakeholders with unusually high or low feedback counts
         if feedback_count > avg_items * 2:
-            print(f"[WARNING] Stakeholder '{name}' has unusually high feedback count: {feedback_count} (avg: {avg_items:.1f})")
+            feedbackLogger.warning(f"Stakeholder '{name}' has unusually high feedback count: {feedback_count} (avg: {avg_items:.1f})")
             unusual_counts.append((name, feedback_count, "high"))
         elif feedback_count < avg_items * 0.5 and feedback_count > 0:
-            print(f"[WARNING] Stakeholder '{name}' has unusually low feedback count: {feedback_count} (avg: {avg_items:.1f})")
+            feedbackLogger.warning(f"Stakeholder '{name}' has unusually low feedback count: {feedback_count} (avg: {avg_items:.1f})")
             unusual_counts.append((name, feedback_count, "low"))
         elif feedback_count == 0:
-            print(f"[WARNING] Stakeholder '{name}' has no feedback items")
+            feedbackLogger.warning(f"Stakeholder '{name}' has no feedback items")
             unusual_counts.append((name, feedback_count, "none"))
     
     # Check for identical feedback across stakeholders
@@ -488,9 +591,12 @@ def validate_stakeholder_attribution(stakeholder_feedback: List[Dict[str, Any]])
     duplicate_feedback = []
     for text, stakeholders in feedback_by_text.items():
         if len(stakeholders) > 1:
-            print(f"[WARNING] Identical feedback found across multiple stakeholders: {', '.join(stakeholders)}")
-            print(f"  Text: {text[:100]}...")
+            feedbackLogger.warning(f"Identical feedback found across multiple stakeholders: {', '.join(stakeholders)}")
+            feedbackLogger.warning(f"  Text: {text[:100]}...")
             duplicate_feedback.append((text, stakeholders))
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Validation complete: found {len(unusual_counts)} stakeholders with unusual counts and {len(duplicate_feedback)} duplicate feedback items in {elapsed_time:.2f} seconds")
     
     # Return the original data, as this is just a validation step
     return stakeholder_feedback
@@ -718,32 +824,47 @@ def format_final_result(categorized_feedback: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Formatted result
     """
+    start_time = time.time()
+    feedbackLogger.info("Formatting final result")
+    
     result = {
         "strengths": {},
         "areas_to_target": {}
     }
     
     # Process strengths
+    strengths_count = 0
     for stakeholder, data in categorized_feedback.get("strengths", {}).items():
+        feedback_items = data.get("feedback", [])
+        strengths_count += len(feedback_items)
         result["strengths"][stakeholder] = {
             "role": data.get("role", ""),
-            "feedback": data.get("feedback", [])
+            "feedback": feedback_items
         }
     
     # Process areas to target
+    areas_count = 0
     for stakeholder, data in categorized_feedback.get("areas_to_target", {}).items():
+        feedback_items = data.get("feedback", [])
+        areas_count += len(feedback_items)
         result["areas_to_target"][stakeholder] = {
             "role": data.get("role", ""),
-            "feedback": data.get("feedback", [])
+            "feedback": feedback_items
         }
     
     # Process advice - temporarily removed from final result
     # We still collect advice in categorized_feedback but don't include it in the result
+    # advice_count = 0
     # for stakeholder, data in categorized_feedback.get("advice", {}).items():
+    #     feedback_items = data.get("feedback", [])
+    #     advice_count += len(feedback_items)
     #     result["advice"][stakeholder] = {
     #         "role": data.get("role", ""),
-    #         "feedback": data.get("feedback", [])
+    #         "feedback": feedback_items
     #     }
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Final result formatted with {strengths_count} strengths and {areas_count} areas to target in {elapsed_time:.2f} seconds")
     
     return result
 
@@ -928,40 +1049,64 @@ async def get_feedback(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) :
+    start_time = time.time()
     user_id = current_user.user_id
-    if(True):
+    apiLogger.info(f"Feedback request received for file ID {file_id} from user {user_id}")
+    
+    try:
         # Check cache first
         if use_cache:
             cached_data = get_cached_feedback(user_id, file_id, db)
             if cached_data:
-                print(f"Using cached feedback for file ID {file_id}")
+                apiLogger.info(f"Using cached feedback for file ID {file_id}")
                 return cached_data
 
         # If not cached or cache disabled, process normally
+        apiLogger.info(f"No cache found or cache disabled, processing feedback for file ID {file_id}")
         db_task = get_task_by_user_and_fileId(user_id, file_id, db)
+        if not db_task:
+            apiLogger.error(f"Task not found for user {user_id} and file ID {file_id}")
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        apiLogger.info(f"Found task with ID {db_task.id} for file ID {file_id}")
         
         # try to get or generate transcripts
         feedback_transcript = None
         assess_data = get_processed_assessment_by_task_id(db, db_task.id)
         if assess_data and assess_data.filtered_data:
+            apiLogger.info(f"Using filtered data from processed assessment for task ID {db_task.id}")
             feedback_transcript = assess_data.filtered_data
         if not feedback_transcript:
             # Get the feedback transcript
             feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+            apiLogger.info(f"Looking for feedback transcript at {feedback_path}")
+            
             if not os.path.exists(feedback_path):
+                apiLogger.error(f"Feedback transcript not found at {feedback_path}")
                 raise HTTPException(status_code=404, detail="Feedback transcript not found or generated.")
 
+            apiLogger.info(f"Reading feedback transcript from file")
             with open(feedback_path, "r") as f:
                 feedback_transcript = f.read()
+            
+            apiLogger.info(f"Successfully read feedback transcript ({len(feedback_transcript)} characters)")
 
         # Initialize Claude client
-        client = anthropic.Anthropic(api_key=env_variables.ANTHROPIC_API_KEY)
-
-        import time
+        apiLogger.info("Initializing Claude client")
+        try:
+            client = anthropic.Anthropic(api_key=env_variables.ANTHROPIC_API_KEY)
+            apiLogger.info("Claude client initialized successfully")
+        except Exception as e:
+            apiLogger.error(f"Failed to initialize Claude client: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to initialize AI client")
         
-        print("="*80)
-        print(f"STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
-        print("="*80)
+        apiLogger.info("="*80)
+        apiLogger.info(f"STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
+        apiLogger.info("="*80)
+        
+        feedbackLogger.info("="*80)
+        feedbackLogger.info(f"STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
+        feedbackLogger.info("="*80)
         
         # Stage 1: Identify stakeholders
         print("\n[STAGE 1] Identifying stakeholders...")
@@ -1053,15 +1198,29 @@ async def get_feedback(
         print("="*80)
         
         # Save to database
+        apiLogger.info(f"Saving feedback results to database for task ID {db_task.id}")
         feedback_data = {
             "task_id": db_task.id,
             "feedback": result
         }
         
         # Save to db
-        db_feedback = create_feedback(FeedBackCreate(**feedback_data), db)
-        return db_feedback.feedback
-        
-    # except Exception as e:
-    #     print(f"Error in get_feedback: {str(e)}")
-    #     raise HTTPException(status_code=500, detail=str(e))
+        try:
+            db_feedback = create_feedback(FeedBackCreate(**feedback_data), db)
+            dbLogger.info(f"Feedback saved to database for task ID {db_task.id}")
+            
+            total_elapsed_time = time.time() - start_time
+            apiLogger.info(f"Feedback extraction completed in {total_elapsed_time:.2f} seconds")
+            
+            return db_feedback.feedback
+        except Exception as e:
+            dbLogger.error(f"Failed to save feedback to database: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to save feedback to database")
+            
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as they already have status codes
+        apiLogger.error(f"HTTP error in get_feedback: {he.detail}")
+        raise
+    except Exception as e:
+        apiLogger.error(f"Error in get_feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

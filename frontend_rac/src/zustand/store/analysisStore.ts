@@ -109,11 +109,21 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   handleAnalysisUpdate: (updater) => {
     const { activeTemplateId, templates } = get();
     if (!activeTemplateId) return;
-    const updatedTemplates = {
-      ...templates,
-      [activeTemplateId]: updater(templates[activeTemplateId]),
-    };
-    set({ templates: updatedTemplates, isEditing: true });
+
+    // Create a new reference for the updated template
+    const updatedTemplate = updater(templates[activeTemplateId]);
+
+    // Only update if there's an actual change
+    if (
+      JSON.stringify(updatedTemplate) !==
+      JSON.stringify(templates[activeTemplateId])
+    ) {
+      const updatedTemplates = {
+        ...templates,
+        [activeTemplateId]: updatedTemplate,
+      };
+      set({ templates: updatedTemplates, isEditing: true });
+    }
   },
 
   resetAnalysisToOriginal: () => {

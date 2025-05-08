@@ -22,6 +22,11 @@ export const useSnapshotSaver = () => {
     parentId?: number,
   ) => {
     if (!fileId || !user?.id) return;
+    if (
+      !manualReport.sorted_by?.stakeholders?.adviceData ||
+      !manualReport.sorted_by?.stakeholders?.feedbackData
+    )
+      return;
 
     const manual_report_data = templates[templatesIds.base];
     const ai_competencies_data = templates[templatesIds.aiCompetencies];
@@ -68,7 +73,7 @@ export const useSnapshotSaver = () => {
       parent_id: parentId,
     };
 
-    console.log(snapshotData)
+    console.log(snapshotData);
     saveSnapshotMutation.mutate({
       snapshotData,
       makeCurrent: makeActive,

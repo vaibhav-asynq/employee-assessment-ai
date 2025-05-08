@@ -18,6 +18,8 @@ class DBTask(Base):
     name: Mapped[str] 
     file_id: Mapped[str]
     file_name: Mapped[str]
+    storage_type: Mapped[Optional[str]] = mapped_column(default="local")  # "local" or "s3"
+    s3_key: Mapped[Optional[str]] = mapped_column(nullable=True)
 
     current_snapshot_id: Mapped[int] = mapped_column(nullable=True)
     feedbacks = relationship("DBFeedBack", back_populates="task")

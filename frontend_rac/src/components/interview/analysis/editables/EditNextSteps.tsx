@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "./shared/SectionHeading";
 import { Plus, Trash2 } from "lucide-react";
-import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { useEditAnalysis } from "../../hooks/useEditAnalysis";
 import { NextSteps, TemplateId } from "@/lib/types/types.analysis";
 import { EditableText } from "./shared/EditableText";
 import { GenerateNextStepsAi } from "./GenerateNextStepsAi";
+import { useTemplateUpdater } from "@/hooks/useTemplateUpdater";
+import { useDebounce } from "@/lib/utils/debounce";
+import { useCallback } from "react";
+import { EditableSubheading } from "./shared/EditableSubheading";
 
 interface EditNextSteps {
   nextSteps: NextSteps;
@@ -32,20 +34,33 @@ export function EditNextSteps({
   addTextBtnText = "Add Text",
   promptBtnText = "Generate with AI",
 }: EditNextSteps) {
-  const handleAnalysisUpdate = useAnalysisStore(
-    (state) => state.handleAnalysisUpdate,
+  const {
+    addTextNextStep,
+    addPointsNextStep,
+    updateNextStep,
+    deleteNextStep,
+    updateMainPointNextStep,
+    updateSubPointNextStep,
+    deleteSubPointNextStep,
+    addSubPointNextStep,
+  } = useTemplateUpdater();
+
+  // Debounced handler for main point updates
+  const debouncedUpdateMainPoint = useDebounce(
+    (index: number, value: string) => {
+      updateMainPointNextStep(index, value);
+    },
+    300,
+    [updateMainPointNextStep],
   );
 
-  const {
-    handleAddTextNextStep,
-    handleAddPointsNextStep,
-    handleUpdateNextStep,
-    handleDeleteNextStep,
-    handleUpdateMainPointNextStep,
-    handleUpdateSubPointNextStep,
-    handleDeleteSubPointNextStep,
-    handleAddSubPointNextStep,
-  } = useEditAnalysis(handleAnalysisUpdate);
+  // Handler for main point input changes
+  const handleMainPointChange = useCallback(
+    (index: number, value: string) => {
+      debouncedUpdateMainPoint(index, value);
+    },
+    [debouncedUpdateMainPoint],
+  );
 
   return (
     <section className="mb-8">
@@ -54,10 +69,10 @@ export function EditNextSteps({
         className="text-xl font-semibold text-gray-900"
       >
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleAddTextNextStep}>
+          <Button variant="outline" size="sm" onClick={addTextNextStep}>
             <Plus className="h-4 w-4 mr-1" /> {addTextBtnText}
           </Button>
-          <Button variant="outline" size="sm" onClick={handleAddPointsNextStep}>
+          <Button variant="outline" size="sm" onClick={addPointsNextStep}>
             <Plus className="h-4 w-4 mr-1" /> {addPointsBtnText}
           </Button>
 
@@ -77,14 +92,14 @@ export function EditNextSteps({
               <div className="flex gap-2">
                 <EditableText
                   value={step}
-                  onChange={(newValue) => handleUpdateNextStep(index, newValue)}
+                  onChange={(newValue) => updateNextStep(index, newValue)}
                   minHeight="100px"
                   placeholder={placeholderTextContent}
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteNextStep(index)}
+                  onClick={() => deleteNextStep(index)}
                   className="text-gray-500 hover:text-red-600  opacity-35 hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -93,19 +108,18 @@ export function EditNextSteps({
             ) : (
               <div className="space-y-2">
                 <div className="flex gap-2 w-full">
-                  <input
-                    type="text"
-                    className="flex-1 p-2 border rounded text-lg font-semibold min-w-[500px]"
+                  <EditableSubheading
                     value={step.main}
-                    onChange={(e) =>
-                      handleUpdateMainPointNextStep(index, e.target.value)
-                    }
                     placeholder={placeholderHeading}
+                    className="flex-1 p-2 border rounded text-lg font-semibold min-w-[500px]"
+                    onChange={(newHeading) => {
+                      handleMainPointChange(index, newHeading);
+                    }}
                   />
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteNextStep(index)}
+                    onClick={() => deleteNextStep(index)}
                     className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -117,11 +131,7 @@ export function EditNextSteps({
                       <EditableText
                         value={point}
                         onChange={(newValue) =>
-                          handleUpdateSubPointNextStep(
-                            index,
-                            pointIndex,
-                            newValue,
-                          )
+                          updateSubPointNextStep(index, pointIndex, newValue)
                         }
                         minHeight="60px"
                         placeholder={placeholderPoint}
@@ -130,7 +140,7 @@ export function EditNextSteps({
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          handleDeleteSubPointNextStep(index, pointIndex)
+                          deleteSubPointNextStep(index, pointIndex)
                         }
                         className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
                       >
@@ -141,7 +151,7 @@ export function EditNextSteps({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAddSubPointNextStep(index)}
+                    onClick={() => addSubPointNextStep(index)}
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add Sub-point
                   </Button>

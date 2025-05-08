@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getToLocalTime } from "@/lib/timeStamp";
 
 function SnapshotHistoryContent() {
   const { fileId } = useInterviewDataStore();
@@ -300,11 +301,21 @@ function SnapshotHistoryContent() {
                     <div className="flex items-center text-xs text-muted-foreground gap-1">
                       <Calendar size={12} />
                       <span>
-                        {format(new Date(snapshot.created_at), "MMM d, yyyy")}
+                        {
+                          getToLocalTime(
+                            new Date(snapshot.created_at),
+                            "MMM d, yyyy",
+                          ) as string
+                        }
                       </span>
                       <Clock size={12} className="ml-2" />
                       <span>
-                        {format(new Date(snapshot.created_at), "h:mm:ss a")}
+                        {
+                          getToLocalTime(
+                            new Date(snapshot.created_at),
+                            "h:mm:ss a",
+                          ) as string
+                        }
                       </span>
                     </div>
                   </div>

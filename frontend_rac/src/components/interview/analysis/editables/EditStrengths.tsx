@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { Strengths, TemplateId } from "@/lib/types/types.analysis";
-import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { useEditAnalysis } from "../../hooks/useEditAnalysis";
 import { GenerateStrengthsAi } from "./GenerateStrengthsAi";
 import { EditableSubheading } from "./shared/EditableSubheading";
 import { SectionHeading } from "./shared/SectionHeading";
 import { EditableText } from "./shared/EditableText";
+import { useTemplateUpdater } from "@/hooks/useTemplateUpdater";
 
 interface EditableStrengthsProps {
   strengths: Strengths;
@@ -28,15 +27,12 @@ export function EditStrengths({
   addBtnText = "Add Subheading",
   promptBtnText = "Prompt with AI",
 }: EditableStrengthsProps) {
-  const handleAnalysisUpdate = useAnalysisStore(
-    (state) => state.handleAnalysisUpdate,
-  );
   const {
-    handleAddStrength,
-    handleStrengthDelete,
-    handleStrengthContentChange,
-    handleStrengthHeadingChange,
-  } = useEditAnalysis(handleAnalysisUpdate);
+    addStrength,
+    deleteStrength,
+    updateStrengthContent,
+    updateStrengthHeading,
+  } = useTemplateUpdater();
 
   return (
     <section className="mb-8">
@@ -44,7 +40,7 @@ export function EditStrengths({
         title={heading}
         className="text-xl font-semibold text-gray-900"
       >
-        <Button variant="outline" size="sm" onClick={() => handleAddStrength()}>
+        <Button variant="outline" size="sm" onClick={() => addStrength()}>
           <Plus className="h-4 w-4 mr-1" /> {addBtnText}
         </Button>
       </SectionHeading>
@@ -59,7 +55,7 @@ export function EditStrengths({
                     value={item.heading.trim()}
                     placeholder={placeholderSubheading}
                     onChange={(newHeading) => {
-                      handleStrengthHeadingChange(id, newHeading);
+                      updateStrengthHeading(id, newHeading);
                     }}
                   />
                 </div>
@@ -74,7 +70,7 @@ export function EditStrengths({
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    handleStrengthDelete(id);
+                    deleteStrength(id);
                   }}
                   className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
                 >
@@ -84,7 +80,7 @@ export function EditStrengths({
               <EditableText
                 value={item.content}
                 onChange={(newContent) => {
-                  handleStrengthContentChange(id, newContent);
+                  updateStrengthContent(id, newContent);
                 }}
                 minHeight="180px"
                 placeholder={placeholderContent}

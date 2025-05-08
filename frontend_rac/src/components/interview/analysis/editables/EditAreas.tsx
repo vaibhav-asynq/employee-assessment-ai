@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { AreasToTarget, TemplateId } from "@/lib/types/types.analysis";
-import { useAnalysisStore } from "@/zustand/store/analysisStore";
-import { useEditAnalysis } from "../../hooks/useEditAnalysis";
+import { useTemplateUpdater } from "@/hooks/useTemplateUpdater";
 import { EditableSubheading } from "./shared/EditableSubheading";
 import { SectionHeading } from "./shared/SectionHeading";
 import { EditableText } from "./shared/EditableText";
@@ -28,15 +27,8 @@ export function EditAreas({
   addBtnText = "Add Subheading",
   promptBtnText = "Prompt with AI",
 }: EditAreasProps) {
-  const handleAnalysisUpdate = useAnalysisStore(
-    (state) => state.handleAnalysisUpdate,
-  );
-  const {
-    handleAddArea,
-    handleAreaHeadingChange,
-    handleAreaDelete,
-    handleAreaContentChange,
-  } = useEditAnalysis(handleAnalysisUpdate);
+  const { addArea, updateAreaHeading, deleteArea, updateAreaContent } =
+    useTemplateUpdater();
 
   return (
     <section className="mb-8">
@@ -44,7 +36,7 @@ export function EditAreas({
         title={heading}
         className="text-xl font-semibold text-gray-900"
       >
-        <Button variant="outline" size="sm" onClick={() => handleAddArea()}>
+        <Button variant="outline" size="sm" onClick={() => addArea()}>
           <Plus className="h-4 w-4 mr-1" /> {addBtnText}
         </Button>
       </SectionHeading>
@@ -59,7 +51,7 @@ export function EditAreas({
                     value={item.heading.trim()}
                     placeholder={placeholderSubheading}
                     onChange={(newHeading) => {
-                      handleAreaHeadingChange(id, newHeading);
+                      updateAreaHeading(id, newHeading);
                     }}
                   />
                 </div>
@@ -74,7 +66,7 @@ export function EditAreas({
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    handleAreaDelete(id);
+                    deleteArea(id);
                   }}
                   className="text-gray-500 hover:text-red-600 opacity-35 hover:opacity-100 transition-opacity"
                 >
@@ -84,7 +76,7 @@ export function EditAreas({
               <EditableText
                 value={item.content}
                 onChange={(newContent) => {
-                  handleAreaContentChange(id, newContent);
+                  updateAreaContent(id, newContent);
                 }}
                 minHeight="180px"
                 placeholder={placeholderContent}

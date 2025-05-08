@@ -64,8 +64,6 @@ export function AnalysisDisplay() {
     );
   };
 
-  console.log({ loading, initializing });
-
   if (loading || initializing) {
     return (
       <>

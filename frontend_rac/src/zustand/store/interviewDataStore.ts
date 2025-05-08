@@ -126,10 +126,12 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
           },
         },
       },
+      fileId,
       file: null,
+      error: undefined,
+      loading: false,
       fullReport: null,
       aiCompetencies: null,
-      fileId,
     });
   },
 

@@ -24,8 +24,7 @@ import {
 import { useInterviewDataStore } from "@/zustand/store/interviewDataStore";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useDeleteFileTask, useTaskHistory } from "@/lib/react-query";
-import { format, parseISO, isValid } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getToLocalTime } from "@/lib/timeStamp";
 
 export function TaskHistory() {
   const { user } = useUser();
@@ -301,20 +301,13 @@ export function TaskHistory() {
                               </span>
                               <div className="flex items-center gap-1.5">
                                 <Calendar size={12} className="text-blue-300" />
-                                {/* <span className="text-xs font-medium text-blue-500"> */}
-                                {/*   {formatInTimeZone( */}
-                                {/*     task.created_at, */}
-                                {/*     "Asia/Kolkata", */}
-                                {/*     "MMM d, yyyy h:mm a", */}
-                                {/*     // "yyyy-MM-dd HH:mm", */}
-                                {/*   )} */}
-                                {/* </span> */}
                                 <span className="text-xs font-medium text-blue-500">
-                                  {format(
-                                    new Date(task.created_at),
-                                    "MMM d, yyyy h:mm a",
-                                    // "yyyy-MM-dd HH:mm",
-                                  )}
+                                  {task.created_at
+                                    ? `${getToLocalTime(
+                                        new Date(task.created_at),
+                                        "MMM d, yyyy h:mm a",
+                                      )}`
+                                    : "N/A"}
                                 </span>
                               </div>
                             </span>

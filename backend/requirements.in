@@ -34,3 +34,6 @@ bcrypt
 passlib
 python-jose
 cryptography
+
+# s3
+boto3

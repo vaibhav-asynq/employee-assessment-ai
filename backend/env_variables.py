@@ -6,7 +6,7 @@ load_dotenv()
 
 ## ENVIRONMENT VARIABLES
 RELOAD_MODE = os.getenv("RELOAD_MODE", False)  # true || false
-if RELOAD_MODE in ["yes", "Yes", "YES", "true", "True", "TRUE"]:
+if RELOAD_MODE.lower() in ["yes", "true"]:
     RELOAD_MODE = True
 else:
     RELOAD_MODE = False
@@ -23,6 +23,14 @@ DB_NAME = os.getenv("DB_NAME")
 DB_USER =os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
+
+# S3 configuration
+USE_S3 = os.getenv("USE_S3", "false").lower() in ["true", "yes", "1"]
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+S3_REGION = os.getenv("S3_REGION", "us-east-1")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")  # For custom S3-compatible storage
 
 # VALIDATOR FUNCTION
 def validate_env_vars(

@@ -20,15 +20,20 @@ class AssessmentProcessor:
         
     def _setup_logging(self):
         """Set up logging configuration."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('assessment_processing.log'),
-                logging.StreamHandler()
-            ]
-        )
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+
+        if not self.logger.hasHandlers():  # Prevent duplicate handlers
+            file_handler = logging.FileHandler('assessment_processing.log')
+            stream_handler = logging.StreamHandler()
+
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            stream_handler.setFormatter(formatter)
+
+            self.logger.addHandler(file_handler)
+            self.logger.addHandler(stream_handler)
+            self.logger.propagate = False
 
     def extract_candidate_name(self, pdf_path: str) -> str:
         """Extract filename without extension to use as identifier."""

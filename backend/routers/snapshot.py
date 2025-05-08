@@ -14,6 +14,7 @@ from db.snapshot import (SnapshotCreate, SnapshotReport,
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from utils.loggers.endPoint_logger import logger as apiLogger
 
 router = APIRouter(
     prefix="/api/snapshots",
@@ -48,6 +49,7 @@ async def create_snapshot_endpoint(
     db: Session = Depends(get_db)
 ):
     user_id = user.user_id
+    apiLogger.info(f"User {user_id} creating snapshot for file {request.file_id} with trigger_type {request.trigger_type}")
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, request.file_id, db)
     
@@ -78,7 +80,7 @@ async def create_snapshot_endpoint(
         restore_snapshot(db, task.id, snapshot.id)
     
     # Convert datetime to string for JSON response
-    return SnapshotResponse(
+    res =  SnapshotResponse(
         id=snapshot.id,
         snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
@@ -89,6 +91,8 @@ async def create_snapshot_endpoint(
         full_report=snapshot.full_report,
         ai_Competencies=snapshot.ai_Competencies
     )
+    apiLogger.info(f"Snapshot created successfully: id={snapshot.id}, task_id={snapshot.task_id}, trigger_type={snapshot.trigger_type}")
+    return res
 
 @router.get("/latest/{file_id}", response_model=Optional[SnapshotResponse])
 async def get_latest_snapshot_endpoint(
@@ -97,6 +101,7 @@ async def get_latest_snapshot_endpoint(
     db: Session = Depends(get_db)
 ):
     user_id = user.user_id
+    apiLogger.info(f"User {user_id} requesting latest snapshot for file {file_id}")
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
     
@@ -107,7 +112,7 @@ async def get_latest_snapshot_endpoint(
         return None
     
     # Convert datetime to string for JSON response
-    return SnapshotResponse(
+    res = SnapshotResponse(
         id=snapshot.id,
         snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
@@ -118,6 +123,8 @@ async def get_latest_snapshot_endpoint(
         full_report=snapshot.full_report,
         ai_Competencies=snapshot.ai_Competencies
     )
+    apiLogger.info(f"Retrieved latest snapshot: id={snapshot.id}, task_id={snapshot.task_id}")
+    return res
 
 @router.get("/current/{file_id}", response_model=Optional[SnapshotResponse])
 async def get_current_snapshot_endpoint(
@@ -126,6 +133,7 @@ async def get_current_snapshot_endpoint(
     db: Session = Depends(get_db)
 ):
     user_id = user.user_id
+    apiLogger.info(f"User {user_id} requesting current snapshot for file {file_id}")
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
@@ -137,7 +145,7 @@ async def get_current_snapshot_endpoint(
         return None
     
     # Convert datetime to string for JSON response
-    return SnapshotResponse(
+    res = SnapshotResponse(
         id=snapshot.id,
         snapshot_name=snapshot.snapshot_name,
         task_id=snapshot.task_id,
@@ -148,6 +156,8 @@ async def get_current_snapshot_endpoint(
         full_report=snapshot.full_report,
         ai_Competencies=snapshot.ai_Competencies
     )
+    apiLogger.info(f"Retrieved current snapshot: id={snapshot.id}, task_id={snapshot.task_id}")
+    return res
 
 @router.get("/history/{file_id}", response_model=List[SnapshotResponse])
 async def get_snapshot_history_endpoint(
@@ -158,12 +168,16 @@ async def get_snapshot_history_endpoint(
     db: Session = Depends(get_db)
 ):
     user_id = user.user_id
+    apiLogger.info(f"User {user_id} requesting snapshot history for file {file_id} (limit={limit}, offset={offset})")
     
     # Verify task belongs to user
     task = get_task_by_user_and_fileId(user_id, file_id, db)
     
     # Get snapshot history
     snapshots = get_snapshot_history(db, task.id, limit, offset)
+
+    apiLogger.info(f"Retrieved {len(snapshots)} snapshots from history for task_id={task.id}")
+
     # Convert datetime to string for JSON response
     return [
         SnapshotResponse(
@@ -360,6 +374,7 @@ async def delete_snapshot_endpoint(
     # Get snapshot to verify ownership
     snapshot = get_snapshot_by_id(db, snapshot_id)
     if not snapshot:
+        apiLogger.warning(f"Snapshot not found: {snapshot_id}")
         raise HTTPException(status_code=404, detail="Snapshot not found")
     
     # Get task to verify ownership
@@ -369,6 +384,7 @@ async def delete_snapshot_endpoint(
     
     # Verify task belongs to user
     if task.user_id != user_id:
+        apiLogger.warning(f"Unauthorized access attempt: User {user_id} tried to access snapshot {snapshot_id} belonging to user {task.user_id}")
         raise HTTPException(status_code=403, detail="Not authorized to access this snapshot")
     
     # Delete snapshot
@@ -438,6 +454,7 @@ async def set_current_snapshot_endpoint(
     # Set as current snapshot
     task.current_snapshot_id = snapshot_id
     db.commit()
+    apiLogger.info(f"Successfully set snapshot {snapshot_id} as current for task {task.id}")
     
     # Return the snapshot that was set as current
     return SnapshotResponse(
@@ -459,15 +476,17 @@ async def get_snapshot_children_endpoint(
     db: Session = Depends(get_db)
 ):
     user_id = user.user_id
+    apiLogger.info(f"User {user_id} requesting children of snapshot {snapshot_id}")
     # Get snapshot with children
     snapshot, children = get_snapshot_with_children(db, snapshot_id)
     
     if not snapshot:
         raise HTTPException(status_code=404, detail="Snapshot not found")
-    
     # Get task to verify ownership
     task = db.get(task_id=snapshot.task_id)
     if not task:
+        apiLogger.warning(f"Task not found for snapshot {snapshot_id}, task_id={snapshot.task_id}")
+        raise HTTPException(status_code=404, detail="Task not found")
         raise HTTPException(status_code=404, detail="Task not found")
     
     # Verify task belongs to user

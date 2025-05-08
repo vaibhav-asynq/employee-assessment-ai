@@ -5,26 +5,7 @@ import {
   containsCode,
   hasSuspiciousContent,
 } from "@/lib/sanitize";
-import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
-import debounce from "lodash.debounce";
-
-const debouncedSnapshotSave = debounce(
-  (
-    input: {
-      triggerType: "manual" | "auto";
-      makeActive?: boolean;
-      parentId?: number;
-    },
-    fetchFunction: (
-      triggerType: "manual" | "auto",
-      makeActive?: boolean,
-      parentId?: number,
-    ) => void,
-  ) => {
-    fetchFunction(input.triggerType, input.makeActive, input.parentId);
-  },
-  2000,
-);
+import { useDebounce } from "@/lib/utils/debounce";
 
 interface EditableTextProps {
   value: string;
@@ -45,14 +26,6 @@ export function EditableText({
   const [hasHTML, setHasHTML] = useState(false);
   const [hasCode, setHasCode] = useState(false);
   const [hasSuspicious, setHasSuspicious] = useState(false);
-  const { saveSnapshotToDb } = useSnapshotSaver();
-
-  const debouncedSaveSnapshot = useCallback(
-    debounce(() => {
-      saveSnapshotToDb("auto", true);
-    }, 4000),
-    [saveSnapshotToDb],
-  );
 
   // Sync with parent value when not editing
   useEffect(() => {
@@ -86,6 +59,16 @@ export function EditableText({
     [],
   );
 
+  // Debounced onChange handler
+  const debouncedOnChange = useDebounce(
+    (value: string) => {
+      const sanitizedValue = sanitizeInput(value);
+      onChange(sanitizedValue);
+    },
+    300,
+    [onChange],
+  );
+
   // Handle focus
   const handleFocus = useCallback(() => {
     setIsEditing(true);
@@ -109,17 +92,8 @@ export function EditableText({
         setHasCode(false);
         setHasSuspicious(false);
       }
-      debouncedSaveSnapshot();
     }
-  }, [
-    localValue,
-    value,
-    onChange,
-    hasHTML,
-    hasCode,
-    hasSuspicious,
-    debouncedSaveSnapshot,
-  ]);
+  }, [localValue, value, onChange, hasHTML, hasCode, hasSuspicious]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback(
@@ -129,9 +103,14 @@ export function EditableText({
         if (textareaRef.current) {
           textareaRef.current.blur();
         }
+      } else {
+        // For other key events, update via debounced handler while typing
+        if (localValue !== value && !hasHTML && !hasCode && !hasSuspicious) {
+          debouncedOnChange(localValue);
+        }
       }
     },
-    [],
+    [localValue, value, debouncedOnChange, hasHTML, hasCode, hasSuspicious],
   );
 
   return (

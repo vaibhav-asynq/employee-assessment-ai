@@ -5,17 +5,23 @@ import {
   containsCode,
   hasSuspiciousContent,
 } from "@/lib/sanitize";
+import { useDebounce } from "@/lib/utils/debounce";
+import { cn } from "@/lib/utils";
 
 interface EditableSubheadingProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
+  classNameContainer?: string;
 }
 
 export function EditableSubheading({
   value,
   onChange,
   placeholder = "Enter subheading...",
+  className = "",
+  classNameContainer = "",
 }: EditableSubheadingProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [localValue, setLocalValue] = useState(value);
@@ -42,6 +48,16 @@ export function EditableSubheading({
     setHasCode(containsCode(newValue));
     setHasSuspicious(hasSuspiciousContent(newValue));
   }, []);
+
+  // Debounced onChange handler
+  const debouncedOnChange = useDebounce(
+    (value: string) => {
+      const sanitizedValue = sanitizeInput(value);
+      onChange(sanitizedValue);
+    },
+    300,
+    [onChange],
+  );
 
   // Handle focus
   const handleFocus = useCallback(() => {
@@ -76,21 +92,30 @@ export function EditableSubheading({
         if (inputRef.current) {
           inputRef.current.blur();
         }
+      } else {
+        // For other key events, update via debounced handler while typing
+        if (localValue !== value && !hasHTML && !hasCode && !hasSuspicious) {
+          debouncedOnChange(localValue);
+        }
       }
     },
-    [],
+    [localValue, value, debouncedOnChange, hasHTML, hasCode, hasSuspicious],
   );
 
   return (
-    <div className="flex flex-col group">
+    <div className={cn("flex flex-col group", classNameContainer)}>
       <input
         ref={inputRef}
         type="text"
-        className={`flex-1 text-lg font-semibold p-2 border rounded focus:outline-none focus:ring-1 ${
-          hasHTML || hasCode || hasSuspicious
-            ? "border-red-500 focus:ring-red-500"
-            : "focus:ring-blue-500"
-        }`}
+        className={cn(
+          `flex-1 text-lg font-semibold p-2 border rounded focus:outline-none focus:ring-1`,
+          className,
+          `${
+            hasHTML || hasCode || hasSuspicious
+              ? "border-red-500 focus:ring-red-500"
+              : "focus:ring-blue-500"
+          }`,
+        )}
         value={localValue}
         onChange={handleChange}
         onFocus={handleFocus}
