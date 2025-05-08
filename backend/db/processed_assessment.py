@@ -1,13 +1,12 @@
 from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from .models import DBProcessedAssessment, DBTask
 
 
-async def create_processed_assessment(
-    db: AsyncSession,
+def create_processed_assessment(
+    db: Session,
     task_id: int,
     filtered_data: str,
     executive_data: str
@@ -19,39 +18,33 @@ async def create_processed_assessment(
     )
     
     db.add(db_processed_assessment)
-    await db.commit()
-    await db.refresh(db_processed_assessment)
+    db.commit()
+    db.refresh(db_processed_assessment)
     
     return db_processed_assessment
 
 
-async def get_processed_assessment_by_id(
-    db: AsyncSession,
+def get_processed_assessment_by_id(
+    db: Session,
     assessment_id: int
 ) -> Optional[DBProcessedAssessment]:
-    result = await db.execute(
-        select(DBProcessedAssessment).where(DBProcessedAssessment.id == assessment_id)
-    )
-    return result.scalars().first()
+    return db.query(DBProcessedAssessment).filter(DBProcessedAssessment.id == assessment_id).first()
 
 
-async def get_processed_assessment_by_task_id(
-    db: AsyncSession,
+def get_processed_assessment_by_task_id(
+    db: Session,
     task_id: int
 ) -> Optional[DBProcessedAssessment]:
-    result = await db.execute(
-        select(DBProcessedAssessment).where(DBProcessedAssessment.task_id == task_id)
-    )
-    return result.scalars().first()
+    return db.query(DBProcessedAssessment).filter(DBProcessedAssessment.task_id == task_id).first()
 
 
-async def update_processed_assessment(
-    db: AsyncSession,
+def update_processed_assessment(
+    db: Session,
     assessment_id: int,
     filtered_data: Optional[str] = None,
     executive_data: Optional[str] = None
 ) -> Optional[DBProcessedAssessment]:
-    db_assessment = await get_processed_assessment_by_id(db, assessment_id)
+    db_assessment = get_processed_assessment_by_id(db, assessment_id)
     
     if not db_assessment:
         return None
@@ -62,22 +55,22 @@ async def update_processed_assessment(
     if executive_data is not None:
         db_assessment.executive_data = executive_data
     
-    await db.commit()
-    await db.refresh(db_assessment)
+    db.commit()
+    db.refresh(db_assessment)
     
     return db_assessment
 
 
-async def delete_processed_assessment(
-    db: AsyncSession,
+def delete_processed_assessment(
+    db: Session,
     assessment_id: int
 ) -> bool:
-    db_assessment = await get_processed_assessment_by_id(db, assessment_id)
+    db_assessment = get_processed_assessment_by_id(db, assessment_id)
     
     if not db_assessment:
         return False
     
-    await db.delete(db_assessment)
-    await db.commit()
+    db.delete(db_assessment)
+    db.commit()
     
     return True

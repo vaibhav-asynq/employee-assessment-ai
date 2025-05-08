@@ -7,6 +7,7 @@ from auth.user import User, get_current_user
 from db.advice import AdviceCreate, create_advice, get_cached_advice
 from db.core import get_db
 from db.file import get_task_by_user_and_fileId
+from db.processed_assessment import get_processed_assessment_by_task_id
 from dir_config import SAVE_DIR
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.params import Depends
@@ -19,7 +20,7 @@ router = APIRouter(
 
 
 # here tasks will be created
-@router.get("/api/db/get_advice/{file_id}")
+@router.get("/api/get_advice/{file_id}")
 async def get_advice(
     request: Request, 
     file_id: str,
@@ -40,13 +41,20 @@ async def get_advice(
 
         # If not cached or cache disabled, process normally
         db_task = get_task_by_user_and_fileId(user_id, file_id, db)
-        # Get the feedback transcript
-        feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-        if not os.path.exists(feedback_path):
-            raise HTTPException(status_code=404, detail="Feedback transcript not found")
 
-        with open(feedback_path, "r") as f:
-            feedback_transcript = f.read()
+        # try to get or generate transcripts
+        feedback_transcript = None
+        assess_data = get_processed_assessment_by_task_id(db, db_task.id)
+        if assess_data and assess_data.filtered_data:
+            feedback_transcript = assess_data.filtered_data
+        if not feedback_transcript:
+            # Get the feedback transcript from file
+            feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
+            if not os.path.exists(feedback_path):
+                raise HTTPException(status_code=404, detail="Feedback transcript not found or generated.")
+
+            with open(feedback_path, "r") as f:
+                feedback_transcript = f.read()
 
         # Load and format prompt
         advice_prompt = load_prompt("advice.txt")

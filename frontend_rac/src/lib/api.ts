@@ -300,6 +300,11 @@ export const getFileTaskHistory = async (userId: string): Promise<Task[]> => {
   return response.data;
 };
 
+export const deleteFileTask = async (taskId: number): Promise<Task> => {
+  const response = await api.delete(`/api/tasks/${taskId}`);
+  return response.data;
+};
+
 export const getDevelopmentAreas = async (
   fileId: string,
   numCompetencies: number,
@@ -498,6 +503,16 @@ export const setCurrentSnapshot = async (
     const response = await api.post(
       `/api/snapshots/set-current/${fileId}/${snapshotId}`,
     );
+    return response.data;
+  } catch (error) {
+    console.error("Error setting current snapshot:", error);
+    throw error;
+  }
+};
+
+export const deleteSnapshot = async (snapshotId: number) => {
+  try {
+    const response = await api.delete(`/api/snapshots/${snapshotId}`);
     return response.data;
   } catch (error) {
     console.error("Error setting current snapshot:", error);

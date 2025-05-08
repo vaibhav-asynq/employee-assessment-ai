@@ -9,7 +9,7 @@ import aspose.words as aw
 from anthropic import Anthropic
 from db.processed_assessment import create_processed_assessment
 from PyPDF2 import PdfReader
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 
 class AssessmentProcessor:
@@ -348,7 +348,7 @@ class AssessmentProcessor:
             raise
 
 
-    def process_assessment_with_executive(self, pdf_path: str, task_id: int = None, db: AsyncSession = None, save_to_files: bool = False, SAVE_DIR: str = None) -> tuple[str, str]:
+    def process_assessment_with_executive(self, pdf_path: str, task_id: int = None, db: Session = None, save_to_files: bool = False, SAVE_DIR: str = None) -> tuple[str, str]:
         """
         Process assessment document and extract both stakeholder feedback and executive interview.
         
@@ -441,7 +441,7 @@ class AssessmentProcessor:
 
     async def save_to_database(
         self, 
-        db: AsyncSession, 
+        db: Session, 
         task_id: int, 
         stakeholder_text: str, 
         executive_text: str
@@ -456,7 +456,7 @@ class AssessmentProcessor:
             executive_text: Content of the executive assessment (executive's own words)
         """
         try:
-            await create_processed_assessment(
+            create_processed_assessment(
                 db=db,
                 task_id=task_id,
                 filtered_data=stakeholder_text,

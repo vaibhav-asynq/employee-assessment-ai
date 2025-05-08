@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { FeedbackData, AdviceData } from "@/lib/types/types.interview-data";
 import { uploadFile, SortedEvidence } from "@/lib/api";
 import { TemplatedData } from "@/lib/types/types.analysis";
+import { handleError } from "@/lib/errorHandling";
 
 type InterviewDataState = {
   // States
@@ -39,7 +40,7 @@ type InterviewDataState = {
 
   setFileId: (fileId: string | null) => void;
   handleSelectPdf: (
-    event: React.ChangeEvent<HTMLInputElement>,
+    file: File,
     callback?: () => void,
     useCache?: boolean,
   ) => Promise<void>;
@@ -89,17 +90,8 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
   aiCompetencies: null,
 
   // Handle PDF Upload
-  handleSelectPdf: async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    callback?: () => void,
-    useCache: boolean = true,
-  ) => {
-    const uploadedFile = event.target.files?.[0];
-    if (!uploadedFile) return;
-    if (uploadedFile.type !== "application/pdf") {
-      set({ error: "Please upload a PDF file" });
-      return;
-    }
+  handleSelectPdf: async (file, callback, useCache = true) => {
+    const uploadedFile = file;
     set({
       loading: true,
       error: "",
@@ -114,9 +106,8 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
       });
       if (callback) callback();
     } catch (error) {
-      console.error("Upload failed:", error);
       set({
-        error: error instanceof Error ? error.message : "Failed to upload PDF",
+        error: handleError(error),
       });
     } finally {
       set({ loading: false, uploadProgress: null });
@@ -135,6 +126,7 @@ export const useInterviewDataStore = create<InterviewDataState>((set, get) => ({
           },
         },
       },
+      file: null,
       fullReport: null,
       aiCompetencies: null,
       fileId,

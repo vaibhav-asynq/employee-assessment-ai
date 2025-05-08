@@ -28,13 +28,8 @@ export function AnalysisDisplay() {
   // TODO: check if this useEffect is needed
   // Check if templates are initialized
   useEffect(() => {
-    // If templates object is empty or missing required templates, show initializing state
     const hasRequiredTemplates =
-      templates &&
-      Object.keys(templates).length >= 3 &&
-      templates[templatesIds.base] &&
-      templates[templatesIds.fullReport] &&
-      templates[templatesIds.aiCompetencies];
+      templates && Object.keys(templates).length >= 1;
 
     setInitializing(!hasRequiredTemplates);
   }, [templates]);
@@ -68,6 +63,8 @@ export function AnalysisDisplay() {
       </TabsContent>
     );
   };
+
+  console.log({ loading, initializing });
 
   if (loading || initializing) {
     return (

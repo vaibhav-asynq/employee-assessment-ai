@@ -9,10 +9,13 @@ from typing import Any, Dict, List, Optional, Union
 import anthropic
 import aspose.words as aw
 import env_variables
-import uvicorn
 import special_name_processor
+import uvicorn
+from auth.user import User, get_current_user
 from cache_manager import (add_to_filename_map, get_cached_data,
                            get_cached_file_id, save_cached_data)
+from db.core import get_db
+from db.feedback import get_cached_feedback
 from docx import Document
 from docx.shared import Inches
 from dotenv import load_dotenv
@@ -36,6 +39,7 @@ from prompt_loader import (format_area_content_prompt,
 from pydantic import BaseModel
 from report_generation import (create_360_feedback_report,
                                create_360_feedback_report_for_word)
+from sqlalchemy.orm import Session
 from state import files_store
 from utils.jwt_utils import verify_clerk_token
 from utils.postgreSql_uitls import get_db_connection
@@ -45,15 +49,7 @@ from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
-from auth.user import User, get_current_user
-from sqlalchemy.orm import Session
-from db.core import get_db
-from db.feedback import get_cached_feedback
 
-
-
-import json
-import os
 
 def read_filename_map():
     try:
@@ -1010,6 +1006,7 @@ async def sort_strengths_evidence(
         user_id = current_user.user_id
         feedback_data = None
         
+        #  TODO: implement db feedback_transcript
         if user_id:
             try:
                 feedback_data = get_cached_feedback(user_id, request.file_id, db)
@@ -1389,7 +1386,7 @@ async def get_strength_evidences(
 
 
 
-@app.get("/api/get_advice/{file_id}")
+@app.get("/api/get_advice_old/{file_id}")
 async def get_advice(
     file_id: str,
     use_cache: bool = Query(
@@ -1767,6 +1764,7 @@ async def sort_areas_evidence(
         user_id = current_user.user_id
         feedback_data = None
         
+        #  TODO: implement db feedback_transcript
         if user_id:
             try:
                 feedback_data = get_cached_feedback(user_id, request.file_id, db)

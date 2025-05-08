@@ -7,16 +7,14 @@ from db.core import NotFoundError, get_db
 from db.file import (Task, TaskCreate, create_db_task, delete_db_task,
                      get_cached_file_id, get_db_task,
                      get_task_by_user_and_fileId, get_user_tasks_db,
-                     is_file_exist, save_uploaded_file, update_db_task)
+                     is_file_exist, process_initial_transcripts,
+                     save_uploaded_file, update_db_task)
 from dir_config import SAVE_DIR
 from fastapi import (APIRouter, HTTPException, Query, Request, UploadFile,
                      status)
 from fastapi.params import Depends
-from process_pdf import AssessmentProcessor
 from sqlalchemy.orm import Session
 from state import files_store
-
-assessment_processor = AssessmentProcessor(env_variables.ANTHROPIC_API_KEY)
 
 router = APIRouter(
     prefix="",
@@ -35,20 +33,7 @@ async def upload_file(
     db: Session = Depends(get_db)
 ) :
     user_id = current_user.user_id
-    use_cache=False
     try:
-        if use_cache:
-            cached_file_id =  get_cached_file_id(user_id, file.filename,db )
-            if cached_file_id:
-                print(f"Using cached file ID {cached_file_id} for {file.filename}")
-                file_path = is_file_exist(cached_file_id)
-                if file_path:
-                    if cached_file_id not in files_store:
-                        files_store[cached_file_id] = {
-                            "file_path": file_path,
-                            "original_name": file.filename,
-                        }
-                    return {"file_id": cached_file_id}
         file_id, file_path = await save_uploaded_file(file)
         task_item = {
             "user_id": user_id,
@@ -61,12 +46,7 @@ async def upload_file(
         add_to_filename_map(file.filename, file_id)
 
         # Process the file
-        (
-            stakeholder_feedback,
-            executive_interview,
-        # ) = assessment_processor.process_assessment_with_executive(file_path, SAVE_DIR)
-        ) = await assessment_processor.process_assessment_with_executive(file_path, task.id, db)
-
+        process_initial_transcripts(file_path=file_path, db=db, taskId=task.id, save_to_files=True)
         
         # TODO: return the task
         return {"file_id": task.file_id}
@@ -154,7 +134,7 @@ async def delete_task(
     try:
         # We need to add this function to db/file.py
         delete_db_task(task_id, user_id, db)
-        return {}
+        return {"success": True}
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

@@ -184,3 +184,37 @@ export const useUploadUpdatedReport = () => {
     mutationFn: (file: File) => api.uploadUpdatedReport(file),
   });
 };
+
+/**
+ * Hook to delete a file task
+ */
+export const useDeleteFileTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: number) => api.deleteFileTask(taskId),
+    onSuccess: () => {
+      // Invalidate the file task history query to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.all,
+      });
+    },
+  });
+};
+
+/**
+ * Hook to delete a snapshot
+ */
+export const useDeleteSnapshot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (snapshotId: number) => api.deleteSnapshot(snapshotId),
+    onSuccess: (_, variables) => {
+      // Since we don't know the fileId here, we need to invalidate all snapshot queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.snapshots.all,
+      });
+    },
+  });
+};

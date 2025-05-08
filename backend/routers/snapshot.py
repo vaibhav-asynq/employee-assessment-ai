@@ -363,7 +363,7 @@ async def delete_snapshot_endpoint(
         raise HTTPException(status_code=404, detail="Snapshot not found")
     
     # Get task to verify ownership
-    task = db.get(task_id=snapshot.task_id)
+    task = get_db_task(snapshot.task_id, user_id, db)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
