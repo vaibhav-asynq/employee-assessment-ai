@@ -24,7 +24,6 @@ export function SaveSnapshotBtn() {
   const handleSaveSnapshot = () => {
     saveSnapshotToDb("manual", true, snapshotName || undefined);
     setSnapshotName("");
-    console.log(snapshotName);
     setIsDialogOpen(false);
   };
 
