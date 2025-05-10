@@ -39,7 +39,7 @@ export function AiCompetencies() {
 
   return (
     <ErrorBoundary FallbackComponent={FallbackAiCompetencies}>
-      <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
+      <div className="grid grid-cols-2 gap-8">
         {/* Left side - Evidence Display */}
         <div className="overflow-y-auto pr-4">
           <ErrorBoundary FallbackComponent={FallbackAiCompetenciesDisplay}>

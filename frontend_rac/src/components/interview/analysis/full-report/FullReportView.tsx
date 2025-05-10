@@ -18,7 +18,7 @@ export function FullReportView() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
+    <div className="grid grid-cols-2 gap-8">
       <div className="overflow-y-auto pr-4 p-6">
         <div className="mt-4 mb-6">
           <h2 className="text-2xl font-bold">Sorted by stakeholder</h2>
