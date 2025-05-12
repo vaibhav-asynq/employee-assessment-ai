@@ -2,14 +2,94 @@ import logging
 import os
 import re
 import textwrap
+import asyncio
+import time
+import concurrent.futures
+import threading
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
+from functools import partial
 
 import aspose.words as aw
 from anthropic import Anthropic
 from db.processed_assessment import create_processed_assessment
 from PyPDF2 import PdfReader
 from sqlalchemy.orm import Session
+
+# Import the API config
+try:
+    from config.api_config import MAX_CONCURRENT_API_CALLS, MAX_API_CALLS_PER_MINUTE, PDF_CHUNK_BATCH_SIZE
+except ImportError:
+    # Default values if config file doesn't exist
+    MAX_CONCURRENT_API_CALLS = 3
+    MAX_API_CALLS_PER_MINUTE = 50
+    PDF_CHUNK_BATCH_SIZE = 4  # Process 4 chunks at a time by default
+
+# API Call Manager for controlling concurrency
+class ApiCallManager:
+    """
+    Manages concurrent API calls to ensure we don't exceed the maximum limit.
+    Uses a semaphore to control concurrency.
+    """
+    def __init__(self, max_concurrent=MAX_CONCURRENT_API_CALLS):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.active_calls = 0
+        self.lock = asyncio.Lock()
+        self.max_concurrent = max_concurrent
+        
+    async def __aenter__(self):
+        """Acquire the semaphore before making an API call"""
+        # Log if we're about to wait
+        async with self.lock:
+            current = self.active_calls
+            if current >= self.max_concurrent:
+                print(f"Waiting for API call slot (current: {current}/{self.max_concurrent})")
+        
+        # Acquire semaphore (will block if at max concurrent calls)
+        await self.semaphore.acquire()
+        
+        async with self.lock:
+            self.active_calls += 1
+            current = self.active_calls
+        
+        print(f"API call started. Active calls: {current}/{self.max_concurrent}")
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Release the semaphore after the API call completes"""
+        async with self.lock:
+            self.active_calls -= 1
+            current = self.active_calls
+        self.semaphore.release()
+        print(f"API call completed. Active calls: {current}/{self.max_concurrent}")
+
+# Rate Limiter for controlling API call frequency
+class RateLimiter:
+    """
+    Limits the rate of API calls to prevent hitting rate limits.
+    Tracks calls over a rolling 60-second window.
+    """
+    def __init__(self, max_calls_per_minute=MAX_API_CALLS_PER_MINUTE):
+        self.max_calls = max_calls_per_minute
+        self.calls = []
+        self.lock = asyncio.Lock()
+        
+    async def wait_if_needed(self):
+        """Wait if we've exceeded our rate limit"""
+        now = time.time()
+        async with self.lock:
+            # Remove calls older than 1 minute
+            self.calls = [t for t in self.calls if now - t < 60]
+            
+            # If we're at the limit, wait
+            if len(self.calls) >= self.max_calls:
+                sleep_time = 60 - (now - self.calls[0])
+                if sleep_time > 0:
+                    print(f"Rate limit reached, waiting {sleep_time:.2f} seconds")
+                    await asyncio.sleep(sleep_time)
+            
+            # Add this call
+            self.calls.append(time.time())
 
 
 class AssessmentProcessor:
@@ -162,7 +242,7 @@ class AssessmentProcessor:
         """
 
     def process_chunk(self, prompt: str) -> str:
-        """Process chunk using Claude."""
+        """Process chunk using Claude (synchronous version)."""
         try:
             message = self.client.messages.create(
                 model="claude-3-7-sonnet-latest",
@@ -176,6 +256,30 @@ class AssessmentProcessor:
                 ]
             )
             return message.content[0].text.strip()
+        except Exception as e:
+            self.logger.error(f"Error processing chunk with Claude: {str(e)}")
+            raise
+            
+    async def process_chunk_async(self, prompt: str, api_call_manager: ApiCallManager, rate_limiter: RateLimiter) -> str:
+        """Process chunk using Claude (async version with rate limiting)."""
+        try:
+            # Apply rate limiting
+            await rate_limiter.wait_if_needed()
+            
+            # Use API call manager to control concurrency
+            async with api_call_manager:
+                message = self.client.messages.create(
+                    model="claude-3-7-sonnet-latest",
+                    max_tokens=4096,
+                    system="You are an expert at filtering assessment documents while maintaining their structure and format. Return ONLY the filtered content without any explanatory text, meta-commentary, notes, or descriptions of what you're doing. Do not include phrases like 'I'll provide' or 'Here's the processed version' or explanatory notes in brackets.",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+                return message.content[0].text.strip()
         except Exception as e:
             self.logger.error(f"Error processing chunk with Claude: {str(e)}")
             raise
@@ -220,7 +324,7 @@ class AssessmentProcessor:
         """
 
     def process_chunk_executive(self, prompt: str) -> str:
-        """Process chunk using Claude for executive content and clean the output."""
+        """Process chunk using Claude for executive content and clean the output (synchronous version)."""
         try:
             message = self.client.messages.create(
                 model="claude-3-7-sonnet-latest",
@@ -240,48 +344,89 @@ class AssessmentProcessor:
                 traceback.print_exc()
                 content = ""
 
-            
-            # Remove common explanation patterns
-            content = re.sub(r"I'm sorry, but.*?\n", "", content)
-            content = re.sub(r"The document chunk.*?\n", "", content)
-            content = re.sub(r"There is no.*?\n", "", content)
-            content = re.sub(r"This section does not.*?\n", "", content)
-            
-            # Clean up any remaining explanation text that starts with common patterns
-            lines = content.split('\n')
-            cleaned_lines = []
-            skip_line = False
-            
-            for line in lines:
-                lower_line = line.lower().strip()
-                if any(phrase in lower_line for phrase in [
-                    "document chunk",
-                    "no content",
-                    "no relevant",
-                    "i apologize",
-                    "i'm sorry",
-                    "could not find",
-                    "does not contain",
-                    "based on the criteria",
-                    "please provide"
-                ]):
-                    skip_line = True
-                    continue
-                    
-                if skip_line and line.strip() == "":
-                    skip_line = False
-                    continue
-                    
-                if not skip_line:
-                    cleaned_lines.append(line)
-            
-            return "\n".join(cleaned_lines).strip()
+            # Clean up the content
+            content = self._clean_executive_content(content)
+            return content
             
         except Exception as e:
             import traceback
             traceback.print_exc()
             self.logger.error(f"Error processing chunk with Claude: {str(e)}")
             raise
+            
+    async def process_chunk_executive_async(self, prompt: str, api_call_manager: ApiCallManager, rate_limiter: RateLimiter) -> str:
+        """Process chunk using Claude for executive content and clean the output (async version with rate limiting)."""
+        try:
+            # Apply rate limiting
+            await rate_limiter.wait_if_needed()
+            
+            # Use API call manager to control concurrency
+            async with api_call_manager:
+                message = self.client.messages.create(
+                    model="claude-3-7-sonnet-latest",
+                    max_tokens=4096,
+                    system="You are an expert at extracting executive's own words from assessment documents. Return ONLY the extracted content without any explanatory text, meta-commentary, or notes about what you've done. Do not use phrases like 'I'll provide' or 'Here's the extracted content'. Do not include explanatory notes in brackets. If no relevant content is found, return an empty string.",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+                try:
+                    content = message.content[0].text.strip()
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    content = ""
+
+                # Clean up the content
+                content = self._clean_executive_content(content)
+                return content
+                
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.logger.error(f"Error processing chunk with Claude: {str(e)}")
+            raise
+            
+    def _clean_executive_content(self, content: str) -> str:
+        """Clean up executive content by removing explanatory text and other artifacts."""
+        # Remove common explanation patterns
+        content = re.sub(r"I'm sorry, but.*?\n", "", content)
+        content = re.sub(r"The document chunk.*?\n", "", content)
+        content = re.sub(r"There is no.*?\n", "", content)
+        content = re.sub(r"This section does not.*?\n", "", content)
+        
+        # Clean up any remaining explanation text that starts with common patterns
+        lines = content.split('\n')
+        cleaned_lines = []
+        skip_line = False
+        
+        for line in lines:
+            lower_line = line.lower().strip()
+            if any(phrase in lower_line for phrase in [
+                "document chunk",
+                "no content",
+                "no relevant",
+                "i apologize",
+                "i'm sorry",
+                "could not find",
+                "does not contain",
+                "based on the criteria",
+                "please provide"
+            ]):
+                skip_line = True
+                continue
+                
+            if skip_line and line.strip() == "":
+                skip_line = False
+                continue
+                
+            if not skip_line:
+                cleaned_lines.append(line)
+        
+        return "\n".join(cleaned_lines).strip()
 
     def process_assessment_with_executive_old(self, pdf_path: str, SAVE_DIR: str) -> tuple[str, str]:
         """Process assessment document and extract both stakeholder feedback and executive interview."""
@@ -353,6 +498,64 @@ class AssessmentProcessor:
             raise
 
 
+    async def process_chunks_parallel(self, document_name: str, chunks: List[str], batch_size: int = PDF_CHUNK_BATCH_SIZE) -> Tuple[List[str], List[str]]:
+        """
+        Process chunks in parallel using async methods.
+        
+        Args:
+            document_name: Name of the document being processed
+            chunks: List of text chunks to process
+            batch_size: Number of chunks to process in parallel
+            
+        Returns:
+            Tuple of (stakeholder_chunks, executive_chunks)
+        """
+        self.logger.info(f"Processing {len(chunks)} chunks in parallel with batch size {batch_size}")
+        
+        # Create API call manager and rate limiter
+        api_call_manager = ApiCallManager(MAX_CONCURRENT_API_CALLS)
+        rate_limiter = RateLimiter(MAX_API_CALLS_PER_MINUTE)
+        
+        stakeholder_chunks = []
+        executive_chunks = []
+        
+        # Process chunks in batches
+        for i in range(0, len(chunks), batch_size):
+            batch_end = min(i + batch_size, len(chunks))
+            current_batch = chunks[i:batch_end]
+            
+            self.logger.info(f"Processing batch {i//batch_size + 1}: chunks {i+1} to {batch_end} of {len(chunks)}")
+            
+            # Create tasks for stakeholder feedback processing
+            stakeholder_tasks = []
+            for j, chunk in enumerate(current_batch):
+                stakeholder_prompt = self.create_filtering_prompt(document_name, chunk)
+                task = self.process_chunk_async(stakeholder_prompt, api_call_manager, rate_limiter)
+                stakeholder_tasks.append(task)
+            
+            # Create tasks for executive interview processing
+            executive_tasks = []
+            for j, chunk in enumerate(current_batch):
+                executive_prompt = self.create_executive_prompt(document_name, chunk)
+                task = self.process_chunk_executive_async(executive_prompt, api_call_manager, rate_limiter)
+                executive_tasks.append(task)
+            
+            # Wait for all tasks in this batch to complete
+            batch_stakeholder_results = await asyncio.gather(*stakeholder_tasks)
+            batch_executive_results = await asyncio.gather(*executive_tasks)
+            
+            # Add results to our lists
+            stakeholder_chunks.extend(batch_stakeholder_results)
+            
+            # Only add non-empty executive chunks
+            for result in batch_executive_results:
+                if result.strip():
+                    executive_chunks.append(result)
+            
+            self.logger.info(f"Completed batch {i//batch_size + 1}")
+        
+        return stakeholder_chunks, executive_chunks
+
     def process_assessment_with_executive(self, pdf_path: str, task_id: int = None, db: Session = None, save_to_files: bool = False, SAVE_DIR: str = None) -> tuple[str, str]:
         """
         Process assessment document and extract both stakeholder feedback and executive interview.
@@ -373,24 +576,30 @@ class AssessmentProcessor:
             
             # Use the improved chunking method with overlap
             chunks = self.read_pdf_in_chunks(pdf_path, chunk_size=1500, overlap=200)
-            stakeholder_chunks = []
-            executive_chunks = []
-            
             self.logger.info(f"Total chunks to process: {len(chunks)}")
             
-            for i, chunk in enumerate(chunks, 1):
-                self.logger.info(f"Processing chunk {i}/{len(chunks)}")
+            # Process chunks in parallel using asyncio
+            import asyncio
+            
+            # Use asyncio.run for the async method if we're not already in an async context
+            if asyncio.get_event_loop().is_running():
+                # We're already in an async context, create a task instead of run_until_complete
+                self.logger.info("Using existing event loop for parallel processing - creating task")
                 
-                # Process stakeholder feedback using original method
-                stakeholder_prompt = self.create_filtering_prompt(document_name, chunk)
-                stakeholder_chunk = self.process_chunk(stakeholder_prompt)
-                stakeholder_chunks.append(stakeholder_chunk)
+                # Create a task that will run in the background
+                # This returns a coroutine that will be processed asynchronously
+                processing_task = self.process_chunks_parallel(document_name, chunks, PDF_CHUNK_BATCH_SIZE)
                 
-                # Process executive interview with clean output
-                executive_prompt = self.create_executive_prompt(document_name, chunk)
-                executive_chunk = self.process_chunk_executive(executive_prompt)
-                if executive_chunk.strip():  # Only add non-empty chunks
-                    executive_chunks.append(executive_chunk)
+                # Since we're in an async context, we need to await the task
+                # But we can't use await directly here, so we'll return the task
+                # The caller will need to handle this appropriately
+                return processing_task
+            else:
+                # We're not in an async context, use asyncio.run
+                self.logger.info("Creating new event loop for parallel processing")
+                stakeholder_chunks, executive_chunks = asyncio.run(
+                    self.process_chunks_parallel(document_name, chunks, PDF_CHUNK_BATCH_SIZE)
+                )
             
             # Combine processed chunks and remove any duplicate whitespace
             stakeholder_text = "\n\n".join(stakeholder_chunks)

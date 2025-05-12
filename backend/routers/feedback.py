@@ -3,8 +3,12 @@ import json
 import os
 import re
 import time
+import asyncio
+import concurrent.futures
+import threading
 from string import Template
 from typing import Any, Dict, List, Optional, Tuple
+from functools import partial
 
 import anthropic
 import env_variables
@@ -22,10 +26,215 @@ from utils.loggers.db_logger import logger as dbLogger
 from utils.loggers.endPoint_logger import logger as apiLogger
 from utils.loggers.feedback_logger import feedbackLogger
 
+# Import the API config
+try:
+    from config.api_config import MAX_CONCURRENT_API_CALLS, MAX_API_CALLS_PER_MINUTE, STAKEHOLDER_BATCH_SIZE
+except ImportError:
+    # Default values if config file doesn't exist
+    MAX_CONCURRENT_API_CALLS = 3
+    MAX_API_CALLS_PER_MINUTE = 50
+    STAKEHOLDER_BATCH_SIZE = 2
+    feedbackLogger.warning("API config file not found, using default values")
+
 router = APIRouter(
     prefix="",
 )
 
+class ApiCallManager:
+    """
+    Manages concurrent API calls to ensure we don't exceed the maximum limit.
+    Uses a semaphore to control concurrency.
+    """
+    def __init__(self, max_concurrent=MAX_CONCURRENT_API_CALLS):
+        self.semaphore = threading.Semaphore(max_concurrent)
+        self.active_calls = 0
+        self.lock = threading.Lock()
+        self.max_concurrent = max_concurrent
+        feedbackLogger.info(f"API Call Manager initialized with max {max_concurrent} concurrent calls")
+    
+    def __enter__(self):
+        """Acquire the semaphore before making an API call"""
+        # Log if we're about to wait
+        with self.lock:
+            current = self.active_calls
+            if current >= self.max_concurrent:
+                feedbackLogger.info(f"Waiting for API call slot (current: {current}/{self.max_concurrent})")
+        
+        # Acquire semaphore (will block if at max concurrent calls)
+        self.semaphore.acquire()
+        
+        with self.lock:
+            self.active_calls += 1
+            current = self.active_calls
+        
+        feedbackLogger.debug(f"API call started. Active calls: {current}/{self.max_concurrent}")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Release the semaphore after the API call completes"""
+        with self.lock:
+            self.active_calls -= 1
+            current = self.active_calls
+        self.semaphore.release()
+        feedbackLogger.debug(f"API call completed. Active calls: {current}/{self.max_concurrent}")
+
+# Create a global instance
+api_call_manager = ApiCallManager()
+
+class RateLimiter:
+    """
+    Limits the rate of API calls to prevent hitting rate limits.
+    Tracks calls over a rolling 60-second window.
+    """
+    def __init__(self, max_calls_per_minute=MAX_API_CALLS_PER_MINUTE):
+        self.max_calls = max_calls_per_minute
+        self.calls = []
+        self.lock = threading.Lock()
+        feedbackLogger.info(f"Rate Limiter initialized with max {max_calls_per_minute} calls per minute")
+    
+    def wait_if_needed(self):
+        """Wait if we've exceeded our rate limit"""
+        now = time.time()
+        with self.lock:
+            # Remove calls older than 1 minute
+            self.calls = [t for t in self.calls if now - t < 60]
+            
+            # If we're at the limit, wait
+            if len(self.calls) >= self.max_calls:
+                sleep_time = 60 - (now - self.calls[0])
+                if sleep_time > 0:
+                    feedbackLogger.info(f"Rate limit reached, waiting {sleep_time:.2f} seconds")
+                    time.sleep(sleep_time)
+            
+            # Add this call
+            self.calls.append(time.time())
+
+# Create a rate limiter instance
+rate_limiter = RateLimiter()
+
+def call_claude_api(client, prompt, max_tokens=3000):
+    """
+    Wrapper for Claude API calls with rate limiting and concurrency control.
+    Uses both the rate limiter and API call manager.
+    """
+    # First check rate limiting
+    rate_limiter.wait_if_needed()
+    
+    # Then control concurrency
+    with api_call_manager:
+        return client.messages.create(
+            model="claude-3-7-sonnet-latest",
+            max_tokens=max_tokens,
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+
+
+async def process_stakeholders_parallel(stakeholders, transcript, client):
+    """
+    Process multiple stakeholders in parallel to extract their feedback.
+    Limited by MAX_CONCURRENT_API_CALLS.
+    
+    Args:
+        stakeholders: List of stakeholder dictionaries
+        transcript: The full transcript text
+        client: The Anthropic client for API calls
+        
+    Returns:
+        List of stakeholder feedback dictionaries
+    """
+    feedbackLogger.info(f"Processing {len(stakeholders)} stakeholders in parallel (max {MAX_CONCURRENT_API_CALLS} concurrent)")
+    start_time = time.time()
+    
+    results = []
+    
+    # Create a partial function with fixed arguments
+    extract_func = partial(extract_stakeholder_feedback, transcript=transcript, client=client)
+    
+    # Process stakeholders in parallel using a thread pool
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_CONCURRENT_API_CALLS) as executor:
+        # Submit all tasks
+        future_to_stakeholder = {
+            executor.submit(extract_func, stakeholder): i 
+            for i, stakeholder in enumerate(stakeholders)
+        }
+        
+        # Process results as they complete
+        for future in concurrent.futures.as_completed(future_to_stakeholder):
+            stakeholder_index = future_to_stakeholder[future]
+            try:
+                feedback = future.result()
+                feedbackLogger.info(f"Stakeholder {stakeholder_index+1}/{len(stakeholders)} processing complete")
+                results.append(feedback)
+            except Exception as e:
+                feedbackLogger.error(f"Error processing stakeholder {stakeholder_index+1}: {str(e)}")
+                # Add a minimal structure so the pipeline doesn't break
+                results.append({
+                    "name": stakeholders[stakeholder_index].get("name", "Unknown"),
+                    "role": stakeholders[stakeholder_index].get("role", ""),
+                    "feedback": []
+                })
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Parallel processing complete: processed {len(stakeholders)} stakeholders in {elapsed_time:.2f} seconds")
+    
+    return results
+
+async def process_batches_parallel(stakeholder_feedback, client, batch_size=STAKEHOLDER_BATCH_SIZE):
+    """
+    Process batches of stakeholders in parallel for categorization.
+    Limited by MAX_CONCURRENT_API_CALLS.
+    
+    Args:
+        stakeholder_feedback: List of dictionaries with stakeholder feedback
+        client: The Anthropic client for API calls
+        batch_size: Size of each batch
+        
+    Returns:
+        A dictionary with categorized feedback
+    """
+    feedbackLogger.info(f"Processing {len(stakeholder_feedback)} stakeholders in parallel batches of {batch_size} (max {MAX_CONCURRENT_API_CALLS} concurrent)")
+    start_time = time.time()
+    
+    # Create batches
+    batches = []
+    for i in range(0, len(stakeholder_feedback), batch_size):
+        batch_end = min(i + batch_size, len(stakeholder_feedback))
+        batches.append(stakeholder_feedback[i:batch_end])
+    
+    # Process batches in parallel
+    categorized_data = {
+        "strengths": {},
+        "areas_to_target": {},
+        "advice": {}
+    }
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_CONCURRENT_API_CALLS) as executor:
+        # Submit all batch processing tasks
+        future_to_batch = {
+            executor.submit(categorize_stakeholder_batch, batch, client): i 
+            for i, batch in enumerate(batches)
+        }
+        
+        # Process results as they complete
+        for future in concurrent.futures.as_completed(future_to_batch):
+            batch_index = future_to_batch[future]
+            try:
+                batch_result = future.result()
+                feedbackLogger.info(f"Batch {batch_index+1}/{len(batches)} processing complete")
+                merge_categorized_data(categorized_data, batch_result)
+            except Exception as e:
+                feedbackLogger.error(f"Error processing batch {batch_index+1}: {str(e)}")
+    
+    elapsed_time = time.time() - start_time
+    feedbackLogger.info(f"Parallel batch processing complete in {elapsed_time:.2f} seconds")
+    
+    return categorized_data
 
 def identify_stakeholders(transcript: str, client: anthropic.Anthropic) -> List[Dict[str, str]]:
     """
@@ -49,20 +258,10 @@ def identify_stakeholders(transcript: str, client: anthropic.Anthropic) -> List[
     template = Template(prompt_text)
     updated_prompt = template.substitute(feedback=transcript)
     
-    # Call Claude API
+    # Call Claude API using the wrapper
     feedbackLogger.info("Calling Claude API to identify stakeholders")
     try:
-        response = client.messages.create(
-            model="claude-3-7-sonnet-latest",
-            max_tokens=2000,
-            temperature=0,
-            messages=[
-                {
-                    "role": "user",
-                    "content": updated_prompt
-                }
-            ]
-        )
+        response = call_claude_api(client, updated_prompt, max_tokens=2000)
         response_text = response.content[0].text
         feedbackLogger.debug(f"Raw response from identify_stakeholders: {response_text[:200]}...")
     except Exception as e:
@@ -171,20 +370,10 @@ def extract_stakeholder_feedback(stakeholder: Dict[str, str], transcript: str, c
         feedback=transcript
     )
     
-    # Call Claude API
+    # Call Claude API using the wrapper
     feedbackLogger.info(f"Calling Claude API to extract feedback for '{name}'")
     try:
-        response = client.messages.create(
-            model="claude-3-7-sonnet-latest",
-            max_tokens=3000,
-            temperature=0,
-            messages=[
-                {
-                    "role": "user",
-                    "content": formatted_prompt
-                }
-            ]
-        )
+        response = call_claude_api(client, formatted_prompt, max_tokens=3000)
         
         response_text = response.content[0].text
         feedbackLogger.debug(f"Raw response from extract_stakeholder_feedback for {name}: {response_text[:200]}...")
@@ -234,9 +423,9 @@ def extract_stakeholder_feedback(stakeholder: Dict[str, str], transcript: str, c
     return feedback_data
 
 
-def categorize_with_strength_assessment(stakeholder_feedback: List[Dict[str, Any]], client: anthropic.Anthropic) -> Dict[str, Any]:
+async def categorize_with_strength_assessment(stakeholder_feedback: List[Dict[str, Any]], client: anthropic.Anthropic) -> Dict[str, Any]:
     """
-    Stage 3: Categorize feedback and assess strength.
+    Stage 3: Categorize feedback and assess strength using parallel processing.
     
     Args:
         stakeholder_feedback: List of dictionaries with stakeholder feedback
@@ -246,38 +435,10 @@ def categorize_with_strength_assessment(stakeholder_feedback: List[Dict[str, Any
         A dictionary with categorized feedback
     """
     start_time = time.time()
-    feedbackLogger.info("Starting Stage 3: Categorizing feedback and assessing strength")
+    feedbackLogger.info("Starting Stage 3: Categorizing feedback and assessing strength using parallel processing")
     
-    # Initialize the result structure
-    categorized_data = {
-        "strengths": {},
-        "areas_to_target": {},
-        "advice": {}
-    }
-    
-    # Process stakeholders in batches of 2 to reduce complexity
-    batch_size = 2
-    total_stakeholders = len(stakeholder_feedback)
-    
-    feedbackLogger.info(f"Processing {total_stakeholders} stakeholders in batches of {batch_size}")
-    
-    # Process stakeholders in batches
-    for i in range(0, total_stakeholders, batch_size):
-        batch_start_time = time.time()
-        batch_end = min(i + batch_size, total_stakeholders)
-        current_batch = stakeholder_feedback[i:batch_end]
-        
-        batch_num = i//batch_size + 1
-        feedbackLogger.info(f"Processing batch {batch_num}: stakeholders {i+1} to {batch_end} of {total_stakeholders}")
-        
-        # Process this batch
-        batch_result = categorize_stakeholder_batch(current_batch, client)
-        
-        # Merge the batch result into the overall result
-        merge_categorized_data(categorized_data, batch_result)
-        
-        batch_elapsed_time = time.time() - batch_start_time
-        feedbackLogger.info(f"Batch {batch_num} processed in {batch_elapsed_time:.2f} seconds")
+    # Process all stakeholders in parallel batches
+    categorized_data = await process_batches_parallel(stakeholder_feedback, client, batch_size=STAKEHOLDER_BATCH_SIZE)
     
     # Ensure all required categories exist
     if "strengths" not in categorized_data:
@@ -325,20 +486,10 @@ def categorize_stakeholder_batch(stakeholder_batch: List[Dict[str, Any]], client
     template = Template(prompt_text)
     formatted_prompt = template.substitute(input_data=input_data)
     
-    # Call Claude API
+    # Call Claude API using the wrapper
     feedbackLogger.info("Calling Claude API for batch categorization")
     try:
-        response = client.messages.create(
-            model="claude-3-7-sonnet-latest",
-            max_tokens=4000,
-            temperature=0,
-            messages=[
-                {
-                    "role": "user",
-                    "content": formatted_prompt
-                }
-            ]
-        )
+        response = call_claude_api(client, formatted_prompt, max_tokens=4000)
         
         response_text = response.content[0].text
         response_length = len(response_text)
@@ -729,18 +880,8 @@ def verify_extraction(categorized_feedback: Dict[str, Any], transcript: str, cli
         feedback=transcript
     )
     
-    # Call Claude API
-    response = client.messages.create(
-        model="claude-3-7-sonnet-latest",
-        max_tokens=3000,
-        temperature=0,
-        messages=[
-            {
-                "role": "user",
-                "content": formatted_prompt
-            }
-        ]
-    )
+    # Call Claude API using the wrapper
+    response = call_claude_api(client, formatted_prompt, max_tokens=3000)
     
     response_text = response.content[0].text
     
@@ -1119,18 +1260,13 @@ async def get_feedback(
             print(f"  {i+1}. {s.get('name', 'Unknown')} - {s.get('role', 'Unknown role')}")
         print(f"[STAGE 1] Completed in {stage1_time:.2f} seconds")
         
-        # Stage 2: Extract feedback per stakeholder
-        print("\n[STAGE 2] Extracting feedback per stakeholder...")
+        # Stage 2: Extract feedback per stakeholder (in parallel)
+        print("\n[STAGE 2] Extracting feedback for all stakeholders in parallel...")
         start_time = time.time()
-        stakeholder_feedback = []
-        for i, stakeholder in enumerate(stakeholders):
-            print(f"  [STAGE 2.{i+1}] Processing stakeholder: {stakeholder['name']} ({i+1}/{len(stakeholders)})")
-            s_start_time = time.time()
-            feedback = extract_stakeholder_feedback(stakeholder, feedback_transcript, client)
-            feedback_count = len(feedback.get("feedback", []))
-            s_time = time.time() - s_start_time
-            print(f"  [STAGE 2.{i+1}] Extracted {feedback_count} feedback items in {s_time:.2f} seconds")
-            stakeholder_feedback.append(feedback)
+        stakeholder_feedback = await process_stakeholders_parallel(stakeholders, feedback_transcript, client)
+        stage2_time = time.time() - start_time
+        total_feedback_count = sum(len(feedback.get("feedback", [])) for feedback in stakeholder_feedback)
+        print(f"[STAGE 2] Extracted {total_feedback_count} total feedback items in {stage2_time:.2f} seconds")
         
         # Validate stakeholder attribution
         print("\n[STAGE 2.5] Validating stakeholder attribution...")
@@ -1149,10 +1285,10 @@ async def get_feedback(
         stage2_time = time.time() - start_time
         print(f"[STAGE 2] Completed in {stage2_time:.2f} seconds")
         
-        # Stage 3: Categorize feedback and assess strength
-        print("\n[STAGE 3] Categorizing feedback and assessing strength...")
+        # Stage 3: Categorize feedback and assess strength (in parallel)
+        print("\n[STAGE 3] Categorizing feedback in parallel batches...")
         start_time = time.time()
-        categorized_feedback = categorize_with_strength_assessment(stakeholder_feedback, client)
+        categorized_feedback = await process_batches_parallel(stakeholder_feedback, client, batch_size=STAKEHOLDER_BATCH_SIZE)
         
         # Count items in each category
         strengths_count = sum(len(data.get("feedback", [])) for data in categorized_feedback.get("strengths", {}).values())

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-05-12 18:21:43",
+  "file_id": "f417457a-e315-4de8-811f-aececfa9f76f",
+  "config": {
+    "max_concurrent_api_calls": 3,
+    "stakeholder_batch_size": 2,
+    "max_api_calls_per_minute": 50
+  },
+  "performance": {
+    "total_time": 141.80568170547485,
+    "stage1_time": 8.41783595085144,
+    "stage2_time": 62.37950897216797,
+    "stage3_time": 71.00824785232544,
+    "stage4_time": 8.893013000488281e-05
+  },
+  "stats": {
+    "stakeholders_count": 10,
+    "feedback_count": 201,
+    "strengths_count": 127,
+    "areas_count": 34,
+    "advice_count": 17
+  }
+}

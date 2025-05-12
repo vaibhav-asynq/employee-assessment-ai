@@ -55,12 +55,12 @@ async def upload_file(
         add_to_filename_map(file.filename, file_id)
         apiLogger.info(f"File added to store and filename map: file_id={file_id}")
 
-        # TODO: fix: if transcripts generation fail other data  generating will also fails make it a retry/background task
-        # Process the file
-        process_initial_transcripts(file_path=file_path, db=db, taskId=task.id, save_to_files=True)
-        apiLogger.info(f"Initial transcripts processed for file_id={file_id}, task_id={task.id}")
+        # Process the file asynchronously - this now returns a task that will run in the background
+        # We don't need to await it since we want to return to the client immediately
+        process_task = process_initial_transcripts(file_path=file_path, db=db, taskId=task.id, save_to_files=True)
+        apiLogger.info(f"Initial transcript processing started asynchronously for file_id={file_id}, task_id={task.id}")
         
-        # TODO: return the task
+        # Return without waiting for the processing to complete
         return {"file_id": task.file_id}
     except Exception as e:
         apiLogger.error(f"Error uploading file: {str(e)}", exc_info=True)

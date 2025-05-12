@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-05-12 19:23:11",
+  "file_id": "7ed8e3d5-9c28-48a4-a5fb-2bd6bb360131",
+  "config": {
+    "max_concurrent_api_calls": 3
+  },
+  "strengths_sorting": {
+    "time": 150.71256494522095,
+    "stakeholders_count": 10,
+    "feedback_items": 121,
+    "headings_count": 6,
+    "evidence_count": 115
+  },
+  "areas_sorting": {
+    "time": 66.21901202201843,
+    "stakeholders_count": 9,
+    "feedback_items": 42,
+    "headings_count": 6,
+    "evidence_count": 34
+  }
+}

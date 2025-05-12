@@ -1,5 +1,7 @@
 import os
+import re
 import uuid
+import asyncio
 from datetime import datetime
 from typing import Optional, Tuple
 
@@ -143,8 +145,11 @@ def generate_presigned_url(s3_key: str, expiration: int = 3600) -> str:
         dbLogger.error(f"Error generating presigned URL: {str(e)}")
         raise
 
-def process_initial_transcripts(file_path:str=None, file_id:str=None, taskId:int=None, db: Session=None, save_to_files: bool = False):
-    dbLogger.info(f"Processing initial transcripts for task_id: {taskId}, file_id: {file_id}")
+async def process_initial_transcripts_async(file_path:str=None, file_id:str=None, taskId:int=None, db: Session=None, save_to_files: bool = False):
+    """
+    Async version of process_initial_transcripts that uses parallel processing.
+    """
+    dbLogger.info(f"Processing initial transcripts asynchronously for task_id: {taskId}, file_id: {file_id}")
     
     # If taskId is provided, try to get the task to determine storage type
     task = None
@@ -177,14 +182,94 @@ def process_initial_transcripts(file_path:str=None, file_id:str=None, taskId:int
         dbLogger.debug(f"Using provided file path: {file_path}")
     
     try:
-        (
-        filtered_feedback,
-        executive_interview,
-        ) = assessment_processor.process_assessment_with_executive(file_path, taskId, db, save_to_files, SAVE_DIR)
+        # Process the assessment using the parallel implementation
+        result = assessment_processor.process_assessment_with_executive(file_path, taskId, db, save_to_files, SAVE_DIR)
+        
+        # Check if the result is a coroutine (async task) or a tuple
+        if asyncio.iscoroutine(result):
+            # If it's a coroutine, we need to await it
+            dbLogger.info(f"Awaiting async processing task for task_id: {taskId}")
+            stakeholder_chunks, executive_chunks = await result
+            
+            # Combine processed chunks and remove any duplicate whitespace
+            filtered_feedback = "\n\n".join(stakeholder_chunks)
+            executive_interview = "\n\n".join(filter(None, executive_chunks))  # Filter out empty chunks
+            
+            # Clean up final output
+            executive_interview = re.sub(r'\n{3,}', '\n\n', executive_interview)  # Replace multiple newlines with double newline
+            executive_interview = executive_interview.strip()
+            
+            # Save to database if task_id and db are provided
+            if taskId is not None and db is not None:
+                await assessment_processor.save_to_database(db, taskId, filtered_feedback, executive_interview)
+                dbLogger.info(f"Saved to database for task ID: {taskId}")
+            
+            # Optionally save to files
+            if save_to_files and SAVE_DIR:
+                # Create output directory if it doesn't exist
+                os.makedirs(SAVE_DIR, exist_ok=True)
+                
+                document_name = os.path.splitext(os.path.basename(file_path))[0]
+                stakeholder_path = os.path.join(
+                    SAVE_DIR, 
+                    f"filtered_{document_name}.txt"
+                )
+                executive_path = os.path.join(
+                    SAVE_DIR, 
+                    f"executive_{document_name}.txt"
+                )
+                
+                # Only write executive file if there's actual content
+                with open(stakeholder_path, 'w', encoding='utf-8') as f:
+                    f.write(filtered_feedback)
+                
+                if executive_interview.strip():
+                    with open(executive_path, 'w', encoding='utf-8') as f:
+                        f.write(executive_interview)
+                        dbLogger.info(f"Executive interview saved to: {executive_path}")
+                else:
+                    dbLogger.info(f"No executive content found for task_id: {taskId}")
+                
+                dbLogger.info(f"Stakeholder feedback saved to: {stakeholder_path}")
+        else:
+            # If it's a tuple, unpack it directly
+            filtered_feedback, executive_interview = result
+            
         dbLogger.info(f"Successfully processed assessment for task_id: {taskId}")
         return filtered_feedback, executive_interview
     except Exception as e:
         dbLogger.error(f"Error processing assessment for task_id: {taskId}, error: {str(e)}")
+        raise
+
+def process_initial_transcripts(file_path:str=None, file_id:str=None, taskId:int=None, db: Session=None, save_to_files: bool = False):
+    """
+    Process initial transcripts from a PDF file.
+    This function is a wrapper around the async version that handles the event loop.
+    """
+    dbLogger.info(f"Processing initial transcripts for task_id: {taskId}, file_id: {file_id}")
+    
+    # Use asyncio to run the async version
+    import asyncio
+    
+    try:
+        # Check if we're already in an event loop
+        if asyncio.get_event_loop().is_running():
+            # We're already in an async context, create a task instead of run_until_complete
+            dbLogger.info("Using existing event loop for transcript processing - creating task")
+            # Create a task in the existing event loop
+            task = asyncio.create_task(
+                process_initial_transcripts_async(file_path, file_id, taskId, db, save_to_files)
+            )
+            # Return the task - the caller can await it if needed
+            return task
+        else:
+            # We're not in an async context, use asyncio.run
+            dbLogger.info("Creating new event loop for transcript processing")
+            return asyncio.run(
+                process_initial_transcripts_async(file_path, file_id, taskId, db, save_to_files)
+            )
+    except Exception as e:
+        dbLogger.error(f"Error in process_initial_transcripts: {str(e)}")
         raise
 
 

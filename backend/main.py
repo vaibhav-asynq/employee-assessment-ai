@@ -2,6 +2,7 @@ import json
 import os
 import traceback
 import uuid
+import asyncio
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Union
@@ -955,6 +956,93 @@ def parse_claude_response(response_text):
             raise Exception(f"Failed to parse AI response into valid JSON: {str(e)}")
 
 
+async def process_batch(batch_data, headings, is_strengths=True):
+    """
+    Process a single batch of stakeholders and their feedback.
+    
+    Args:
+        batch_data: Dictionary of stakeholders and their feedback for this batch
+        headings: List of headings to sort evidence under
+        is_strengths: Whether this is for strengths (True) or areas to target (False)
+        
+    Returns:
+        Sorted evidence for this batch
+    """
+    # Convert batch data to JSON
+    batch_json = json.dumps(batch_data, indent=2)
+    
+    # Load appropriate prompt
+    prompt_file = "sort_evidence_strenght.txt" if is_strengths else "sort_evidence_area_to_target.txt"
+    sort_prompt = load_prompt(prompt_file)
+    
+    # Format prompt for this batch
+    if is_strengths:
+        prompt = sort_prompt.format(strengths=batch_json, headings="\n".join(headings))
+    else:
+        prompt = sort_prompt.format(areas=batch_json, headings="\n".join(headings))
+    
+    # Initialize Claude client
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    # Get sorted evidence from Claude for this batch
+    response = client.messages.create(
+        model="claude-3-7-sonnet-latest",
+        max_tokens=2000,
+        temperature=0,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    
+    # Parse JSON response
+    response_text = response.content[0].text
+    
+    try:
+        # Use enhanced parser that can handle common JSON issues
+        return parse_claude_response(response_text)
+    except Exception as e:
+        print(f"Error parsing response: {str(e)}")
+        print(f"Raw response: {response_text}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to parse AI response into valid JSON",
+        )
+
+async def process_batches_parallel(stakeholder_data, headings, batch_size, is_strengths=True):
+    """
+    Process multiple batches of stakeholders in parallel.
+    
+    Args:
+        stakeholder_data: Dictionary of all stakeholders and their feedback
+        headings: List of headings to sort evidence under
+        batch_size: Number of stakeholders to process in each batch
+        is_strengths: Whether this is for strengths (True) or areas to target (False)
+        
+    Returns:
+        Merged result with all evidence sorted under headings
+    """
+    # Create batches
+    stakeholders = list(stakeholder_data.keys())
+    batches = []
+    
+    for i in range(0, len(stakeholders), batch_size):
+        batch_end = min(i + batch_size, len(stakeholders))
+        batch_stakeholders = stakeholders[i:batch_end]
+        batch_data = {k: stakeholder_data[k] for k in batch_stakeholders if k in stakeholder_data}
+        batches.append(batch_data)
+    
+    print(f"Processing {len(batches)} batches in parallel")
+    
+    # Process batches in parallel
+    tasks = []
+    for batch in batches:
+        task = asyncio.create_task(process_batch(batch, headings, is_strengths))
+        tasks.append(task)
+    
+    # Wait for all tasks to complete
+    batch_results = await asyncio.gather(*tasks)
+    
+    # Merge results from all batches
+    return merge_sorted_evidence(batch_results)
+
 def merge_sorted_evidence(batch_results):
     """
     Merge multiple batches of sorted evidence into a single result.
@@ -1033,6 +1121,38 @@ async def sort_strengths_evidence(
             prompt = sort_prompt.format(
                 strengths=transcript, headings="\n".join(request.headings)
             )
+            
+            # Get sorted evidence from Claude
+            response = client.messages.create(
+                model="claude-3-7-sonnet-latest",
+                max_tokens=2000,
+                temperature=0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            # Parse JSON response
+            response_text = response.content[0].text
+
+            try:
+                result = json.loads(response_text)
+            except json.JSONDecodeError:
+                try:
+                    start = response_text.find("[")
+                    end = response_text.rfind("]") + 1
+                    if start >= 0 and end > 0:
+                        json_str = response_text[start:end]
+                        result = json.loads(json_str)
+                    else:
+                        raise ValueError("No JSON content found in response")
+                except Exception as e:
+                    print(f"Error parsing response: {str(e)}")
+                    print(f"Raw response: {response_text}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to parse AI response into valid JSON",
+                    )
+
+            return result
         else:
             # Use the previously generated strengths from the database
             strengths_data = feedback_data.get("strengths", {})
@@ -1060,115 +1180,22 @@ async def sort_strengths_evidence(
                     "feedback": processed_feedback
                 }
             
-            # Process in batches
-            all_results = []
-            stakeholders = list(processed_strengths.keys())
-            batch_size = 1  # Process 1 stakeholder at a time for maximum reliability
-            
             # Count total feedback items for verification
             total_feedback_items = sum(len(data.get("feedback", [])) for data in processed_strengths.values())
             print(f"Total feedback items to process: {total_feedback_items}")
             
-            # Initialize Claude client
-            client = anthropic.Anthropic(api_key=api_key)
-            
-            # Load prompt template
-            sort_prompt = load_prompt("sort_evidence_strenght.txt")
-            
-            # Process in batches
-            for i in range(0, len(stakeholders), batch_size):
-                batch_stakeholders = stakeholders[i:i+batch_size]
-                batch_strengths = {k: processed_strengths[k] for k in batch_stakeholders if k in processed_strengths}
-                
-                # Count items in this batch
-                batch_items = sum(len(data.get("feedback", [])) for data in batch_strengths.values())
-                print(f"Processing batch {i//batch_size + 1} with {len(batch_stakeholders)} stakeholders and {batch_items} feedback items")
-                
-                # Convert batch data to JSON
-                batch_json = json.dumps(batch_strengths, indent=2)
-                
-                # Format prompt for this batch
-                prompt = sort_prompt.format(
-                    strengths=batch_json, 
-                    headings="\n".join(request.headings)
-                )
-                
-                # Get sorted evidence from Claude for this batch
-                response = client.messages.create(
-                    model="claude-3-7-sonnet-latest",
-                    max_tokens=2000,
-                    temperature=0,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                
-                # Parse JSON response using our enhanced parser
-                response_text = response.content[0].text
-                
-                try:
-                    # Use our enhanced parser that can handle common JSON issues
-                    batch_result = parse_claude_response(response_text)
-                except Exception as e:
-                    print(f"Error parsing response: {str(e)}")
-                    print(f"Raw response: {response_text}")
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Failed to parse AI response into valid JSON",
-                    )
-                
-                # Count evidence items in the result
-                evidence_count = sum(len(item.get("evidence", [])) for item in batch_result)
-                print(f"Batch {i//batch_size + 1} returned {evidence_count} evidence items")
-                
-                # Verify all items were included
-                if evidence_count < batch_items:
-                    print(f"WARNING: Batch {i//batch_size + 1} is missing items. Expected {batch_items}, got {evidence_count}")
-                
-                all_results.append(batch_result)
-            
-            # Merge results from all batches
-            result = merge_sorted_evidence(all_results)
+            # Process in parallel with batch size 1 for maximum reliability
+            print(f"Processing strengths evidence in parallel with batch size 1")
+            result = await process_batches_parallel(processed_strengths, request.headings, batch_size=1, is_strengths=True)
             
             # Verify total evidence count
             total_evidence = sum(len(item.get("evidence", [])) for item in result)
-            print(f"Total evidence items after merging: {total_evidence}")
+            print(f"Total evidence items after parallel processing: {total_evidence}")
             
             if total_evidence < total_feedback_items:
                 print(f"WARNING: Final result is missing items. Expected {total_feedback_items}, got {total_evidence}")
             
             return result
-
-        # If we're here, we're processing the entire dataset at once (not in batches)
-        # Get sorted evidence from Claude
-        response = client.messages.create(
-            model="claude-3-7-sonnet-latest",
-            max_tokens=2000,
-            temperature=0,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        # Parse JSON response
-        response_text = response.content[0].text
-
-        try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
-            try:
-                start = response_text.find("[")
-                end = response_text.rfind("]") + 1
-                if start >= 0 and end > 0:
-                    json_str = response_text[start:end]
-                    result = json.loads(json_str)
-                else:
-                    raise ValueError("No JSON content found in response")
-            except Exception as e:
-                print(f"Error parsing response: {str(e)}")
-                print(f"Raw response: {response_text}")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to parse AI response into valid JSON",
-                )
-
-        return result
     except Exception as e:
         print(f"Error in sort_strengths_evidence: {str(e)}")
         print(traceback.format_exc())
@@ -1803,77 +1830,17 @@ async def sort_areas_evidence(
                 "feedback": processed_feedback
             }
         
-        # Process in batches
-        all_results = []
-        stakeholders = list(processed_areas.keys())
-        batch_size = 2  # Process 2 stakeholders at a time (reduced from 3 for better reliability)
-        
         # Count total feedback items for verification
         total_feedback_items = sum(len(data.get("feedback", [])) for data in processed_areas.values())
         print(f"Total feedback items to process: {total_feedback_items}")
         
-        # Initialize Claude client
-        client = anthropic.Anthropic(api_key=api_key)
-        
-        # Load prompt template
-        sort_prompt = load_prompt("sort_evidence_area_to_target.txt")
-        
-        # Process in batches
-        for i in range(0, len(stakeholders), batch_size):
-            batch_stakeholders = stakeholders[i:i+batch_size]
-            batch_areas = {k: processed_areas[k] for k in batch_stakeholders if k in processed_areas}
-            
-            # Count items in this batch
-            batch_items = sum(len(data.get("feedback", [])) for data in batch_areas.values())
-            print(f"Processing batch {i//batch_size + 1} with {len(batch_stakeholders)} stakeholders and {batch_items} feedback items")
-            
-            # Convert batch data to JSON
-            batch_json = json.dumps(batch_areas, indent=2)
-            
-            # Format prompt for this batch
-            prompt = sort_prompt.format(
-                areas=batch_json, 
-                headings="\n".join(request.headings)
-            )
-            
-            # Get sorted evidence from Claude for this batch
-            response = client.messages.create(
-                model="claude-3-7-sonnet-latest",
-                max_tokens=2000,
-                temperature=0,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            
-            # Parse JSON response using our enhanced parser
-            response_text = response.content[0].text
-            
-            try:
-                # Use our enhanced parser that can handle common JSON issues
-                batch_result = parse_claude_response(response_text)
-            except Exception as e:
-                print(f"Error parsing response: {str(e)}")
-                print(f"Raw response: {response_text}")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to parse AI response into valid JSON",
-                )
-            
-            # Count evidence items in the result
-            evidence_count = sum(len(item.get("evidence", [])) for item in batch_result)
-            print(f"Batch {i//batch_size + 1} returned {evidence_count} evidence items")
-            
-            # Verify all items were included
-            if evidence_count < batch_items:
-                print(f"WARNING: Batch {i//batch_size + 1} is missing items. Expected {batch_items}, got {evidence_count}")
-            
-            all_results.append(batch_result)
-        
-        # Merge results from all batches
-        result = merge_sorted_evidence(all_results)
+        # Process in parallel with batch size 2 for better reliability
+        print(f"Processing areas evidence in parallel with batch size 2")
+        result = await process_batches_parallel(processed_areas, request.headings, batch_size=2, is_strengths=False)
         
         # Verify total evidence count
         total_evidence = sum(len(item.get("evidence", [])) for item in result)
-        print(f"Total evidence items after merging: {total_evidence}")
+        print(f"Total evidence items after parallel processing: {total_evidence}")
         
         if total_evidence < total_feedback_items:
             print(f"WARNING: Final result is missing items. Expected {total_feedback_items}, got {total_evidence}")

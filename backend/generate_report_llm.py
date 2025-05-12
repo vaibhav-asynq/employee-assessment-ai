@@ -1,12 +1,92 @@
 import json
-from anthropic import Anthropic
+import time
 import asyncio
-from uuid import uuid4
 import re
-from PyPDF2 import PdfReader
-from typing import Dict, Optional
 import os
+from uuid import uuid4
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple, Any
+
+from anthropic import Anthropic
+from PyPDF2 import PdfReader
+
+# Import the API config
+try:
+    from config.api_config import MAX_CONCURRENT_API_CALLS, MAX_API_CALLS_PER_MINUTE
+except ImportError:
+    # Default values if config file doesn't exist
+    MAX_CONCURRENT_API_CALLS = 3
+    MAX_API_CALLS_PER_MINUTE = 50
+
+# API Call Manager for controlling concurrency
+class ApiCallManager:
+    """
+    Manages concurrent API calls to ensure we don't exceed the maximum limit.
+    Uses a semaphore to control concurrency.
+    """
+    def __init__(self, max_concurrent=MAX_CONCURRENT_API_CALLS):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.active_calls = 0
+        self.lock = asyncio.Lock()
+        self.max_concurrent = max_concurrent
+        
+    async def __aenter__(self):
+        """Acquire the semaphore before making an API call"""
+        # Log if we're about to wait
+        async with self.lock:
+            current = self.active_calls
+            if current >= self.max_concurrent:
+                print(f"Waiting for API call slot (current: {current}/{self.max_concurrent})")
+        
+        # Acquire semaphore (will block if at max concurrent calls)
+        await self.semaphore.acquire()
+        
+        async with self.lock:
+            self.active_calls += 1
+            current = self.active_calls
+        
+        print(f"API call started. Active calls: {current}/{self.max_concurrent}")
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Release the semaphore after the API call completes"""
+        async with self.lock:
+            self.active_calls -= 1
+            current = self.active_calls
+        self.semaphore.release()
+        print(f"API call completed. Active calls: {current}/{self.max_concurrent}")
+
+# Rate Limiter for controlling API call frequency
+class RateLimiter:
+    """
+    Limits the rate of API calls to prevent hitting rate limits.
+    Tracks calls over a rolling 60-second window.
+    """
+    def __init__(self, max_calls_per_minute=MAX_API_CALLS_PER_MINUTE):
+        self.max_calls = max_calls_per_minute
+        self.calls = []
+        self.lock = asyncio.Lock()
+        
+    async def wait_if_needed(self):
+        """Wait if we've exceeded our rate limit"""
+        now = time.time()
+        async with self.lock:
+            # Remove calls older than 1 minute
+            self.calls = [t for t in self.calls if now - t < 60]
+            
+            # If we're at the limit, wait
+            if len(self.calls) >= self.max_calls:
+                sleep_time = 60 - (now - self.calls[0])
+                if sleep_time > 0:
+                    print(f"Rate limit reached, waiting {sleep_time:.2f} seconds")
+                    await asyncio.sleep(sleep_time)
+            
+            # Add this call
+            self.calls.append(time.time())
+
+# Create global instances
+api_call_manager = ApiCallManager()
+rate_limiter = RateLimiter()
 
 def read_file_content(file_path: str) -> str:
     """Read and return content from a file."""
@@ -477,6 +557,42 @@ Note: Do not include explicit impact sections or quantified metrics."""
     return [str2, str3,str_3_1, str_3_2, str_3_3, str_3_4, str_4, str4_next_steps_1, str4_next_steps_2]
 
 
+async def call_claude_api(
+    client: Anthropic,
+    messages: List[Dict[str, Any]],
+    system_prompt: str,
+    model_name: str = "claude-3-5-sonnet-20241022",
+    max_tokens: int = 4000,
+    temperature: float = 0.0
+) -> str:
+    """
+    Call Claude API with rate limiting and concurrency control.
+    
+    Args:
+        client: Anthropic client
+        messages: List of message objects
+        system_prompt: System prompt
+        model_name: Model name
+        max_tokens: Maximum tokens
+        temperature: Temperature
+        
+    Returns:
+        Response text
+    """
+    # Apply rate limiting
+    await rate_limiter.wait_if_needed()
+    
+    # Use API call manager to control concurrency
+    async with api_call_manager:
+        response = client.messages.create(
+            model=model_name,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            messages=messages,
+            system=system_prompt
+        )
+        return response.content[0].text
+
 async def process_single_prompt(
     client: Anthropic,
     prompt_category: list,
@@ -484,12 +600,23 @@ async def process_single_prompt(
     structured_system_prompt: str,
     temperature: float = 0.0,
     model_name: str = "claude-3-5-sonnet-20241022"
-) -> dict:
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """
+    Process a single prompt category with multiple prompts.
+    
+    Args:
+        client: Anthropic client
+        prompt_category: List of prompts
+        file_content: Content to process
+        structured_system_prompt: System prompt
+        temperature: Temperature
+        model_name: Model name
+        
+    Returns:
+        Tuple of (parsed_response1, parsed_response2)
+    """
     messages = []
-    chat_history = []
-    messages.extend(chat_history)
     final_response1 = "{}"
-    loop = asyncio.get_event_loop()
     
     for i, prompt in enumerate(prompt_category):
         if i == 0:
@@ -503,49 +630,77 @@ async def process_single_prompt(
                 "content": prompt
             })
         
-        response = await loop.run_in_executor(
-            None,
-            lambda: client.messages.create(
-                model=model_name,
-                max_tokens=4000,
-                temperature=temperature,
-                messages=messages,
-                system=structured_system_prompt
-            )
+        response_text = await call_claude_api(
+            client=client,
+            messages=messages,
+            system_prompt=structured_system_prompt,
+            model_name=model_name,
+            temperature=temperature
         )
         
         if len(prompt_category) > 5 and i == 6:
-            final_response1 = response.content[0].text
+            final_response1 = response_text
             messages = messages[:-1]
             continue
             
         messages.append({
             "role": "assistant",
-            "content": response.content[0].text
+            "content": response_text
         })
         
-    raw_result = response.content[0].text
+    raw_result = messages[-1]["content"]
     return parse_gpt_response(final_response1), parse_gpt_response(raw_result)
 
 async def process_prompts(feedback_content: str, executive_interview: str, api_key: str, system_prompt: str):
+    """
+    Process multiple prompt categories in parallel.
+    
+    Args:
+        feedback_content: Content to process
+        executive_interview: Executive interview content
+        api_key: Anthropic API key
+        system_prompt: System prompt
+        
+    Returns:
+        List of results from processing all prompts
+    """
     client = Anthropic(api_key=api_key)
     
     reflection_prompt = get_reflection_prompts(executive_interview)
     consumer_prompt = get_strengths_prompts()
     pain_points_prompt = get_development_prompts()
     
-    all_prompts = [reflection_prompt, consumer_prompt, pain_points_prompt]
+    print(f"Starting parallel processing of {len([reflection_prompt, consumer_prompt, pain_points_prompt])} prompt categories")
+    start_time = time.time()
     
-    results = []
-    for prompt in all_prompts:
+    # Process all prompt categories in parallel
+    async def process_category(prompt_category):
+        category_start = time.time()
         result, result1 = await process_single_prompt(
             client=client,
-            prompt_category=prompt,
-            file_content=feedback_content,  # Use full feedback for non-reflection prompts
+            prompt_category=prompt_category,
+            file_content=feedback_content,
             structured_system_prompt=system_prompt
         )
-        results.append(result)
-        results.append(result1)
+        category_end = time.time()
+        print(f"Processed category with {len(prompt_category)} prompts in {category_end - category_start:.2f} seconds")
+        return result, result1
+    
+    # Use asyncio.gather to run all categories in parallel
+    category_results = await asyncio.gather(
+        process_category(reflection_prompt),
+        process_category(consumer_prompt),
+        process_category(pain_points_prompt)
+    )
+    
+    # Flatten the results
+    results = []
+    for result_pair in category_results:
+        results.append(result_pair[0])  # Add the first result
+        results.append(result_pair[1])  # Add the second result
+    
+    end_time = time.time()
+    print(f"Completed all prompt processing in {end_time - start_time:.2f} seconds")
     
     return results
 
@@ -620,9 +775,9 @@ def transform_content_to_report_format(content_list, employee_name, report_date)
     return report_data
 
 
-def extract_employee_info(pdf_path: str, api_key: str) -> Dict[str, Optional[str]]:
+async def extract_employee_info_async(pdf_path: str, api_key: str) -> Dict[str, Optional[str]]:
     """
-    Extract employee name and full report date from E360 report using LLM.
+    Extract employee name and full report date from E360 report using LLM (async version).
     
     Args:
         pdf_path (str): Path to the PDF file
@@ -663,28 +818,22 @@ Here's the text:
 
 Only return the exact format specified above, nothing else."""
         
-        # Get response from Claude
-        message = client.messages.create(
-            model="claude-3-opus-20240229",
+        # Get response from Claude using our rate limiting and concurrency control
+        response_text = await call_claude_api(
+            client=client,
+            messages=[{"role": "user", "content": prompt}],
+            system_prompt="You are a precise data extraction assistant. Only return the exact format requested, nothing else.",
+            model_name="claude-3-opus-20240229",
             max_tokens=100,
-            temperature=0,
-            system="You are a precise data extraction assistant. Only return the exact format requested, nothing else.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            temperature=0
         )
         
         # Parse response
-        response = message.content[0].text
-        
         # Extract name and date using simple parsing
         name = None
         date = None
         
-        for line in response.split('\n'):
+        for line in response_text.split('\n'):
             if line.startswith('Name:'):
                 name = line.replace('Name:', '').strip()
             elif line.startswith('Date:'):
@@ -697,6 +846,39 @@ Only return the exact format specified above, nothing else."""
         
     except Exception as e:
         print(f"Error processing PDF: {str(e)}")
+        return {
+            'employee_name': None,
+            'report_date': None
+        }
+
+def extract_employee_info(pdf_path: str, api_key: str) -> Dict[str, Optional[str]]:
+    """
+    Extract employee name and full report date from E360 report using LLM.
+    This is a synchronous wrapper around the async version.
+    
+    Args:
+        pdf_path (str): Path to the PDF file
+        api_key (str): Anthropic API key
+    
+    Returns:
+        Dict containing employee_name and report_date (full date if available)
+    """
+    try:
+        # Use asyncio to run the async version
+        import asyncio
+        
+        # Check if we're already in an event loop
+        if asyncio.get_event_loop().is_running():
+            # We're already in an async context, create a task
+            print("Using existing event loop for employee info extraction")
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(extract_employee_info_async(pdf_path, api_key))
+        else:
+            # We're not in an async context, use asyncio.run
+            print("Creating new event loop for employee info extraction")
+            return asyncio.run(extract_employee_info_async(pdf_path, api_key))
+    except Exception as e:
+        print(f"Error in extract_employee_info: {str(e)}")
         return {
             'employee_name': None,
             'report_date': None
