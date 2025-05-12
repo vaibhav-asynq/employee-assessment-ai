@@ -27,6 +27,7 @@ typing-extensions
 
 # db
 psycopg2-binary
+asyncpg
 sqlalchemy
 alembic
 pyjwt

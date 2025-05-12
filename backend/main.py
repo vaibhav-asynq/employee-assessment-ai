@@ -15,7 +15,7 @@ import uvicorn
 from auth.user import User, get_current_user
 from cache_manager import (add_to_filename_map, get_cached_data,
                            get_cached_file_id, save_cached_data)
-from db.core import get_db
+from db.core import get_async_db, get_db
 from db.feedback import get_cached_feedback
 from docx import Document
 from docx.shared import Inches
@@ -40,6 +40,7 @@ from prompt_loader import (format_area_content_prompt,
 from pydantic import BaseModel
 from report_generation import (create_360_feedback_report,
                                create_360_feedback_report_for_word)
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from state import files_store
 from utils.jwt_utils import verify_clerk_token
@@ -50,6 +51,7 @@ from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
+from routers.snapshot_asynq import router as snapshot_asynq_routers
 
 
 def read_filename_map():
@@ -1929,6 +1931,7 @@ app.include_router(file_routers)
 app.include_router(feedback_routers)
 app.include_router(advice_routers)
 app.include_router(snapshot_routers)
+app.include_router(snapshot_asynq_routers)
 
 if __name__ == "__main__":
     validate_required_env()

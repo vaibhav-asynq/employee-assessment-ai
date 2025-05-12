@@ -1,33 +1,23 @@
 from typing import List, Optional
 
 from auth.user import User, get_current_user
-from db.core import get_db
-from db.file import async_get_db_task, async_get_task_by_user_and_fileId, get_db_task, get_task_by_user_and_fileId
-from db.snapshot import (SnapshotCreate, SnapshotReport,
-                         SnapshotReportWithMisc, count_snapshots,
-                         create_snapshot, delete_snapshot,
-                         get_current_snapshot, get_last_auto_snapshot,
-                         get_latest_snapshot, get_manual_snapshots,
-                         get_snapshot_by_id, get_snapshot_history,
-                         get_snapshot_with_children, get_snapshots_by_type,
-                         redo_snapshot, restore_snapshot, undo_snapshot,
-                         async_count_snapshots, async_create_snapshot, async_delete_snapshot,
+from db.core import get_async_db
+from db.file import async_get_task_by_user_and_fileId, async_get_db_task
+from db.async_snapshot import (SnapshotCreate, SnapshotReport,
+                         SnapshotReportWithMisc, async_count_snapshots,
+                         async_create_snapshot, async_delete_snapshot,
                          async_get_current_snapshot, async_get_last_auto_snapshot,
                          async_get_latest_snapshot, async_get_manual_snapshots,
                          async_get_snapshot_by_id, async_get_snapshot_history,
                          async_get_snapshot_with_children, async_get_snapshots_by_type,
-                         async_redo_snapshot, async_restore_snapshot, async_undo_snapshot
-                         
-                         )
+                         async_redo_snapshot, async_restore_snapshot, async_undo_snapshot)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.core import get_async_db
 from utils.loggers.endPoint_logger import logger as apiLogger
 
 router = APIRouter(
-    prefix="/api/snapshots",
+    prefix="/api/snapshots/async",
     tags=["snapshots"],
 )
 
@@ -50,7 +40,6 @@ class SnapshotResponse(BaseModel):
     manual_report: dict
     full_report: dict
     ai_Competencies: dict
-
 
 @router.post("/create", response_model=SnapshotResponse)
 async def create_snapshot_endpoint(

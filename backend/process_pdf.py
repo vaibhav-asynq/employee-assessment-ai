@@ -11,9 +11,10 @@ from typing import Dict, List, Tuple, Optional
 from functools import partial
 
 import aspose.words as aw
-from anthropic import Anthropic
-from db.processed_assessment import create_processed_assessment
+from anthropic import Anthropic, AsyncAnthropic
+from db.processed_assessment import create_processed_assessment, async_create_processed_assessment
 from PyPDF2 import PdfReader
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 # Import the API config
@@ -281,7 +282,7 @@ class AssessmentProcessor:
                 )
                 return message.content[0].text.strip()
         except Exception as e:
-            self.logger.error(f"Error processing chunk with Claude: {str(e)}")
+            self.logger.error(f"[ASYNC] Error processing chunk with Claude: {str(e)}")
             raise
 
     def create_executive_prompt(self, document_name: str, chunk_text: str) -> str:
@@ -387,7 +388,7 @@ class AssessmentProcessor:
         except Exception as e:
             import traceback
             traceback.print_exc()
-            self.logger.error(f"Error processing chunk with Claude: {str(e)}")
+            self.logger.error(f"[ASYNC] Error processing chunk with Claude: {str(e)}")
             raise
             
     def _clean_executive_content(self, content: str) -> str:
@@ -653,6 +654,106 @@ class AssessmentProcessor:
             self.logger.error(f"Error processing assessment {pdf_path}: {str(e)}")
             raise
 
+    async def async_process_assessment_with_executive(self, pdf_path: str, task_id: int = None, db: AsyncSession = None, save_to_files: bool = False, SAVE_DIR: str = None) -> tuple[str, str]:
+        """
+        Process assessment document and extract both stakeholder feedback and executive interview asynchronously.
+        
+        Args:
+            pdf_path: Path to the PDF file
+            task_id: ID of the task this assessment belongs to (for database storage)
+            db: Async database session (for database storage)
+            save_to_files: Whether to save the processed assessment to files
+            SAVE_DIR: Directory to save the files (only used if save_to_files is True)
+            
+        Returns:
+            Tuple of (stakeholder_text, executive_text)
+        """
+        try:
+            document_name = self.extract_candidate_name(pdf_path)
+            self.logger.info(f"[ASYNC] Starting assessment processing for: {document_name}")
+            
+            # Use the improved chunking method with overlap
+            chunks = self.read_pdf_in_chunks(pdf_path, chunk_size=1500, overlap=200)
+            stakeholder_chunks = []
+            executive_chunks = []
+            
+            self.logger.info(f"[ASYNC] Total chunks to process: {len(chunks)}")
+            
+            # Process chunks concurrently for better performance
+            import asyncio
+            
+            # Process stakeholder feedback
+            stakeholder_tasks = []
+            for i, chunk in enumerate(chunks, 1):
+                stakeholder_prompt = self.create_filtering_prompt(document_name, chunk)
+                task = asyncio.create_task(self.async_process_chunk(stakeholder_prompt))
+                stakeholder_tasks.append(task)
+            
+            # Process executive interview
+            executive_tasks = []
+            for i, chunk in enumerate(chunks, 1):
+                executive_prompt = self.create_executive_prompt(document_name, chunk)
+                task = asyncio.create_task(self.async_process_chunk_executive(executive_prompt))
+                executive_tasks.append(task)
+            
+            # Await all stakeholder tasks
+            for i, task in enumerate(stakeholder_tasks, 1):
+                self.logger.info(f"[ASYNC] Awaiting stakeholder chunk {i}/{len(chunks)}")
+                stakeholder_chunk = await task
+                stakeholder_chunks.append(stakeholder_chunk)
+            
+            # Await all executive tasks
+            for i, task in enumerate(executive_tasks, 1):
+                self.logger.info(f"[ASYNC] Awaiting executive chunk {i}/{len(chunks)}")
+                executive_chunk = await task
+                if executive_chunk.strip():  # Only add non-empty chunks
+                    executive_chunks.append(executive_chunk)
+            
+            # Combine processed chunks and remove any duplicate whitespace
+            stakeholder_text = "\n\n".join(stakeholder_chunks)
+            executive_text = "\n\n".join(filter(None, executive_chunks))  # Filter out empty chunks
+            
+            # Clean up final output
+            executive_text = re.sub(r'\n{3,}', '\n\n', executive_text)  # Replace multiple newlines with double newline
+            executive_text = executive_text.strip()
+            
+            # Save to database if task_id and db are provided
+            if task_id is not None and db is not None:
+                await self.async_save_to_database(db, task_id, stakeholder_text, executive_text)
+                self.logger.info(f"[ASYNC] Saved to database for task ID: {task_id}")
+            
+            # Optionally save to files
+            if save_to_files and SAVE_DIR:
+                # Create output directory if it doesn't exist
+                os.makedirs(SAVE_DIR, exist_ok=True)
+                
+                stakeholder_path = os.path.join(
+                    SAVE_DIR, 
+                    f"filtered_{document_name}.txt"
+                )
+                executive_path = os.path.join(
+                    SAVE_DIR, 
+                    f"executive_{document_name}.txt"
+                )
+                
+                # Only write executive file if there's actual content
+                with open(stakeholder_path, 'w', encoding='utf-8') as f:
+                    f.write(stakeholder_text)
+                
+                if executive_text.strip():
+                    with open(executive_path, 'w', encoding='utf-8') as f:
+                        f.write(executive_text)
+                        self.logger.info(f"[ASYNC] Executive interview saved to: {executive_path}")
+                else:
+                    self.logger.info(f"[ASYNC] No executive content found for: {document_name}")
+                
+                self.logger.info(f"[ASYNC] Stakeholder feedback saved to: {stakeholder_path}")
+            
+            return stakeholder_text, executive_text
+        except Exception as e:
+            self.logger.error(f"[ASYNC] Error processing assessment {pdf_path}: {str(e)}")
+            raise
+
     async def save_to_database(
         self, 
         db: Session, 
@@ -679,6 +780,34 @@ class AssessmentProcessor:
             self.logger.info(f"Processed assessment saved to database for task ID: {task_id}")
         except Exception as e:
             self.logger.error(f"Error saving processed assessment to database: {str(e)}")
+            raise
+            
+    async def async_save_to_database(
+        self, 
+        db: AsyncSession, 
+        task_id: int, 
+        stakeholder_text: str, 
+        executive_text: str
+    ) -> None:
+        """
+        Save the processed assessment to the database asynchronously.
+        
+        Args:
+            db: Async database session
+            task_id: ID of the task this assessment belongs to
+            stakeholder_text: Content of the filtered assessment (stakeholder feedback)
+            executive_text: Content of the executive assessment (executive's own words)
+        """
+        try:
+            await async_create_processed_assessment(
+                db=db,
+                task_id=task_id,
+                filtered_data=stakeholder_text,
+                executive_data=executive_text
+            )
+            self.logger.info(f"[ASYNC] Processed assessment saved to database for task ID: {task_id}")
+        except Exception as e:
+            self.logger.error(f"[ASYNC] Error saving processed assessment to database: {str(e)}")
             raise
 
 

@@ -15,6 +15,8 @@ from fastapi import HTTPException, UploadFile
 from process_pdf import AssessmentProcessor
 from pydantic import BaseModel
 from sqlalchemy import desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from utils.loggers.db_logger import logger as dbLogger
 from utils.loggers.endPoint_logger import logger as ApiLogger
@@ -588,4 +590,126 @@ def delete_db_task(task_id: int, user_id: str, session: Session) -> None:
     except Exception as e:
         dbLogger.error(f"Error deleting task {task_id}: {str(e)}")
         session.rollback()
+        raise
+
+# Async versions of the functions
+
+async def async_get_cached_file_id(user_id: str, filename: str, session: AsyncSession) -> Optional[str]:
+    """Async version of get_cached_file_id"""
+    dbLogger.debug(f"[ASYNC] Looking for cached file_id for user: {user_id}, filename: {filename}")
+    try:
+        stmt = select(DBTask).filter(DBTask.file_name == filename, DBTask.user_id == user_id)
+        result = await session.execute(stmt)
+        db_task = result.scalars().first()
+        
+        if db_task is None:
+            dbLogger.debug(f"[ASYNC] No cached file found for user: {user_id}, filename: {filename}")
+            return None
+            
+        dbLogger.debug(f"[ASYNC] Found cached file_id: {db_task.file_id}")
+        return db_task.file_id
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error getting cached file_id: {str(e)}")
+        raise
+
+async def async_create_db_task(task: TaskCreate, session: AsyncSession) -> DBTask:
+    """Async version of create_db_task"""
+    dbLogger.info(f"[ASYNC] Creating new task for user: {task.user_id}, file: {task.file_name}")
+    try:
+        db_item = DBTask(**task.model_dump(exclude_none=True))
+        session.add(db_item)
+        await session.commit()
+        await session.refresh(db_item)
+        dbLogger.info(f"[ASYNC] Successfully created task with id: {db_item.id}")
+        return db_item
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error creating task: {str(e)}")
+        await session.rollback()
+        raise
+
+async def async_get_db_task(task_id: int, user_id: str, session: AsyncSession) -> DBTask:
+    """Async version of get_db_task"""
+    dbLogger.debug(f"[ASYNC] Retrieving task with id: {task_id} for user: {user_id}")
+    try:
+        stmt = select(DBTask).filter(DBTask.id == task_id, DBTask.user_id == user_id)
+        result = await session.execute(stmt)
+        db_task = result.scalars().first()
+        
+        if db_task is None:
+            dbLogger.warning(f"[ASYNC] Task with id {task_id} not found for user: {user_id}")
+            raise NotFoundError(f"Task with id {task_id} not found.")
+            
+        dbLogger.debug(f"[ASYNC] Successfully retrieved task with id: {task_id}")
+        return db_task
+    except NotFoundError:
+        raise
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error retrieving task: {str(e)}")
+        raise
+
+async def async_get_task_by_user_and_fileId(user_id: str, file_id: str, session: AsyncSession) -> Optional[DBTask]:
+    """Async version of get_task_by_user_and_fileId"""
+    dbLogger.debug(f"[ASYNC] Retrieving task for user: {user_id} with file_id: {file_id}")
+    try:
+        stmt = select(DBTask).filter(DBTask.file_id == file_id, DBTask.user_id == user_id)
+        result = await session.execute(stmt)
+        db_task = result.scalars().first()
+        
+        if db_task is None:
+            dbLogger.warning(f"[ASYNC] Task with file_id: {file_id} not found for user: {user_id}")
+            raise NotFoundError(f"Task with file id:{file_id} not found.")
+            
+        dbLogger.debug(f"[ASYNC] Successfully retrieved task with id: {db_task.id} for file_id: {file_id}")
+        return db_task
+    except NotFoundError:
+        raise
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error retrieving task by file_id: {str(e)}")
+        raise
+
+async def async_process_initial_transcripts(file_path: str = None, file_id: str = None, taskId: int = None, db: AsyncSession = None, save_to_files: bool = False):
+    """Async version of process_initial_transcripts"""
+    dbLogger.info(f"[ASYNC] Processing initial transcripts for task_id: {taskId}, file_id: {file_id}")
+    
+    # If taskId is provided, try to get the task to determine storage type
+    task = None
+    if taskId and db:
+        stmt = select(DBTask).filter(DBTask.id == taskId)
+        result = await db.execute(stmt)
+        task = result.scalars().first()
+    
+    # Get file path or content based on storage type
+    if task and task.storage_type == "s3" and task.s3_key and env_variables.USE_S3 and s3_client:
+        try:
+            # For S3 storage, download to a temporary file
+            dbLogger.debug(f"[ASYNC] Getting file from S3: {task.s3_key}")
+            file_content = download_from_s3(task.s3_key)
+            
+            # Write to a temporary file for processing
+            if not file_path:
+                file_path = get_upload_file_path(task.file_id)
+                with open(file_path, "wb") as f:
+                    f.write(file_content)
+                dbLogger.debug(f"[ASYNC] Downloaded S3 file to temporary path: {file_path}")
+        except Exception as e:
+            dbLogger.error(f"[ASYNC] Error getting file from S3, trying local: {str(e)}")
+            # Fall back to local file path
+            if file_id:
+                file_path = get_upload_file_path(file_id)
+                dbLogger.debug(f"[ASYNC] Falling back to local file path: {file_path}")
+    elif file_id:
+        file_path = get_upload_file_path(file_id)
+        dbLogger.debug(f"[ASYNC] Using file path from file_id: {file_path}")
+    else:
+        dbLogger.debug(f"[ASYNC] Using provided file path: {file_path}")
+    
+    try:
+        # Use the async version of process_assessment_with_executive
+        filtered_feedback, executive_interview = await assessment_processor.async_process_assessment_with_executive(
+            file_path, taskId, db, save_to_files, SAVE_DIR
+        )
+        dbLogger.info(f"[ASYNC] Successfully processed assessment for task_id: {taskId}")
+        return filtered_feedback, executive_interview
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error processing assessment for task_id: {taskId}, error: {str(e)}")
         raise
