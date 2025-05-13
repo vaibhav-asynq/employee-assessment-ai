@@ -11,9 +11,8 @@ export function InterviewAnalysis() {
   return (
     <>
       <StepperProvider>
-        <div className="flex">
-          <AppSidebar />
-          <div className="flex-1 ml-[70px] p-4">
+        <AppSidebar className="z-50 shadow-md border-r border-gray-200">
+          <main className="p-4">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">
@@ -33,8 +32,8 @@ export function InterviewAnalysis() {
             <div>
               <InterviewAnalysisContent />
             </div>
-          </div>
-        </div>
+          </main>
+        </AppSidebar>
       </StepperProvider>
     </>
   );

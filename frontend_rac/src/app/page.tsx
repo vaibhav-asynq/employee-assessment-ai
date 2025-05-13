@@ -5,12 +5,8 @@ import { InterviewAnalysis } from "@/components/interview/InterviewAnalysis";
 
 export default function HomePage() {
   return (
-    <div className="relative container mx-auto px-4 py-8">
-      {/* <AppSidebar /> */}
-      <main>
-        {/* <SidebarTrigger /> */}
-        <InterviewAnalysis />
-      </main>
+    <div className="w-full">
+      <InterviewAnalysis />
     </div>
   );
 }

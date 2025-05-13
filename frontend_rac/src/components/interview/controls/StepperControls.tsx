@@ -23,7 +23,7 @@ export function StepperControls() {
 
   const { nextStep, prevStep, isLastStep, isFirstStep } = useStepper();
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-2 items-center flex-wrap">
       <SnapshotHistory />
       <SaveSnapshotBtn />
       <Button
@@ -43,7 +43,6 @@ export function StepperControls() {
       </Button>
       <Button
         onClick={() => nextStep()}
-        // disabled={activeStep === getTotalSteps() || !analysisData}
         disabled={isLastStep || loadingSnapshot}
       >
         {isLastStep ? "Finish" : "Next"}
