@@ -6,7 +6,7 @@ import { EditableText } from "./shared/EditableText";
 import { GenerateNextStepsAi } from "./GenerateNextStepsAi";
 import { useTemplateUpdater } from "@/hooks/useTemplateUpdater";
 import { useDebounce } from "@/lib/utils/debounce";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { EditableSubheading } from "./shared/EditableSubheading";
 import { DraggableItem } from "./shared/DraggableItem";
 import {
@@ -84,9 +84,15 @@ export function EditNextSteps({
   );
 
   const [isDragging, setIsDragging] = useState(false);
+  const [localNextSteps, setLocalNextSteps] = useState(nextSteps);
+  
+  // Update local state when props change
+  useEffect(() => {
+    setLocalNextSteps(nextSteps);
+  }, [nextSteps]);
 
   // Generate temporary IDs for each item in the nextSteps array
-  const itemIds = nextSteps.map((_, index) => `next-step-${index}`);
+  const itemIds = localNextSteps.map((_, index) => `next-step-${index}`);
 
   // Configure sensors for drag and drop
   const sensors = useSensors(
@@ -112,12 +118,15 @@ export function EditNextSteps({
         const newIndex = itemIds.indexOf(over.id as string);
 
         // Update the template with the new order
+        // Using a more optimistic update approach
         updateTemplate((prev: TemplatedData) => {
+          // Create a new array with the reordered items
           const newNextSteps = arrayMove(
             [...prev.next_steps],
             oldIndex,
             newIndex,
           );
+          
           return {
             ...prev,
             next_steps: newNextSteps,
@@ -171,7 +180,7 @@ export function EditNextSteps({
               isDragging ? "cursor-grabbing" : ""
             }`}
           >
-            {nextSteps.map((step, index) => (
+            {localNextSteps.map((step, index) => (
               <DraggableItem key={itemIds[index]} id={itemIds[index]}>
                 <div className="space-y-2">
                   {typeof step === "string" ? (
