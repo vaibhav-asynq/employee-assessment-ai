@@ -14,14 +14,19 @@ import anthropic
 import env_variables
 from auth.user import User, get_current_user
 from db.core import get_db
-from db.feedback import FeedBackCreate, create_feedback, get_cached_feedback
+from db.core import get_async_db
+from db.feedback import FeedBackCreate, async_create_feedback, async_get_cached_feedback
+from db.feedback import create_feedback, get_cached_feedback
+from db.file import async_get_task_by_user_and_fileId
 from db.file import get_task_by_user_and_fileId, process_initial_transcripts
 from db.processed_assessment import get_processed_assessment_by_task_id
+from db.processed_assessment import async_get_processed_assessment_by_task_id
 from dir_config import SAVE_DIR
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.params import Depends
 from prompt_loader import load_prompt
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.loggers.db_logger import logger as dbLogger
 from utils.loggers.endPoint_logger import logger as apiLogger
 from utils.loggers.feedback_logger import feedbackLogger
@@ -1181,182 +1186,160 @@ def extract_json_from_text(text: str) -> Optional[Dict[str, Any]]:
 
 # here tasks will be created
 @router.get("/api/get_feedback/{file_id}")
-async def get_feedback(
+async def get_feedback_async(
     request: Request, 
     file_id: str,
     use_cache: bool = Query(
         True, description="Whether to use cached results if available"
     ),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-) :
+    db: AsyncSession = Depends(get_async_db)
+) -> Dict[str, Any]:
+    """
+    Asynchronous version of the get_feedback endpoint.
+    Retrieves feedback for a specific file, using cached results if available.
+    """
     start_time = time.time()
     user_id = current_user.user_id
-    apiLogger.info(f"Feedback request received for file ID {file_id} from user {user_id}")
+    apiLogger.info(f"[ASYNC] Feedback request received for file ID {file_id} from user {user_id}")
     
     try:
         # Check cache first
         if use_cache:
-            cached_data = get_cached_feedback(user_id, file_id, db)
+            cached_data = await async_get_cached_feedback(user_id, file_id, db)
             if cached_data:
-                apiLogger.info(f"Using cached feedback for file ID {file_id}")
+                apiLogger.info(f"[ASYNC] Using cached feedback for file ID {file_id}")
                 return cached_data
 
         # If not cached or cache disabled, process normally
-        apiLogger.info(f"No cache found or cache disabled, processing feedback for file ID {file_id}")
-        db_task = get_task_by_user_and_fileId(user_id, file_id, db)
+        apiLogger.info(f"[ASYNC] No cache found or cache disabled, processing feedback for file ID {file_id}")
+        db_task = await async_get_task_by_user_and_fileId(user_id, file_id, db)
         if not db_task:
-            apiLogger.error(f"Task not found for user {user_id} and file ID {file_id}")
+            apiLogger.error(f"[ASYNC] Task not found for user {user_id} and file ID {file_id}")
             raise HTTPException(status_code=404, detail="Task not found")
         
-        apiLogger.info(f"Found task with ID {db_task.id} for file ID {file_id}")
+        apiLogger.info(f"[ASYNC] Found task with ID {db_task.id} for file ID {file_id}")
         
-        # try to get or generate transcripts
+        # Try to get or generate transcripts
         feedback_transcript = None
-        assess_data = get_processed_assessment_by_task_id(db, db_task.id)
+        assess_data = await async_get_processed_assessment_by_task_id(db, db_task.id)
         if assess_data and assess_data.filtered_data:
-            apiLogger.info(f"Using filtered data from processed assessment for task ID {db_task.id}")
+            apiLogger.info(f"[ASYNC] Using filtered data from processed assessment for task ID {db_task.id}")
             feedback_transcript = assess_data.filtered_data
         if not feedback_transcript:
             # Get the feedback transcript
             feedback_path = os.path.join(SAVE_DIR, f"filtered_{file_id}.txt")
-            apiLogger.info(f"Looking for feedback transcript at {feedback_path}")
+            apiLogger.info(f"[ASYNC] Looking for feedback transcript at {feedback_path}")
             
             if not os.path.exists(feedback_path):
-                apiLogger.error(f"Feedback transcript not found at {feedback_path}")
+                apiLogger.error(f"[ASYNC] Feedback transcript not found at {feedback_path}")
                 raise HTTPException(status_code=404, detail="Feedback transcript not found or generated.")
 
-            apiLogger.info(f"Reading feedback transcript from file")
+            apiLogger.info(f"[ASYNC] Reading feedback transcript from file")
             with open(feedback_path, "r") as f:
                 feedback_transcript = f.read()
             
-            apiLogger.info(f"Successfully read feedback transcript ({len(feedback_transcript)} characters)")
+            apiLogger.info(f"[ASYNC] Successfully read feedback transcript ({len(feedback_transcript)} characters)")
 
         # Initialize Claude client
-        apiLogger.info("Initializing Claude client")
+        apiLogger.info("[ASYNC] Initializing Claude client")
         try:
             client = anthropic.Anthropic(api_key=env_variables.ANTHROPIC_API_KEY)
-            apiLogger.info("Claude client initialized successfully")
+            apiLogger.info("[ASYNC] Claude client initialized successfully")
         except Exception as e:
-            apiLogger.error(f"Failed to initialize Claude client: {str(e)}")
+            apiLogger.error(f"[ASYNC] Failed to initialize Claude client: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to initialize AI client")
         
         apiLogger.info("="*80)
-        apiLogger.info(f"STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
+        apiLogger.info(f"[ASYNC] STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
         apiLogger.info("="*80)
         
-        feedbackLogger.info("="*80)
-        feedbackLogger.info(f"STARTING FEEDBACK EXTRACTION FOR FILE ID: {file_id}")
-        feedbackLogger.info("="*80)
-        
         # Stage 1: Identify stakeholders
-        print("\n[STAGE 1] Identifying stakeholders...")
-        start_time = time.time()
+        apiLogger.info("[ASYNC] Stage 1: Identifying stakeholders...")
+        stage1_start_time = time.time()
         stakeholders = identify_stakeholders(feedback_transcript, client)
-        stage1_time = time.time() - start_time
+        stage1_time = time.time() - stage1_start_time
         
-        print(f"[STAGE 1] Found {len(stakeholders)} stakeholders:")
-        for i, s in enumerate(stakeholders):
-            print(f"  {i+1}. {s.get('name', 'Unknown')} - {s.get('role', 'Unknown role')}")
-        print(f"[STAGE 1] Completed in {stage1_time:.2f} seconds")
+        apiLogger.info(f"[ASYNC] Stage 1: Found {len(stakeholders)} stakeholders")
+        apiLogger.info(f"[ASYNC] Stage 1: Completed in {stage1_time:.2f} seconds")
         
         # Stage 2: Extract feedback per stakeholder (in parallel)
-        print("\n[STAGE 2] Extracting feedback for all stakeholders in parallel...")
-        start_time = time.time()
+        apiLogger.info("[ASYNC] Stage 2: Extracting feedback for all stakeholders in parallel...")
+        stage2_start_time = time.time()
         stakeholder_feedback = await process_stakeholders_parallel(stakeholders, feedback_transcript, client)
-        stage2_time = time.time() - start_time
-        total_feedback_count = sum(len(feedback.get("feedback", [])) for feedback in stakeholder_feedback)
-        print(f"[STAGE 2] Extracted {total_feedback_count} total feedback items in {stage2_time:.2f} seconds")
         
         # Validate stakeholder attribution
-        print("\n[STAGE 2.5] Validating stakeholder attribution...")
-        s_start_time = time.time()
+        apiLogger.info("[ASYNC] Stage 2.5: Validating stakeholder attribution...")
         validate_stakeholder_attribution(stakeholder_feedback)
-        s_time = time.time() - s_start_time
-        print(f"[STAGE 2.5] Validation completed in {s_time:.2f} seconds")
         
         # Deduplicate feedback
-        print("\n[STAGE 2.6] Deduplicating feedback...")
-        s_start_time = time.time()
+        apiLogger.info("[ASYNC] Stage 2.6: Deduplicating feedback...")
         stakeholder_feedback = deduplicate_feedback(stakeholder_feedback)
-        s_time = time.time() - s_start_time
-        print(f"[STAGE 2.6] Deduplication completed in {s_time:.2f} seconds")
         
-        stage2_time = time.time() - start_time
-        print(f"[STAGE 2] Completed in {stage2_time:.2f} seconds")
+        stage2_time = time.time() - stage2_start_time
+        total_feedback_count = sum(len(feedback.get("feedback", [])) for feedback in stakeholder_feedback)
+        apiLogger.info(f"[ASYNC] Stage 2: Extracted {total_feedback_count} total feedback items in {stage2_time:.2f} seconds")
         
         # Stage 3: Categorize feedback and assess strength (in parallel)
-        print("\n[STAGE 3] Categorizing feedback in parallel batches...")
-        start_time = time.time()
-        categorized_feedback = await process_batches_parallel(stakeholder_feedback, client, batch_size=STAKEHOLDER_BATCH_SIZE)
+        apiLogger.info("[ASYNC] Stage 3: Categorizing feedback in parallel batches...")
+        stage3_start_time = time.time()
+        categorized_feedback = await process_batches_parallel(stakeholder_feedback, client)
         
         # Count items in each category
         strengths_count = sum(len(data.get("feedback", [])) for data in categorized_feedback.get("strengths", {}).values())
         areas_count = sum(len(data.get("feedback", [])) for data in categorized_feedback.get("areas_to_target", {}).values())
         advice_count = sum(len(data.get("feedback", [])) for data in categorized_feedback.get("advice", {}).values())
         
-        stage3_time = time.time() - start_time
-        print(f"[STAGE 3] Categorized feedback: {strengths_count} strengths, {areas_count} areas to target, {advice_count} advice items")
-        print(f"[STAGE 3] Completed in {stage3_time:.2f} seconds")
-        
-        # Stage 4: Verify completeness - COMMENTED OUT FOR PERFORMANCE
-        # print("\n[STAGE 4] Verifying extraction completeness...")
-        # start_time = time.time()
-        # verification = verify_extraction(categorized_feedback, feedback_transcript, client)
-        # 
-        # # If verification finds missing feedback, add it
-        # if verification.get("missing_feedback"):
-        #     print(f"[STAGE 4] Adding {len(verification['missing_feedback'])} missing feedback items")
-        #     categorized_feedback = add_missing_feedback(categorized_feedback, verification["missing_feedback"])
-        # stage4_time = time.time() - start_time
-        # print(f"[STAGE 4] Completed in {stage4_time:.2f} seconds")
+        stage3_time = time.time() - stage3_start_time
+        apiLogger.info(f"[ASYNC] Stage 3: Categorized feedback: {strengths_count} strengths, {areas_count} areas to target, {advice_count} advice items")
+        apiLogger.info(f"[ASYNC] Stage 3: Completed in {stage3_time:.2f} seconds")
         
         # Format the final result
-        print("\n[FINAL] Formatting results...")
-        start_time = time.time()
+        apiLogger.info("[ASYNC] Final: Formatting results...")
+        format_start_time = time.time()
         result = format_final_result(categorized_feedback)
-        format_time = time.time() - start_time
+        format_time = time.time() - format_start_time
         
         # Calculate total processing time
-        total_time = stage1_time + stage2_time + stage3_time + format_time
+        total_processing_time = stage1_time + stage2_time + stage3_time + format_time
         
-        print("="*80)
-        print(f"FEEDBACK EXTRACTION COMPLETE FOR FILE ID: {file_id}")
-        print(f"Total processing time: {total_time:.2f} seconds")
-        print(f"- Stage 1 (Identify stakeholders): {stage1_time:.2f}s ({stage1_time/total_time*100:.1f}%)")
-        print(f"- Stage 2 (Extract feedback): {stage2_time:.2f}s ({stage2_time/total_time*100:.1f}%)")
-        print(f"- Stage 3 (Categorize feedback): {stage3_time:.2f}s ({stage3_time/total_time*100:.1f}%)")
-        print(f"- Final formatting: {format_time:.2f}s ({format_time/total_time*100:.1f}%)")
-        print(f"Total feedback items: {strengths_count + areas_count + advice_count}")
-        print(f"- Strengths: {strengths_count}")
-        print(f"- Areas to target: {areas_count}")
-        print(f"- Advice: {advice_count}")
-        print("="*80)
+        apiLogger.info("="*80)
+        apiLogger.info(f"[ASYNC] FEEDBACK EXTRACTION COMPLETE FOR FILE ID: {file_id}")
+        apiLogger.info(f"[ASYNC] Total processing time: {total_processing_time:.2f} seconds")
+        apiLogger.info(f"[ASYNC] - Stage 1 (Identify stakeholders): {stage1_time:.2f}s ({stage1_time/total_processing_time*100:.1f}%)")
+        apiLogger.info(f"[ASYNC] - Stage 2 (Extract feedback): {stage2_time:.2f}s ({stage2_time/total_processing_time*100:.1f}%)")
+        apiLogger.info(f"[ASYNC] - Stage 3 (Categorize feedback): {stage3_time:.2f}s ({stage3_time/total_processing_time*100:.1f}%)")
+        apiLogger.info(f"[ASYNC] - Final formatting: {format_time:.2f}s ({format_time/total_processing_time*100:.1f}%)")
+        apiLogger.info(f"[ASYNC] Total feedback items: {strengths_count + areas_count + advice_count}")
+        apiLogger.info(f"[ASYNC] - Strengths: {strengths_count}")
+        apiLogger.info(f"[ASYNC] - Areas to target: {areas_count}")
+        apiLogger.info(f"[ASYNC] - Advice: {advice_count}")
+        apiLogger.info("="*80)
         
         # Save to database
-        apiLogger.info(f"Saving feedback results to database for task ID {db_task.id}")
+        apiLogger.info(f"[ASYNC] Saving feedback results to database for task ID {db_task.id}")
         feedback_data = {
             "task_id": db_task.id,
             "feedback": result
         }
         
-        # Save to db
+        # Save to db using async function
         try:
-            db_feedback = create_feedback(FeedBackCreate(**feedback_data), db)
-            dbLogger.info(f"Feedback saved to database for task ID {db_task.id}")
+            db_feedback = await async_create_feedback(FeedBackCreate(**feedback_data), db)
+            dbLogger.info(f"[ASYNC] Feedback saved to database for task ID {db_task.id}")
             
             total_elapsed_time = time.time() - start_time
-            apiLogger.info(f"Feedback extraction completed in {total_elapsed_time:.2f} seconds")
+            apiLogger.info(f"[ASYNC] Feedback extraction completed in {total_elapsed_time:.2f} seconds")
             
             return db_feedback.feedback
         except Exception as e:
-            dbLogger.error(f"Failed to save feedback to database: {str(e)}")
+            dbLogger.error(f"[ASYNC] Failed to save feedback to database: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to save feedback to database")
             
     except HTTPException as he:
         # Re-raise HTTP exceptions as they already have status codes
-        apiLogger.error(f"HTTP error in get_feedback: {he.detail}")
+        apiLogger.error(f"[ASYNC] HTTP error in get_feedback_async: {he.detail}")
         raise
     except Exception as e:
-        apiLogger.error(f"Error in get_feedback: {str(e)}")
+        apiLogger.error(f"[ASYNC] Error in get_feedback_async: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

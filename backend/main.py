@@ -51,7 +51,6 @@ from routers.advice import router as advice_routers
 from routers.feedback import router as feedback_routers
 from routers.file import router as file_routers
 from routers.snapshot import router as snapshot_routers
-from routers.snapshot_asynq import router as snapshot_asynq_routers
 
 
 def read_filename_map():
@@ -1931,7 +1930,6 @@ app.include_router(file_routers)
 app.include_router(feedback_routers)
 app.include_router(advice_routers)
 app.include_router(snapshot_routers)
-app.include_router(snapshot_asynq_routers)
 
 if __name__ == "__main__":
     validate_required_env()

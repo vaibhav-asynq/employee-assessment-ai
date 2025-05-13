@@ -53,6 +53,8 @@ export const useSnapshotSaver = () => {
         file_id: currentFileId,
         snapshot_name: snapshotName,
         manual_report: {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           selectedPath: currentSelectedPath ?? undefined,
           editable: manual_report_data,
           sorted_by: {

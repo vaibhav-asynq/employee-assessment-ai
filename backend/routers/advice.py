@@ -4,15 +4,15 @@ import os
 import anthropic
 import env_variables
 from auth.user import User, get_current_user
-from db.advice import AdviceCreate, create_advice, get_cached_advice
-from db.core import get_db
-from db.file import get_task_by_user_and_fileId
-from db.processed_assessment import get_processed_assessment_by_task_id
+from db.advice import AdviceCreate, async_create_advice, async_get_cached_advice
+from db.core import get_async_db
+from db.file import async_get_task_by_user_and_fileId
+from db.processed_assessment import async_get_processed_assessment_by_task_id
 from dir_config import SAVE_DIR
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.params import Depends
 from prompt_loader import load_prompt
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.loggers.advice_logger import advice_logger
 from utils.loggers.endPoint_logger import logger as apiLogger
 
@@ -30,25 +30,25 @@ async def get_advice(
         True, description="Whether to use cached results if available"
     ),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) :
     user_id = current_user.user_id
     apiLogger.info(f"User {user_id} requesting advice for file ID {file_id} (use_cache={use_cache})")
     try:
         # Check cache first
         if use_cache:
-            cached_data = get_cached_advice(user_id, file_id, db)
+            cached_data = await async_get_cached_advice(user_id, file_id, db)
             if cached_data:
                 apiLogger.info(f"Using cached advice for file ID {file_id}")
                 advice_logger.info(f"Returned cached advice for user {user_id}, file ID {file_id}")
                 return cached_data
 
-        db_task = get_task_by_user_and_fileId(user_id, file_id, db)
+        db_task = await async_get_task_by_user_and_fileId(user_id, file_id, db)
         apiLogger.info(f"Processing advice for task ID {db_task.id}")
 
         # try to get or generate transcripts
         feedback_transcript = None
-        assess_data = get_processed_assessment_by_task_id(db, db_task.id)
+        assess_data = await async_get_processed_assessment_by_task_id(db, db_task.id)
         if assess_data and assess_data.filtered_data:
             advice_logger.info(f"Using filtered data from processed assessment for task ID {db_task.id}")
             feedback_transcript = assess_data.filtered_data
@@ -116,10 +116,10 @@ async def get_advice(
         }
         # Save to db
         apiLogger.info(f"Saving advice to database for task ID {db_task.id}")
-        db_advice = create_advice(AdviceCreate(**advice_data), db)
+        db_advice = await async_create_advice(AdviceCreate(**advice_data), db)
         advice_logger.info(f"Successfully saved advice to database for task ID {db_task.id}, advice ID: {db_advice.id}")
         apiLogger.info(f"Successfully generated and saved advice for file ID {file_id}, task ID {db_task.id}")
-        return db_advice.feedback
+        return db_advice.advice
     except Exception as e:
         error_msg = f"Error in get_advice: {str(e)}"
         advice_logger.error(error_msg)

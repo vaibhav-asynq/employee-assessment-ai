@@ -2,11 +2,13 @@ from typing import Any, Dict, List, Optional
 
 from db.core import NotFoundError
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from utils.loggers.db_logger import logger as dbLogger
 from utils.loggers.endPoint_logger import logger as ApiLogger
 
-from .file import get_cached_task
+from .file import get_cached_task, async_get_task_by_user_and_fileId
 from .models import DBFeedBack
 
 
@@ -32,6 +34,23 @@ def create_feedback(feedback: FeedBackCreate, session: Session) -> DBFeedBack:
     dbLogger.info(f"Feedback created with id: {db_feedback.id}")
     return db_feedback
 
+async def async_create_feedback(feedback: FeedBackCreate, session: AsyncSession) -> DBFeedBack:
+    dbLogger.info(f"[ASYNC] Creating feedback for task_id: {feedback.task_id}")
+    try:
+        db_feedback = DBFeedBack(
+            task_id=feedback.task_id,
+            feedback=feedback.feedback
+        )
+        session.add(db_feedback)
+        await session.commit()
+        await session.refresh(db_feedback)
+        dbLogger.info(f"[ASYNC] Feedback created with id: {db_feedback.id}")
+        return db_feedback
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error creating feedback: {str(e)}")
+        await session.rollback()
+        raise
+
 def get_feedback(feedback_id: int, session: Session) -> DBFeedBack:
     dbLogger.info(f"Retrieving feedback with id: {feedback_id}")
     db_feedback = session.query(DBFeedBack).filter(DBFeedBack.id == feedback_id).first()
@@ -41,10 +60,31 @@ def get_feedback(feedback_id: int, session: Session) -> DBFeedBack:
     dbLogger.info(f"Successfully retrieved feedback with id: {feedback_id}")
     return db_feedback
 
+async def async_get_feedback(feedback_id: int, session: AsyncSession) -> DBFeedBack:
+    dbLogger.info(f"[ASYNC] Retrieving feedback with id: {feedback_id}")
+    result = await session.execute(
+        select(DBFeedBack).filter(DBFeedBack.id == feedback_id)
+    )
+    db_feedback = result.scalars().first()
+    if db_feedback is None:
+        dbLogger.error(f"[ASYNC] Feedback with id {feedback_id} not found")
+        raise NotFoundError(f"Feedback with id {feedback_id} not found.")
+    dbLogger.info(f"[ASYNC] Successfully retrieved feedback with id: {feedback_id}")
+    return db_feedback
+
 def get_feedback_by_task(task_id: int, session: Session) -> List[DBFeedBack]:
     dbLogger.info(f"Retrieving all feedback for task_id: {task_id}")
     feedbacks = session.query(DBFeedBack).filter(DBFeedBack.task_id == task_id).all()
     dbLogger.info(f"Found {len(feedbacks)} feedback entries for task_id: {task_id}")
+    return feedbacks
+
+async def async_get_feedback_by_task(task_id: int, session: AsyncSession) -> List[DBFeedBack]:
+    dbLogger.info(f"[ASYNC] Retrieving all feedback for task_id: {task_id}")
+    result = await session.execute(
+        select(DBFeedBack).filter(DBFeedBack.task_id == task_id)
+    )
+    feedbacks = result.scalars().all()
+    dbLogger.info(f"[ASYNC] Found {len(list(feedbacks))} feedback entries for task_id: {task_id}")
     return feedbacks
 
 def update_feedback(feedback_id: int, feedback_data: Dict[str, Any], session: Session) -> DBFeedBack:
@@ -56,12 +96,38 @@ def update_feedback(feedback_id: int, feedback_data: Dict[str, Any], session: Se
     dbLogger.info(f"Successfully updated feedback with id: {feedback_id}")
     return db_feedback
 
+async def async_update_feedback(feedback_id: int, feedback_data: Dict[str, Any], session: AsyncSession) -> DBFeedBack:
+    dbLogger.info(f"[ASYNC] Updating feedback with id: {feedback_id}")
+    try:
+        db_feedback = await async_get_feedback(feedback_id, session)
+        db_feedback.feedback = feedback_data
+        await session.commit()
+        await session.refresh(db_feedback)
+        dbLogger.info(f"[ASYNC] Successfully updated feedback with id: {feedback_id}")
+        return db_feedback
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error updating feedback: {str(e)}")
+        await session.rollback()
+        raise
+
 def delete_feedback(feedback_id: int, session: Session) -> None:
     dbLogger.info(f"Deleting feedback with id: {feedback_id}")
     db_feedback = get_feedback(feedback_id, session)
     session.delete(db_feedback)
     session.commit()
     dbLogger.info(f"Successfully deleted feedback with id: {feedback_id}")
+
+async def async_delete_feedback(feedback_id: int, session: AsyncSession) -> None:
+    dbLogger.info(f"[ASYNC] Deleting feedback with id: {feedback_id}")
+    try:
+        db_feedback = await async_get_feedback(feedback_id, session)
+        await session.delete(db_feedback)
+        await session.commit()
+        dbLogger.info(f"[ASYNC] Successfully deleted feedback with id: {feedback_id}")
+    except Exception as e:
+        dbLogger.error(f"[ASYNC] Error deleting feedback: {str(e)}")
+        await session.rollback()
+        raise
 
 def get_cached_feedback(user_id: str, file_id: str, session: Session ) -> Optional[Dict[str, Any]]:
     ApiLogger.info(f"Retrieving cached feedback for user_id: {user_id}, file_id: {file_id}")
@@ -83,4 +149,26 @@ def get_cached_feedback(user_id: str, file_id: str, session: Session ) -> Option
         return None
     
     ApiLogger.info(f"Successfully retrieved cached feedback for user_id: {user_id}, file_id: {file_id}")
+    return db_feedback.feedback
+
+async def async_get_cached_feedback(user_id: str, file_id: str, session: AsyncSession) -> Optional[Dict[str, Any]]:
+    ApiLogger.info(f"[ASYNC] Retrieving cached feedback for user_id: {user_id}, file_id: {file_id}")
+    cached_task = await async_get_task_by_user_and_fileId(user_id, file_id, session)
+    
+    if not cached_task:
+        ApiLogger.info(f"[ASYNC] No cached task found for user_id: {user_id}, file_id: {file_id}")
+        return None
+    
+    dbLogger.info(f"[ASYNC] Looking for feedback with task_id: {cached_task.id}")
+    result = await session.execute(
+        select(DBFeedBack)
+        .filter(DBFeedBack.task_id == cached_task.id)
+    )
+    db_feedback = result.scalars().first()
+    
+    if not db_feedback:
+        dbLogger.info(f"[ASYNC] No feedback found for task_id: {cached_task.id}")
+        return None
+    
+    ApiLogger.info(f"[ASYNC] Successfully retrieved cached feedback for user_id: {user_id}, file_id: {file_id}")
     return db_feedback.feedback
