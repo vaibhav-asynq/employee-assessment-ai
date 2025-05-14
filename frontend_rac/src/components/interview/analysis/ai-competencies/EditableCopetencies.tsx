@@ -47,27 +47,29 @@ export function EditableCopetencies() {
 
   return (
     <div>
-      {/* Strengths Section */}
-      <EditStrengths
-        strengths={filteredStrengths}
-        templateId={templateId}
-        heading="Strengths"
-        promptBtnText="Prompt"
-      />
+      <div className="overflow-scroll max-h-[100dvh] scrollbar-thin">
+        {/* Strengths Section */}
+        <EditStrengths
+          strengths={filteredStrengths}
+          templateId={templateId}
+          heading="Strengths"
+          promptBtnText="Prompt"
+        />
 
-      {/* Areas to Target Section */}
-      <EditAreas
-        areas={filteredAreas}
-        templateId={templateId}
-        promptBtnText="Prompt"
-        heading="Areas To Target"
-      />
+        {/* Areas to Target Section */}
+        <EditAreas
+          areas={filteredAreas}
+          templateId={templateId}
+          promptBtnText="Prompt"
+          heading="Areas To Target"
+        />
 
-      {/* Next Steps Section */}
-      <EditNextSteps
-        nextSteps={analysisAiCompetencies.next_steps}
-        templateId={templateId}
-      />
+        {/* Next Steps Section */}
+        <EditNextSteps
+          nextSteps={analysisAiCompetencies.next_steps}
+          templateId={templateId}
+        />
+      </div>
     </div>
   );
 }

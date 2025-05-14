@@ -238,7 +238,7 @@ export function EvidanceDisplay() {
       </TabsContent>
 
       <TabsContent value="sorted-evidence" className="mt-0">
-        <div className="h-full space-y-8 relative">
+        <div className="h-full space-y-8 relative overflow-scroll max-h-[100dvh] scrollbar-thin">
           {selectedEvidanceFeedback.length >= 2 && (
             <div className="fixed bottom-4 left-4 z-50">
               <Button
@@ -403,7 +403,7 @@ export function EvidanceDisplay() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Advice</h2>
             <div className="space-y-6">
-              <Accordion type="multiple" defaultValue={["advice"]}>
+              <Accordion type="multiple">
                 <AccordionItem value="advice">
                   <AccordionTrigger>
                     <div className="px-4 py-2 text-lg font-semibold">

@@ -36,27 +36,28 @@ export function EditableReport() {
   return (
     <div>
       <h2 className="text-2xl font-bold tracking-tight mb-8">AI Suggestions</h2>
+      <div className="overflow-scroll max-h-[100dvh] scrollbar-thin">
+        {/* Strength Section */}
+        <EditStrengths
+          strengths={analysisManualReport.strengths}
+          templateId={templateId}
+          promptBtnText="Prompt"
+        />
 
-      {/* Strength Section */}
-      <EditStrengths
-        strengths={analysisManualReport.strengths}
-        templateId={templateId}
-        promptBtnText="Prompt"
-      />
+        {/* Areas to Target Section */}
+        <EditAreas
+          areas={analysisManualReport.areas_to_target}
+          templateId={templateId}
+          promptBtnText="Prompt"
+        />
 
-      {/* Areas to Target Section */}
-      <EditAreas
-        areas={analysisManualReport.areas_to_target}
-        templateId={templateId}
-        promptBtnText="Prompt"
-      />
+        {/* Next Steps Section */}
 
-      {/* Next Steps Section */}
-
-      <EditNextSteps
-        nextSteps={analysisManualReport.next_steps}
-        templateId={templateId}
-      />
+        <EditNextSteps
+          nextSteps={analysisManualReport.next_steps}
+          templateId={templateId}
+        />
+      </div>
     </div>
   );
 }

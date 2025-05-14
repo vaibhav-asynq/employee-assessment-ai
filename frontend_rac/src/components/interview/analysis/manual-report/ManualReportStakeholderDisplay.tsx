@@ -120,7 +120,7 @@ export function ManualReportStakeholderDisplay() {
 
   return (
     <div>
-      <div className="space-y-8">
+      <div className="space-y-8 overflow-scroll max-h-[100dvh] scrollbar-thin">
         {/* Strengths */}
         <div>
           <div className="flex justify-between">
