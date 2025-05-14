@@ -325,7 +325,7 @@ export function TaskHistory() {
                               className={cn(
                                 "hidden group-hover/[item]:block absolute right-0",
                                 "group/[delete]",
-                                "ml-auto p-1.5 rounded-full bg-red-100/80 hover:bg-red-100 transition-colors",
+                                "ml-auto p-1.5 rounded-full bg-red-400 hover:bg-red-500 transition-colors",
                                 "focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50",
                                 deletingTaskId === task.id
                                   ? "pointer-events-none"
@@ -342,7 +342,7 @@ export function TaskHistory() {
                               ) : (
                                 <Trash2
                                   size={16}
-                                  className="text-gray-400 group-hover/[delete]:text-red-500 transition-colors"
+                                  className="text-white group-hover/[delete]:text-gray-100 transition-colors"
                                 />
                               )}
                             </button>
