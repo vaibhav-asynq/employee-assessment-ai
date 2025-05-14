@@ -23,6 +23,7 @@
     "@mescius/spread-sheets-react": "^18.0.2",
     "@mescius/spread-sheets-shapes": "^18.0.2",
     "@next/eslint-plugin-next": "^15.3.1",
+    "@radix-ui/react-accordion": "^1.2.10",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-label": "^2.1.2",

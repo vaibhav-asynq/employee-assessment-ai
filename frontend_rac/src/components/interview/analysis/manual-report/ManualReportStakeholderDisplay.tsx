@@ -6,6 +6,12 @@ import { Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSnapshotLoader } from "@/hooks/useSnapshotLoader";
 import { useSnapshotSaver } from "@/hooks/useSnapshotSaver";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export function ManualReportStakeholderDisplay() {
   const {
@@ -124,32 +130,46 @@ export function ManualReportStakeholderDisplay() {
             <div></div>
           </div>
           <div className="space-y-6">
-            {feedbackData?.strengths &&
-              Object.entries(feedbackData.strengths).map(([name, info]) => (
-                <div key={name} className="border-b pb-6">
-                  <h4 className="font-semibold mb-2">
-                    {name.replace(/_/g, " ")}
-                  </h4>
-                  <p className="text-gray-600 italic mb-3">{info.role}</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index: number) => {
-                      const text =
-                        typeof point === "string" ? point : point.text;
-                      const isStrong =
-                        typeof point === "object" ? point.is_strong : false;
+            <Accordion type="multiple">
+              {feedbackData?.strengths &&
+                Object.entries(feedbackData.strengths).map(([name, info]) => (
+                  <AccordionItem value={name} key={name}>
+                    <div className="border-b pb-6">
+                      <AccordionTrigger className="text-base">
+                        <div className="select-text">
+                          <h4 className="font-semibold mb-2">
+                            {name.replace(/_/g, " ")}
+                          </h4>
+                          <p className="text-gray-600 italic mb-3">
+                            {info.role}
+                          </p>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base">
+                        <ul className="list-disc pl-5 space-y-2">
+                          {info.feedback.map((point, index: number) => {
+                            const text =
+                              typeof point === "string" ? point : point.text;
+                            const isStrong =
+                              typeof point === "object"
+                                ? point.is_strong
+                                : false;
 
-                      return (
-                        <li
-                          key={index}
-                          className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-green-500 bg-green-50" : ""}`}
-                        >
-                          {text}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                            return (
+                              <li
+                                key={index}
+                                className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-green-500 bg-green-50" : ""}`}
+                              >
+                                {text}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </div>
+                  </AccordionItem>
+                ))}
+            </Accordion>
           </div>
         </div>
 
@@ -159,34 +179,52 @@ export function ManualReportStakeholderDisplay() {
             Areas to Target
           </h3>
           <div className="space-y-6">
-            {feedbackData?.areas_to_target &&
-              Object.entries(feedbackData.areas_to_target).map(
-                ([name, info]) => (
-                  <div key={name} className="border-b pb-6">
-                    <h4 className="font-semibold mb-2">
-                      {name.replace(/_/g, " ")}
-                    </h4>
-                    <p className="text-gray-600 italic mb-3">{info.role}</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {info.feedback.map((point, index: number) => {
-                        const text =
-                          typeof point === "string" ? point : point.text;
-                        const isStrong =
-                          typeof point === "object" ? point.is_strong : false;
+            <Accordion type="multiple">
+              {feedbackData?.areas_to_target &&
+                Object.entries(feedbackData.areas_to_target).map(
+                  ([name, info]) => {
+                    return (
+                      <AccordionItem value={name} key={name}>
+                        <div className="border-b pb-6">
+                          <AccordionTrigger className="text-base">
+                            <div className="select-text">
+                              <h4 className="font-semibold mb-2">
+                                {name.replace(/_/g, " ")}
+                              </h4>
+                              <p className="text-gray-600 italic mb-3 font-normal">
+                                {info.role}
+                              </p>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="text-base">
+                            <ul className="list-disc pl-5 space-y-2">
+                              {info.feedback.map((point, index: number) => {
+                                const text =
+                                  typeof point === "string"
+                                    ? point
+                                    : point.text;
+                                const isStrong =
+                                  typeof point === "object"
+                                    ? point.is_strong
+                                    : false;
 
-                        return (
-                          <li
-                            key={index}
-                            className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
-                          >
-                            {text}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ),
-              )}
+                                return (
+                                  <li
+                                    key={index}
+                                    className={`text-gray-800 ${isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
+                                  >
+                                    {text}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </AccordionContent>
+                        </div>
+                      </AccordionItem>
+                    );
+                  },
+                )}
+            </Accordion>
           </div>
         </div>
 
@@ -198,28 +236,42 @@ export function ManualReportStakeholderDisplay() {
               Advice
             </h3>
             <div className="space-y-6">
-              {Object.entries(transformedAdvice).map(([name, info]) => (
-                <div key={name} className="border-b pb-6">
-                  <h4 className="font-semibold mb-2">
-                    {name.replace(/_/g, " ")}
-                  </h4>
-                  <p className="text-gray-600 italic mb-3">{info.role}</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {info.feedback.map((point, index: number) => {
-                      const text =
-                        typeof point === "string" ? point : point.text;
-                      const isStrong =
-                        typeof point === "object" ? point.is_strong : false;
+              <Accordion type="multiple">
+                {Object.entries(transformedAdvice).map(([name, info]) => (
+                  <AccordionItem value={name} key={name}>
+                    <div className="border-b pb-6">
+                      <AccordionTrigger className="text-base">
+                        <div className="select-text">
+                          <h4 className="font-semibold mb-2">
+                            {name.replace(/_/g, " ")}
+                          </h4>
+                          <p className="text-gray-600 italic mb-3">
+                            {info.role}
+                          </p>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base">
+                        <ul className="list-disc pl-5 space-y-2">
+                          {info.feedback.map((point, index: number) => {
+                            const text =
+                              typeof point === "string" ? point : point.text;
+                            const isStrong =
+                              typeof point === "object"
+                                ? point.is_strong
+                                : false;
 
-                      return (
-                        <li key={index} className="text-gray-800">
-                          {text}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                            return (
+                              <li key={index} className="text-gray-800">
+                                {text}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </div>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         )}

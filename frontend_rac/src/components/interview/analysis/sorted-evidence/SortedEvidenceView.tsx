@@ -1,6 +1,10 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface Evidence {
   quote: string;
@@ -25,147 +29,204 @@ export function SortedEvidenceView({
   areasEvidence,
   adviceEvidence,
 }: SortedEvidenceViewProps) {
-  console.log(areasEvidence);
   return (
     <div className="space-y-8">
       {strengthsEvidence && (
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          <h2 className="text-xl font-semibold mb-4 text-emerald-600">
             Strengths Evidence
           </h2>
           <div className="space-y-4">
-            {strengthsEvidence.map((item, index) => {
-              let heading = item.heading;
-              let act_as_title = false;
-              if (
-                item.heading.trim().toLowerCase() === "additional strengths"
-              ) {
-                heading = "Additional Strengths";
-                act_as_title = true;
-                if (!item.evidence.length) {
-                  return null;
+            <Accordion type="multiple">
+              {strengthsEvidence.map((item, index) => {
+                let heading = item.heading;
+                let act_as_title = false;
+                if (
+                  item.heading.trim().toLowerCase() === "additional strengths"
+                ) {
+                  heading = "Additional Strengths";
+                  act_as_title = true;
+                  if (!item.evidence.length) {
+                    return null;
+                  }
                 }
-              }
-              const Component = act_as_title ? "div" : Card;
-              return (
-                <Component
-                  key={index}
-                  className={cn(
-                    "p-6",
-                    act_as_title ? "p-0 m-0 border-none shadow-none" : "",
-                  )}
-                >
-                  <h3
-                    className={cn(
-                      "mb-6 text-card-foreground text-2xl font-semibold leading-none tracking-tight",
-                      act_as_title &&
-                        "text-xl font-semibold mb-4 text-gray-800",
-                    )}
-                  >
-                    {heading}
-                  </h3>
-                  <div className={cn("")}>
-                    <ul className="list-disc pl-6 space-y-2">
-                      {item.evidence.map((evidence, idx) => (
-                        <li
-                          key={idx}
-                          className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-green-500 bg-green-50" : ""}`}
-                        >
-                          <div className="mb-1 text-sm font-medium text-gray-500">
-                            {evidence.name} - {evidence.position}
+
+                if (act_as_title) {
+                  return (
+                    <AccordionItem value={`strength-${index}`} key={index}>
+                      <div key={index} className="mt-6">
+                        <AccordionTrigger className="text-base py-4">
+                          <div className="select-text text-left">
+                            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                              {heading}
+                            </h3>
                           </div>
-                          <div>{evidence.quote}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Component>
-              );
-            })}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-base pt-2">
+                          <ul className="list-disc pl-6 space-y-2">
+                            {item.evidence.map((evidence, idx) => (
+                              <li
+                                key={idx}
+                                className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-green-500 bg-green-50" : ""}`}
+                              >
+                                <div className="mb-1 text-sm font-medium text-gray-500">
+                                  {evidence.name} - {evidence.position}
+                                </div>
+                                <div>{evidence.quote}</div>
+                              </li>
+                            ))}
+                          </ul>
+                        </AccordionContent>
+                      </div>
+                    </AccordionItem>
+                  );
+                }
+
+                return (
+                  <AccordionItem value={`strength-${index}`} key={index}>
+                    <div className="border-b pb-2">
+                      <AccordionTrigger className="text-base py-4">
+                        <div className="select-text text-left">
+                          <h3 className="font-semibold text-lg">{heading}</h3>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base pt-2">
+                        <ul className="list-disc pl-6 space-y-2">
+                          {item.evidence.map((evidence, idx) => (
+                            <li
+                              key={idx}
+                              className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-green-500 bg-green-50" : ""}`}
+                            >
+                              <div className="mb-1 text-sm font-medium text-gray-500">
+                                {evidence.name} - {evidence.position}
+                              </div>
+                              <div>{evidence.quote}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      </AccordionContent>
+                    </div>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
           </div>
         </div>
       )}
 
       {areasEvidence && (
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          <h2 className="text-xl font-semibold mb-4 text-amber-600">
             Areas to Target Evidence
           </h2>
           <div className="space-y-4">
-            {areasEvidence.map((item, index) => {
-              let heading = item.heading;
-              let act_as_title = false;
-              if (item.heading.trim().toLowerCase() === "additional areas") {
-                heading = "Additional Areas To Target";
-                act_as_title = true;
-                if (!item.evidence.length) {
-                  return null;
+            <Accordion type="multiple">
+              {areasEvidence.map((item, index) => {
+                let heading = item.heading;
+                let act_as_title = false;
+                if (item.heading.trim().toLowerCase() === "additional areas") {
+                  heading = "Additional Areas To Target";
+                  act_as_title = true;
+                  if (!item.evidence.length) {
+                    return null;
+                  }
                 }
-              }
-              const Component = act_as_title ? "div" : Card;
-              return (
-                <Component
-                  key={index}
-                  className={cn(
-                    "p-6",
-                    act_as_title ? "p-0 m-0 border-none shadow-none" : "",
-                  )}
-                >
-                  <h3
-                    className={cn(
-                      "mb-6 text-card-foreground text-2xl font-semibold leading-none tracking-tight",
-                      act_as_title &&
-                        "text-xl font-semibold mb-4 text-gray-800",
-                    )}
-                  >
-                    {heading}
-                  </h3>
-                  <div>
-                    <ul className="list-disc pl-6 space-y-2">
-                      {item.evidence.map((evidence, idx) => (
-                        <li
-                          key={idx}
-                          className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
-                        >
-                          <div className="mb-1 text-sm font-medium text-gray-500">
-                            {evidence.name} - {evidence.position}
-                          </div>
-                          <div>{evidence.quote}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Component>
-              );
-            })}
+
+                if (act_as_title) {
+                  return (
+                    <AccordionItem value={`area-${index}`} key={index}>
+                      <div key={index} className="mt-6">
+                        <div className="border-b pb-2">
+                          <AccordionTrigger className="text-base py-4">
+                            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                              {heading}
+                            </h3>
+                          </AccordionTrigger>
+                          <AccordionContent className="text-base pt-2">
+                            <ul className="list-disc pl-6 space-y-2">
+                              {item.evidence.map((evidence, idx) => (
+                                <li
+                                  key={idx}
+                                  className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
+                                >
+                                  <div className="mb-1 text-sm font-medium text-gray-500">
+                                    {evidence.name} - {evidence.position}
+                                  </div>
+                                  <div>{evidence.quote}</div>
+                                </li>
+                              ))}
+                            </ul>
+                          </AccordionContent>
+                        </div>
+                      </div>
+                    </AccordionItem>
+                  );
+                }
+
+                return (
+                  <AccordionItem value={`area-${index}`} key={index}>
+                    <div className="border-b pb-2">
+                      <AccordionTrigger className="text-base py-4">
+                        <div className="select-text text-left">
+                          <h3 className="font-semibold text-lg">{heading}</h3>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base pt-2">
+                        <ul className="list-disc pl-6 space-y-2">
+                          {item.evidence.map((evidence, idx) => (
+                            <li
+                              key={idx}
+                              className={`text-gray-700 ${evidence.isStrong ? "pl-2 border-l-4 border-red-500 bg-red-50" : ""}`}
+                            >
+                              <div className="mb-1 text-sm font-medium text-gray-500">
+                                {evidence.name} - {evidence.position}
+                              </div>
+                              <div>{evidence.quote}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      </AccordionContent>
+                    </div>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
           </div>
         </div>
       )}
 
       {adviceEvidence && (
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Advice</h2>
+          <h2 className="text-xl font-semibold mb-4 text-indigo-600">Advice</h2>
           <div className="space-y-4">
-            {adviceEvidence.map((item, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle>{item.heading}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="list-disc pl-6 space-y-2">
-                    {item.evidence.map((evidence, idx) => (
-                      <li key={idx} className="text-gray-700">
-                        <div className="mb-1 text-sm font-medium text-gray-500">
-                          {evidence.name}{" "}
-                          {evidence.position && `- ${evidence.position}`}
-                        </div>
-                        <div>{evidence.quote}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
+            <Accordion type="multiple">
+              {adviceEvidence.map((item, index) => (
+                <AccordionItem value={`advice-${index}`} key={index}>
+                  <div className="border-b pb-2">
+                    <AccordionTrigger className="text-base py-4">
+                      <div className="select-text text-left">
+                        <h3 className="font-semibold text-lg">
+                          {item.heading}
+                        </h3>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-base pt-2">
+                      <ul className="list-disc pl-6 space-y-2">
+                        {item.evidence.map((evidence, idx) => (
+                          <li key={idx} className="text-gray-700">
+                            <div className="mb-1 text-sm font-medium text-gray-500">
+                              {evidence.name}{" "}
+                              {evidence.position && `- ${evidence.position}`}
+                            </div>
+                            <div>{evidence.quote}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </div>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </div>
       )}

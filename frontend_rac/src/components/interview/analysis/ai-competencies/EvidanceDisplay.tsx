@@ -1,5 +1,10 @@
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +51,7 @@ export function EvidanceDisplay() {
   const [selectedEvidanceFeedback, setSelectedEvidanceFeedback] = useState<
     string[]
   >([]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const handleCardSelect = (cardId: string) => {
     setSelectedEvidanceFeedback((prevSelected) => {
@@ -54,7 +60,14 @@ export function EvidanceDisplay() {
         return prevSelected.filter((id) => id !== cardId);
       }
       // Otherwise, add it to selected cards
-      return [...prevSelected, cardId];
+      const newSelected = [...prevSelected, cardId];
+
+      // Make sure the selected item is expanded
+      if (!expandedItems.includes(cardId)) {
+        setExpandedItems((prev) => [...prev, cardId]);
+      }
+
+      return newSelected;
     });
   };
 
@@ -261,91 +274,128 @@ export function EvidanceDisplay() {
             </DialogContent>
           </Dialog>
 
-          {/* Leadership Qualities Section */}
+          {/* Strengths Section */}
           <div>
             <h2 className="text-2xl font-bold mb-6">Strengths</h2>
             <div className="space-y-6">
-              {analysisAiCompetencies?.strengths.order.map((id) => {
-                const item = analysisAiCompetencies.strengths.items[id];
-                let heading = item.heading;
-                let act_as_title = false;
-                if (
-                  item.heading.trim().toLowerCase() === "additional strengths."
-                ) {
-                  heading = "Additional Strengths";
-                  act_as_title = true;
-                  if (!item.evidence.length) {
-                    return null;
+              <Accordion
+                type="multiple"
+                value={expandedItems}
+                onValueChange={setExpandedItems}
+              >
+                {analysisAiCompetencies?.strengths.order.map((id) => {
+                  const item = analysisAiCompetencies.strengths.items[id];
+                  let heading = item.heading;
+                  let act_as_title = false;
+                  if (
+                    item.heading.trim().toLowerCase() ===
+                      "additional strengths" ||
+                    item.heading.trim().toLowerCase() ===
+                      "additional strengths."
+                  ) {
+                    heading = "Additional Strengths";
+                    act_as_title = true;
+                    if (!item.evidence.length) {
+                      return null;
+                    }
                   }
-                }
-                const Conmponent = act_as_title ? "div" : Card;
 
-                return (
-                  <div id={id} key={id}>
-                    <Conmponent
+                  return (
+                    <AccordionItem
+                      value={id}
+                      key={id}
+                      id={id}
                       className={cn(
-                        "p-4 cursor-pointer",
-                        isCardSelected(id) && "border-black",
-                        act_as_title
-                          ? "mt-3 p-0 m-0 border-none border-0 shadow-none"
-                          : "",
+                        isCardSelected(id) && "border-black border rounded-lg",
+                        act_as_title ? "border-none shadow-none" : "",
                       )}
-                      onClick={() => handleCardSelect(id)}
                     >
-                      {act_as_title ? (
-                        <h3 className="text-2xl font-bold mb-0">{heading}</h3>
-                      ) : (
-                        <h3 className="text-lg font-semibold mb-4">
-                          {heading}
-                        </h3>
-                      )}
-                      <div className="space-y-4">
-                        {item.evidence.map((item) => renderEvidence(item))}
-                      </div>
-                    </Conmponent>
-                  </div>
-                );
-              })}
+                      <AccordionTrigger>
+                        <div
+                          className={cn(
+                            "px-4 py-2",
+                            act_as_title
+                              ? "text-2xl font-bold"
+                              : "text-lg font-semibold",
+                          )}
+                        >
+                          <h3>{heading}</h3>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base px-4 pt-2 pb-4">
+                        <div
+                          className={cn(
+                            "space-y-4 cursor-pointer",
+                            isCardSelected(id) &&
+                              "border-l-4 border-black pl-3 rounded-l",
+                          )}
+                          onClick={() => handleCardSelect(id)}
+                        >
+                          {item.evidence.map((item) => renderEvidence(item))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             </div>
           </div>
 
-          {/* Development Areas Section */}
+          {/* Areas To Target Section */}
           <div>
             <h2 className="text-2xl font-bold mb-6">Areas To Target</h2>
             <div className="space-y-6">
-              {analysisAiCompetencies?.areas_to_target.order.map((id) => {
-                const item = analysisAiCompetencies.areas_to_target.items[id];
-                let heading = item.heading;
-                let act_as_title = false;
-                if (item.heading.trim().toLowerCase() === "additional areas.") {
-                  heading = "Additional Areas To Target";
-                  act_as_title = true;
-                  if (!item.evidence.length) {
-                    return null;
+              <Accordion
+                type="multiple"
+                value={expandedItems}
+                onValueChange={setExpandedItems}
+              >
+                {analysisAiCompetencies?.areas_to_target.order.map((id) => {
+                  const item = analysisAiCompetencies.areas_to_target.items[id];
+                  let heading = item.heading;
+                  let act_as_title = false;
+                  if (
+                    item.heading.trim().toLowerCase() === "additional areas" ||
+                    item.heading.trim().toLowerCase() === "additional areas."
+                  ) {
+                    heading = "Additional Areas To Target";
+                    act_as_title = true;
+                    if (!item.evidence.length) {
+                      return null;
+                    }
                   }
-                }
-                const Component = act_as_title ? "div" : Card;
-                return (
-                  <Component
-                    key={id}
-                    className={cn(
-                      "p-4",
-                      act_as_title
-                        ? "p-0 m-0 border-none border-0 shadow-none"
-                        : "",
-                    )}
-                  >
-                    {act_as_title ? (
-                      <h3 className="text-2xl font-bold mb-0">{heading}</h3>
-                    ) : (
-                      <h3 className="text-lg font-semibold mb-4">{heading}</h3>
-                    )}
-                    <div className="space-y-4">
-                      {item.evidence.map((item) => renderEvidence(item, true))}
-                    </div>
-                  </Component>
-                );
-              })}
+
+                  return (
+                    <AccordionItem
+                      value={id}
+                      key={id}
+                      className={cn(
+                        act_as_title ? "border-none shadow-none" : "",
+                      )}
+                    >
+                      <AccordionTrigger>
+                        <div
+                          className={cn(
+                            "px-4 py-2",
+                            act_as_title
+                              ? "text-2xl font-bold"
+                              : "text-lg font-semibold",
+                          )}
+                        >
+                          <h3>{heading}</h3>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base px-4 pt-2 pb-4">
+                        <div className="space-y-4">
+                          {item.evidence.map((item) =>
+                            renderEvidence(item, true),
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             </div>
           </div>
 
@@ -353,20 +403,29 @@ export function EvidanceDisplay() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Advice</h2>
             <div className="space-y-6">
-              <Card className="p-4">
-                <div className="space-y-4">
-                  {analysisAiCompetencies?.advices.map((advice) => {
-                    return renderEvidence({
-                      feedback: {
-                        text: advice.advice.join(". "),
-                        is_strong: false,
-                      },
-                      source: advice.name.replace(/_/g, " "),
-                      role: advice.role,
-                    });
-                  })}
-                </div>
-              </Card>
+              <Accordion type="multiple" defaultValue={["advice"]}>
+                <AccordionItem value="advice">
+                  <AccordionTrigger>
+                    <div className="px-4 py-2 text-lg font-semibold">
+                      <h3>Advice</h3>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pt-2 pb-4 text-base">
+                    <div className="space-y-4">
+                      {analysisAiCompetencies?.advices.map((advice) => {
+                        return renderEvidence({
+                          feedback: {
+                            text: advice.advice.join(". "),
+                            is_strong: false,
+                          },
+                          source: advice.name.replace(/_/g, " "),
+                          role: advice.role,
+                        });
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         </div>
