@@ -33,12 +33,14 @@ export function SortedReport({ sortedStrengths, sortedAreas }: Props) {
         <div className="mb-6">
           <h2 className="text-2xl font-bold">Sorted Evidence</h2>
         </div>
-        <SortedEvidenceView
-          strengthsEvidence={sortedStrengths}
-          areasEvidence={sortedAreas}
-          adviceEvidence={transformedAdvice}
-          // adviceEvidence={undefined}
-        />
+        <div className="overflow-scroll max-h-[100dvh] scrollbar-thin">
+          <SortedEvidenceView
+            strengthsEvidence={sortedStrengths}
+            areasEvidence={sortedAreas}
+            adviceEvidence={transformedAdvice}
+            // adviceEvidence={undefined}
+          />
+        </div>
       </div>
       <div className="border-l pl-8 overflow-y-auto p-6">
         <EditableReport />

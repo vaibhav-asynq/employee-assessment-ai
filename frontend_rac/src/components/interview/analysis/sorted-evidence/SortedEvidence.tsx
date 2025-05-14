@@ -13,7 +13,9 @@ export function SortedEvidences({
   sortedStrengthEvidences,
   sortedAreasEvidences,
 }: Props) {
-  const adviceData = useInterviewDataStore((state) => state.adviceData) as AdviceData | null;
+  const adviceData = useInterviewDataStore(
+    (state) => state.adviceData,
+  ) as AdviceData | null;
 
   // Transform advice data to match the format expected by SortedEvidenceView
   const transformedAdvice = adviceData
@@ -47,7 +49,6 @@ export function SortedEvidences({
         />
       </div>
       <div className="border-l pl-8">
-        {/* EditableTemplateAnalysis component is missing, replaced with placeholder */}
         <div className="p-4 border rounded">
           <h3 className="text-xl font-semibold mb-2">Template Analysis</h3>
           <p className="text-gray-600">Analysis content would go here.</p>

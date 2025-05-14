@@ -11,7 +11,7 @@ export function ManualReportView() {
         </div>
         <ManualReportStakeholderDisplay />
       </div>
-      <div className="border-l pl-8 overflow-y-auto p-6">
+      <div className="border-l pl-8 p-6">
         <EditableReport />
       </div>
     </div>
