@@ -117,7 +117,7 @@ export function EditableText({
     <div className="w-full flex flex-col group">
       <textarea
         ref={textareaRef}
-        className={`w-full p-2 border rounded resize-none focus:outline-none focus:ring-1 ${
+        className={`w-full p-2 border rounded overflow-hidden resize-none focus:outline-none focus:ring-1 ${
           hasHTML || hasCode || hasSuspicious
             ? "border-red-500 focus:ring-red-500"
             : "focus:ring-blue-500"
